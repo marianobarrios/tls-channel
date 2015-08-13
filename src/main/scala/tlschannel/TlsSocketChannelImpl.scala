@@ -22,7 +22,7 @@ class TlsSocketChannelImpl(
   val engine: SSLEngine,
   val inEncrypted: ByteBuffer,
   val initSessionCallback: SSLSession => Unit)
-  extends ByteChannel {
+    extends ByteChannel {
 
   private val initLock = new ReentrantLock
   private val readLock = new ReentrantLock
@@ -284,20 +284,20 @@ class TlsSocketChannelImpl(
 
   private def handShakeLoop(): Unit = {
     assert(inPlain.position == 0)
-    while (true) {
-      engine.getHandshakeStatus match {
-        case NEED_WRAP =>
-          assert(outEncrypted.position == 0)
-          val result = engine.wrap(dummyOut, outEncrypted)
-          assert(engine.getHandshakeStatus != NEED_TASK)
-          assert(result.getStatus == Status.OK)
-          val bytesToWrite = outEncrypted.position
-          val c = flipAndWriteToNetwork() // IO block
-          if (c < bytesToWrite)
-            throw new NeedsWriteException
-        case NEED_UNWRAP =>
-          assert(inPlain.position == 0)
-          try {
+    try {
+      while (true) {
+        engine.getHandshakeStatus match {
+          case NEED_WRAP =>
+            assert(outEncrypted.position == 0)
+            val result = engine.wrap(dummyOut, outEncrypted)
+            assert(engine.getHandshakeStatus != NEED_TASK)
+            assert(result.getStatus == Status.OK)
+            val bytesToWrite = outEncrypted.position
+            val c = flipAndWriteToNetwork() // IO block
+            if (c < bytesToWrite)
+              throw new NeedsWriteException
+          case NEED_UNWRAP =>
+            assert(inPlain.position == 0)
             unwrapLoop(statusLoopCondition = NEED_UNWRAP)
             while (engine.getHandshakeStatus == NEED_UNWRAP) {
               val bytesRead = readFromNetwork() // IO block
@@ -305,10 +305,16 @@ class TlsSocketChannelImpl(
                 throw new NeedsReadException
               unwrapLoop(statusLoopCondition = NEED_UNWRAP)
             }
-          } catch {
-            case e: EOFException => throw new SSLHandshakeException("EOF reached while handshaking")
-          }
-        case NOT_HANDSHAKING | FINISHED | NEED_TASK => return
+          case NOT_HANDSHAKING | FINISHED | NEED_TASK => return
+        }
+      }
+    } catch {
+      case e: TlsNonBlockingNecessityException => throw e
+      case e: IOException => {
+        val reason = if (e.getMessage == null || e.getMessage.isEmpty()) {
+          e.getClass.getCanonicalName
+        } else e.getMessage
+        throw new SSLHandshakeException(s"Handshaking aborted. Reason: $reason")
       }
     }
   }
@@ -347,9 +353,9 @@ object TlsSocketChannelImpl {
 
   def checkWriteBuffer(out: ByteBuffer): Unit = {
     if (out == null)
-      throw new NullPointerException    
+      throw new NullPointerException
   }
-  
+
   val tlsMaxRecordSize =
     5 + // header
       256 + // IV
