@@ -1,7 +1,7 @@
 scalaVersion := "2.11.6"
 
 organization := "com.despegar"
-version := "0.1-SNAPSHOT"
+version := "0.1.1"
 description := "TLS Socket Channel"
 homepage := Some(url("https://github.com/despegar/tls-socket-channel"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
