@@ -5,30 +5,27 @@ import org.scalatest.Matchers
 import scala.util.Random
 import java.io.IOException
 import TestUtil.functionToRunnable
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
 
 class IntegrationTest extends FunSuite with Matchers with Asserts {
-
-  val dataSize = 1024 * 1024 + Random.nextInt(1000)
+  
+  val dataSize = 2 * 1024 * 1024 + Random.nextInt(1000)
   val data = Array.ofDim[Byte](dataSize)
   Random.nextBytes(data)
 
-  val bigData = Array.ofDim[Byte](10 * 1000 * 1000)
+  val bigData = Array.ofDim[Byte](30 * 1000 * 1000)
 
   val margin = Random.nextInt(100)
+  
+  val sslEngine = SSLContext.getDefault.createSSLEngine
+  
+  val ciphers = sslEngine.getSupportedCipherSuites
+    // Java 8 disabled SSL through another mechanism, ignore that protocol here, to avoid errors 
+    .filter(_.startsWith("TLS_")) 
+    // not using authentication
+    .filter(_.contains("_anon_"))
 
-  val ciphers = Seq(
-    "SSL_DH_anon_EXPORT_WITH_DES40_CBC_SHA",
-    "SSL_DH_anon_EXPORT_WITH_RC4_40_MD5",
-    "SSL_DH_anon_WITH_3DES_EDE_CBC_SHA",
-    "TLS_DH_anon_WITH_AES_128_CBC_SHA256",
-    "TLS_DH_anon_WITH_AES_128_GCM_SHA256",
-    "SSL_DH_anon_WITH_DES_CBC_SHA",
-    "SSL_DH_anon_WITH_RC4_128_MD5",
-    "TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA",
-    "TLS_ECDH_anon_WITH_AES_128_CBC_SHA",
-    "TLS_ECDH_anon_WITH_NULL_SHA",
-    "TLS_ECDH_anon_WITH_RC4_128_SHA")
-    
   def writerLoop(writer: Writer, idx: Int, renegotiate: Boolean = false) = TestUtil.cannotFail(s"Error in writer $idx") {
     var remaining = dataSize
     while (remaining > 0) {

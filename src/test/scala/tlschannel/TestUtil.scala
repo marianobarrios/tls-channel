@@ -30,5 +30,4 @@ object TestUtil extends StrictLogging {
       def run() = fn()
     }
   }
-
 }
