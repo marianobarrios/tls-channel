@@ -310,12 +310,19 @@ class TlsSocketChannelImpl(
           case NEED_UNWRAP =>
             assert(inPlain.position == 0)
             unwrapLoop(statusLoopCondition = NEED_UNWRAP)
-            while (engine.getHandshakeStatus == NEED_UNWRAP) {
+            while (engine.getHandshakeStatus == NEED_UNWRAP && inPlain.position == 0) {
               val bytesRead = readFromNetwork() // IO block
               if (bytesRead == 0)
                 throw new NeedsReadException
               unwrapLoop(statusLoopCondition = NEED_UNWRAP)
             }
+            /*
+             * It is possible that in the middle of the handshake loop, even when the resulting
+             * status is NEED_UNWRAP, some bytes are read in the inPlain buffer. If that is the 
+             * case, interrupt the loop.
+             */
+            if (inPlain.position > 0)
+              return
           case NOT_HANDSHAKING | FINISHED | NEED_TASK => return
         }
       }
