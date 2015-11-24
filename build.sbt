@@ -27,6 +27,7 @@ name := "tls-socket-channel"
 fork in run := true
 fork in Test := true
 connectInput in run := true
+testOptions in Test += Tests.Argument("-oF")
 
 libraryDependencies ++=
   "ch.qos.logback" % "logback-classic" % "1.1.2" % "test" ::
