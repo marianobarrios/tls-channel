@@ -64,6 +64,7 @@ class TlsSocketChannelImpl(
         val transfered = transferPendingPlain(dstBuffer)
         if (transfered > 0)
           return transfered
+        assert(inPlain.position == 0)
         if (tlsClosePending) {
           close()
           return -1
