@@ -80,7 +80,11 @@ class TlsSocketChannelImpl(
             while (inPlain.position == 0 && engine.getHandshakeStatus == NOT_HANDSHAKING) {
               val c = readFromNetwork() // IO block
               if (c == 0) {
-                return transferPendingPlain(dstBuffer)
+                val transfered = transferPendingPlain(dstBuffer)
+                if (transfered > 0)
+                  return transfered
+                else
+                  throw new NeedsReadException
               }
               unwrapLoop(statusLoopCondition = NOT_HANDSHAKING)
             }
@@ -173,8 +177,14 @@ class TlsSocketChannelImpl(
         if (outEncrypted.position > 0) {
           flipAndWriteToNetwork() // IO block
           if (outEncrypted.position > 0) {
-            // Could not write everything, will not wrap any more
-            return bytesConsumed
+            /* 
+             * Could not write everything, will not wrap any more. Also, at this point we know that the socket is
+             * non-blocking
+             */
+            if (bytesConsumed > 0)
+              return bytesConsumed
+            else 
+              throw new NeedsWriteException
           }
         }
         if (bytesConsumed == bytesToConsume)
