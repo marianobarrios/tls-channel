@@ -8,7 +8,7 @@ import TestUtil.functionToRunnable
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 
-class IntegrationTest extends FunSuite with Matchers with Asserts {
+class IntegrationTest extends FunSuite with Matchers {
   
   val dataSize = 2 * 1024 * 1024 + Random.nextInt(1000)
   val data = Array.ofDim[Byte](dataSize)
@@ -49,14 +49,8 @@ class IntegrationTest extends FunSuite with Matchers with Asserts {
       val c = reader.read(receivedData, dataSize - remaining, chunkSize)
       assert(c != -1, "read must not return -1 when there were bytes remaining")
       assert(c <= remaining)
+      assert(c > 0)
       remaining -= c
-      if (c == 0) {
-        /*
-         * The read returns zero when the socket is non-blocking and the buffer is empty. Sleep some time to avoid
-         * using too much CPU
-         */
-        Thread.sleep(ioWaitMs)
-      }
     }
     assert(remaining == 0)
     assert(receivedData.slice(0, dataSize).deep === data.deep)

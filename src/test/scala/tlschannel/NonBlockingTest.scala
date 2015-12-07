@@ -11,7 +11,7 @@ import java.nio.channels.SocketChannel
 import com.typesafe.scalalogging.Logging
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
-class NonBlockingTest extends FunSuite with Matchers with Asserts with StrictLogging {
+class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 
   val sslEngine = SSLContext.getDefault.createSSLEngine
 
