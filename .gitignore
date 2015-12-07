@@ -2,6 +2,6 @@ target
 .classpath
 .project
 .settings/
-project/project/
 project/target/
-
+.cache-main
+.cache-tests
