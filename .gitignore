@@ -5,3 +5,4 @@ target
 project/target/
 .cache-main
 .cache-tests
+/bin/
