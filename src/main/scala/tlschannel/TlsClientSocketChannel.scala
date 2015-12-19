@@ -20,7 +20,7 @@ class TlsClientSocketChannel(
   
   private val inBuffer = ByteBuffer.allocate(TlsSocketChannelImpl.tlsMaxRecordSize)
       
-  private val impl = new TlsSocketChannelImpl(wrapped, engine, inBuffer, sessionInitCallback)
+  private val impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, inBuffer, sessionInitCallback)
 
   def getSession() = engine.getSession
   

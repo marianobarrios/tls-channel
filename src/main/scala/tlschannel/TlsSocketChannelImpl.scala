@@ -16,9 +16,12 @@ import javax.net.ssl.SSLException
 import javax.net.ssl.StandardConstants
 import javax.net.ssl.SSLSession
 import Util.withLock
+import java.nio.channels.ReadableByteChannel
+import java.nio.channels.WritableByteChannel
 
 class TlsSocketChannelImpl(
-  val wrapped: ByteChannel,
+  val readChannel: ReadableByteChannel,
+  val writeChannel: WritableByteChannel,
   val engine: SSLEngine,
   val inEncrypted: ByteBuffer,
   val initSessionCallback: SSLSession => Unit)
@@ -147,7 +150,7 @@ class TlsSocketChannelImpl(
   private def readFromNetwork(): Int = {
     assert(inEncrypted.hasRemaining)
     val res = try {
-      wrapped.read(inEncrypted) // IO block
+      readChannel.read(inEncrypted) // IO block
     } catch {
       case e: IOException =>
         // after a failed read, buffers can be in any state, close 
@@ -239,7 +242,7 @@ class TlsSocketChannelImpl(
   }
 
   protected def writeToNetwork(out: ByteBuffer) = {
-    wrapped.write(out)
+    writeChannel.write(out)
   }
 
   // handshake and close
@@ -353,10 +356,11 @@ class TlsSocketChannelImpl(
       }
       invalid = true
     }
-    Util.closeChannel(wrapped)
+    Util.closeChannel(writeChannel)
+    Util.closeChannel(readChannel)
   }
 
-  def isOpen() = wrapped.isOpen
+  def isOpen() = writeChannel.isOpen && readChannel.isOpen()
 
 }
 

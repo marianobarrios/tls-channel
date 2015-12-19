@@ -75,7 +75,7 @@ class TlsServerSocketChannel(
       val engine = sslContext.createSSLEngine()
       engineConfigurator(engine) // call client code
       engine.setUseClientMode(false)
-      impl = new TlsSocketChannelImpl(wrapped, engine, buffer, sessionInitCallback)
+      impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, buffer, sessionInitCallback)
       sniRead = true
     }
   }
