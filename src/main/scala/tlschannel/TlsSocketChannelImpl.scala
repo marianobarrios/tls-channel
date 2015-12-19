@@ -55,6 +55,7 @@ class TlsSocketChannelImpl(
   // read
 
   def read(dstBuffer: ByteBuffer): Int = {
+    TlsSocketChannelImpl.checkReadBuffer(dstBuffer)
     if (!dstBuffer.hasRemaining)
       return 0
     if (invalid)
@@ -167,6 +168,7 @@ class TlsSocketChannelImpl(
   // write
 
   def write(srcBuffer: ByteBuffer): Int = {
+    TlsSocketChannelImpl.checkWriteBuffer(srcBuffer)
     if (invalid)
       throw new IOException("Socket closed")
     if (!initialHandshaked)
