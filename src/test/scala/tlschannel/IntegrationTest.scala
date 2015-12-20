@@ -43,8 +43,6 @@ class IntegrationTest extends FunSuite with Matchers {
     val receivedData = Array.ofDim[Byte](dataSize + margin)
     var remaining = dataSize
     while (remaining > 0) {
-      if (Random.nextInt(20) == 0)
-        assert(reader.read(Array.ofDim(0), 0, 0) === 0, "read must return zero when the buffer was empty")
       val chunkSize = Random.nextInt(remaining + margin) + 1 // 1 <= chunkSize <= remaining + margin
       val c = reader.read(receivedData, dataSize - remaining, chunkSize)
       assert(c != -1, "read must not return -1 when there were bytes remaining")

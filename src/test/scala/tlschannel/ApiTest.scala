@@ -17,17 +17,25 @@ class ApiTest extends FunSuite with Matchers {
   val readChannel = Channels.newChannel(new ByteArrayInputStream(new Array(arraySize)))
   val writeChannel = Channels.newChannel(new ByteArrayOutputStream(arraySize))
 
-  test("reading into a read-only buffer") {
+  def newSocket() = {
     val sslEngine = SSLContext.getDefault.createSSLEngine
-    val socket = new TlsSocketChannelImpl(readChannel, writeChannel, sslEngine, ByteBuffer.allocate(inEncryptedSize), s => ())
+    new TlsSocketChannelImpl(readChannel, writeChannel, sslEngine, ByteBuffer.allocate(inEncryptedSize), s => ())
+  }
+  
+  test("reading into a read-only buffer") {
+    val socket = newSocket()
     intercept[IllegalArgumentException] {
       socket.read(ByteBuffer.allocate(1).asReadOnlyBuffer())
     }
   }
 
-  test("it should not be possible to use socket after close") {
-    val sslEngine = SSLContext.getDefault.createSSLEngine
-    val socket = new TlsSocketChannelImpl(readChannel, writeChannel, sslEngine, ByteBuffer.allocate(inEncryptedSize), s => ())
+  test("reading into a buffer without remaining capacity") {
+    val socket = newSocket()
+    assert(socket.read(ByteBuffer.allocate(0)) === 0, "read must return zero when the buffer was empty")
+  }
+
+  test("using socket after close") {
+    val socket = newSocket()
     socket.close()
     intercept[IOException] {
       socket.write(ByteBuffer.allocate(arraySize))
