@@ -29,9 +29,6 @@ class SocketReader(socket: Socket) extends Reader {
 class ByteChannelReader(socket: ByteChannel, rawSocket: SocketChannel) extends Reader with Matchers {
 
   def read(array: Array[Byte], offset: Int, length: Int) = {
-    intercept[IllegalArgumentException] {
-      socket.read(ByteBuffer.allocate(1).asReadOnlyBuffer())
-    }
     val c = socket.read(ByteBuffer.wrap(array, offset, length))
     if (length > 0)
       assert(c != 0, "blocking read cannot return 0")

@@ -9,20 +9,20 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 
 class IntegrationTest extends FunSuite with Matchers {
-  
-  val dataSize = 2 * 1024 * 1024 + Random.nextInt(1000)
+
+  val dataSize = 3 * 1024 * 1024 + Random.nextInt(1000)
   val data = Array.ofDim[Byte](dataSize)
   Random.nextBytes(data)
 
-  val bigData = Array.ofDim[Byte](30 * 1000 * 1000)
+  val bigData = Array.ofDim[Byte](50 * 1000 * 1000)
 
   val margin = Random.nextInt(100)
-  
+
   val sslEngine = SSLContext.getDefault.createSSLEngine
-  
+
   val ciphers = sslEngine.getSupportedCipherSuites
     // Java 8 disabled SSL through another mechanism, ignore that protocol here, to avoid errors 
-    .filter(_.startsWith("TLS_")) 
+    .filter(_.startsWith("TLS_"))
     // not using authentication
     .filter(_.contains("_anon_"))
 
@@ -64,37 +64,9 @@ class IntegrationTest extends FunSuite with Matchers {
       val writerThread = new Thread(() => writerLoop(writer, idx = 0, renegotiate = true), "writer")
       val readerThread = new Thread(() => readerLoop(cipher, reader), "reader")
       Seq(readerThread, writerThread).foreach(_.start())
-      readerThread.join()
-      writerThread.join()
+      Seq(readerThread, writerThread).foreach(_.join())
       writer.close()
-      // test two times, to ensure that the second time it behaves the same
-      for (_ <- 1 to 2) {
-        assert(reader.read(Array.ofDim(1), 0, 1) == -1, "final read must return -1, signaling EOF")
-      }
       reader.close()
-      // test two times, to ensure that the second time it behaves the same
-      for (i <- 1 to 2) {
-        intercept[IOException] {
-          writer.write(bigData, 0, bigData.length)
-        }
-      }
-    }
-    info(s"elapsed for $cipher: ${elapsed / 1000} ms")
-  }
-
-  /**
-   * Test an interaction in which the reader closes the socket
-   */
-  def closingStream(cipher: String, writer: Writer, reader: Reader) {
-    val (_, elapsed) = TestUtil.time {
-      reader.close()
-      // test two times, to ensure that the second time it behaves the same
-      for (i <- 1 to 2) {
-        intercept[IOException] {
-          writer.write(bigData, 0, bigData.length)
-        }
-      }
-      writer.close()
     }
     info(s"elapsed for $cipher: ${elapsed / 1000} ms")
   }
@@ -134,9 +106,7 @@ class IntegrationTest extends FunSuite with Matchers {
       val serverWriterThread = new Thread(() => writerLoop(serverWriter, idx), s"server-writer-$idx")
       val clientReaderThread = new Thread(() => readerLoop(cipher, clientReader, idx), s"client-reader-$idx")
       val serverReaderThread = new Thread(() => readerLoop(cipher, serverReader, idx), s"server-reader-$idx")
-      serverReaderThread.start()
-      Seq(clientWriterThread).foreach(_.start())
-      Seq(clientReaderThread, serverWriterThread).foreach(_.start())
+      Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
       Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
       clientWriter.close()
       serverWriter.close()

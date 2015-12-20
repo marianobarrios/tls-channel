@@ -33,11 +33,6 @@ class TlsSocketChannelTest extends IntegrationTest {
     fullDuplexStream(0, "plain", serverWriter, clientReader, clientWriter, serverReader)
   }
 
-  test("plain: old-io -> old-io (closing)") {
-    val ((clientWriter, _), (_, serverReader)) = plain_Old_Old()
-    closingStream("plain", clientWriter, serverReader)
-  }
-
   // PLAIN - NIO -> NIO
 
   test("plain: nio -> nio (simplex)") {
@@ -53,11 +48,6 @@ class TlsSocketChannelTest extends IntegrationTest {
   test("plain: nio -> nio (full duplex)") {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = plain_Nio_Nio()
     fullDuplexStream(0, "plain", serverWriter, clientReader, clientWriter, serverReader)
-  }
-
-  test("plain: nio -> nio (closing)") {
-    val ((clientWriter, clientReader), (serverWriter, serverReader)) = plain_Nio_Nio()
-    closingStream("plain", clientWriter, serverReader)
   }
 
   // PLAIN - OLD IO -> NIO
@@ -77,11 +67,6 @@ class TlsSocketChannelTest extends IntegrationTest {
     fullDuplexStream(0, "plain", serverWriter, clientReader, clientWriter, serverReader)
   }
 
-  test("plain: old-io -> nio (closing)") {
-    val ((clientWriter, _), (_, serverReader)) = plain_Old_Nio()
-    closingStream("plain", clientWriter, serverReader)
-  }
-
   // PLAIN - NIO -> OLD IO
   
   test("plain: nio -> old-io (simplex)") {
@@ -97,11 +82,6 @@ class TlsSocketChannelTest extends IntegrationTest {
   test("plain: nio -> old-io (full duplex)") {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = plain_Nio_Old()
     fullDuplexStream(0, "plain", serverWriter, clientReader, clientWriter, serverReader)
-  }
-
-  test("plain: nio -> old-io (closing)") {
-    val ((clientWriter, _), (_, serverReader)) = plain_Nio_Old()
-    closingStream("plain", clientWriter, serverReader)
   }
 
   /*
@@ -137,15 +117,6 @@ class TlsSocketChannelTest extends IntegrationTest {
     }
   }
 
-  test("tls: old-io -> old-io (closing)") {
-    for (cipher <- ciphers) {
-      withClue(cipher + ": ") {
-        val ((clientWriter, _), (_, serverReader)) = tls_Old_Old(cipher)
-        closingStream(cipher, clientWriter, serverReader)
-      }
-    }
-  }
-
   // TLS - NIO -> OLD IO    
 
   test("tls: nio -> old-io (simplex)") {
@@ -171,15 +142,6 @@ class TlsSocketChannelTest extends IntegrationTest {
       withClue(cipher + ": ") {
         val ((clientWriter, clientReader), (serverWriter, serverReader)) = tls_Nio_Old(cipher)
         fullDuplexStream(idx, cipher, serverWriter, clientReader, clientWriter, serverReader)
-      }
-    }
-  }
-
-  test("tls: nio -> old-io (closing)") {
-    for (cipher <- ciphers) {
-      withClue(cipher + ": ") {
-        val ((clientWriter, _), (_, serverReader)) = tls_Nio_Old(cipher)
-        closingStream(cipher, clientWriter, serverReader)
       }
     }
   }
@@ -213,15 +175,6 @@ class TlsSocketChannelTest extends IntegrationTest {
     }
   }
 
-  test("tls: old-io -> nio (closing)") {
-    for (cipher <- ciphers) {
-      withClue(cipher + ": ") {
-        val ((clientWriter, _), (_, serverReader)) = tls_Old_Nio(cipher)
-        closingStream(cipher, clientWriter, serverReader)
-      }
-    }
-  }
-
   // TLS - NIO -> NIO
 
   test("tls: nio -> nio (simplex)") {
@@ -249,15 +202,6 @@ class TlsSocketChannelTest extends IntegrationTest {
         val ((clientWriter, clientReader), (serverWriter, serverReader)) = 
           tls_Nio_Nio(cipher)
         fullDuplexStream(0, cipher, serverWriter, clientReader, clientWriter, serverReader)
-      }
-    }
-  }
-
-  test("tls: nio -> nio (closing)") {
-    for (cipher <- ciphers) {
-      withClue(cipher + ": ") {
-        val ((clientWriter, _), (_, serverReader)) = tls_Nio_Nio(cipher)
-        closingStream(cipher, clientWriter, serverReader)
       }
     }
   }

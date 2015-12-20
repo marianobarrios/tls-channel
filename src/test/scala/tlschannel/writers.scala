@@ -27,15 +27,11 @@ class SocketWriter(socket: Socket) extends Writer {
 class SocketChannelWriter(socket: ByteChannel, rawSocket: SocketChannel) extends Writer with Matchers {
 
   def write(array: Array[Byte], offset: Int, length: Int) = {
-    var written = 0
     val buffer = ByteBuffer.wrap(array, offset, length)
-    while (written < length) {
+    while (buffer.remaining() > 0) {
       val c = socket.write(buffer)
       assert(c != 0, "blocking write cannot return 0")
-      written += c
     }
-    assert(written == length)
-    assert(buffer.remaining == 0)
   }
 
   def close() = socket.close()
