@@ -33,6 +33,11 @@ class ApiTest extends FunSuite with Matchers {
     val socket = newSocket()
     assert(socket.read(ByteBuffer.allocate(0)) === 0, "read must return zero when the buffer was empty")
   }
+  
+  test("writing from an empty buffer should work") {
+    val socket = newSocket()
+    socket.write(ByteBuffer.allocate(0)) // empty write
+  }
 
   test("using socket after close") {
     val socket = newSocket()

@@ -169,11 +169,13 @@ class TlsSocketChannelImpl(
 
   def write(srcBuffer: ByteBuffer): Int = {
     TlsSocketChannelImpl.checkWriteBuffer(srcBuffer)
+    val bytesToConsume = srcBuffer.remaining
+    if (bytesToConsume == 0)
+      return 0
     if (invalid)
       throw new IOException("Socket closed")
     if (!initialHandshaked)
       doHandshake()
-    val bytesToConsume = srcBuffer.remaining
     withLock(writeLock) {
       if (invalid)
         throw new IOException("Socket closed")

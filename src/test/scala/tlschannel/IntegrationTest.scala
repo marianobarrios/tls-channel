@@ -29,8 +29,6 @@ class IntegrationTest extends FunSuite with Matchers {
   def writerLoop(writer: Writer, idx: Int, renegotiate: Boolean = false) = TestUtil.cannotFail(s"Error in writer $idx") {
     var remaining = dataSize
     while (remaining > 0) {
-      if (Random.nextInt(20) == 0)
-        writer.write(data, 0, 0) // empty write
       if (renegotiate && Random.nextInt(10) == 0)
         writer.renegotiate()
       val chunkSize = Random.nextInt(remaining) + 1 // 1 <= chunkSize <= remaining
