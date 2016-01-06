@@ -47,49 +47,7 @@ class SocketPairFactory(val port: Int) {
     socket
   }
   
-  def plain_Old_Old() = {
-    val serverSocket = new ServerSocket(port)
-    val client = new Socket(localhost, port)
-    val server = serverSocket.accept()
-    serverSocket.close()
-    (client, server)
-  }
-
-  def plain_Nio_Nio() = {
-    val serverSocket = ServerSocketChannel.open()
-    serverSocket.bind(address)
-    val client = SocketChannel.open(address)
-    val server = serverSocket.accept()
-    serverSocket.close()
-    ((new ChunkingByteChannel(client), client), (new ChunkingByteChannel(server), server))
-  }
-
-  def plain_Old_Nio() = {
-    val serverSocket = ServerSocketChannel.open()
-    serverSocket.bind(address)
-    val client = new Socket(localhost, port)
-    val server = serverSocket.accept()
-    serverSocket.close()
-    (client, (new ChunkingByteChannel(server), server))
-  }
-
-  def plain_Nio_Old() = {
-    val serverSocket = new ServerSocket(port)
-    val client = SocketChannel.open(address)
-    val server = serverSocket.accept()
-    serverSocket.close()
-    ((new ChunkingByteChannel(client), client), server)
-  }
-
-  def tls_Old_Old(cipher: String) = {
-    val serverSocket = createSslServerSocket(cipher, port)
-    val client = createSslSocket(cipher, localhost, port)
-    val server = serverSocket.accept()
-    serverSocket.close()
-    (client, server)
-  }
-
-  def tls_Old_Nio(cipher: String) = {
+  def oldNio(cipher: String) = {
     val serverSocket = ServerSocketChannel.open()
     serverSocket.bind(address)
     val client = createSslSocket(cipher, localhost, port)
@@ -100,17 +58,22 @@ class SocketPairFactory(val port: Int) {
     (client, (server, rawServer))
   }
 
-  def tls_Nio_Nio(cipher: String) = {
-    val ((plainClient, rawClient), (plainServer, rawServer)) = plain_Nio_Nio()
+  def nioNio(cipher: String) = {
+    val serverSocket = ServerSocketChannel.open()
+    serverSocket.bind(address)
+    val rawClient = SocketChannel.open(address)
+    val rawServer = serverSocket.accept()
+    serverSocket.close()
+    val (plainClient, plainServer) = (new ChunkingByteChannel(rawClient), new ChunkingByteChannel(rawServer))
     val client = new TlsClientSocketChannel(rawClient, createSslEngine(cipher, client = true))
     val server = new TlsServerSocketChannel(rawServer, n => sslContext, e => e.setEnabledCipherSuites(Array(cipher)))
     ((client, rawClient), (server, rawServer))
   }
 
-  def tls_Nio_Old(cipher: String) = {
+  def nioOld(cipher: String) = {
     val serverSocket = createSslServerSocket(cipher, port)
     val rawClient = SocketChannel.open(address)
-    val server = serverSocket.accept()
+    val server = serverSocket.accept().asInstanceOf[SSLSocket]
     serverSocket.close()
     val client = new TlsClientSocketChannel(new ChunkingByteChannel(rawClient), createSslEngine(cipher, client = true))
     ((client, rawClient), server)

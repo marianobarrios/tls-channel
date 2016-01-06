@@ -23,7 +23,7 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 
   val factory = new SocketPairFactory(7777)
 
-  val dataSize = 10 * 1024 * 1024 + Random.nextInt(1000)
+  val dataSize = 20 * 1024 * 1024 + Random.nextInt(1000)
 
   logger.debug(s"data size: $dataSize")
   val data = Array.ofDim[Byte](dataSize)
@@ -41,7 +41,7 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 
   def testNioLoop(cipher: String) = {
     
-    val (clients, servers) = factory.tls_Nio_Nio(cipher)
+    val (clients, servers) = factory.nioNio(cipher)
     val (tlsClient, rawClient) = clients
     val (tlsServer, rawServer) = servers
     val selector = Selector.open()

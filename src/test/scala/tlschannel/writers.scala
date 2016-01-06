@@ -1,30 +1,24 @@
 package tlschannel
 
 import java.nio.ByteBuffer
-import java.nio.channels.SocketChannel
-import java.net.Socket
 import java.nio.channels.ByteChannel
 import org.scalatest.Matchers
+import javax.net.ssl.SSLSocket
 
 trait Writer {
-  def renegotiate(): Unit = {}
+  def renegotiate(): Unit
   def write(array: Array[Byte], offset: Int, length: Int): Unit
   def close(): Unit
 }
 
-class SocketWriter(socket: Socket) extends Writer {
-
-  val os = socket.getOutputStream
-
-  def write(array: Array[Byte], offset: Int, length: Int) = {
-    os.write(array, offset, length)
-  }
-
+class SSLSocketWriter(socket: SSLSocket) extends Writer {
+  private val os = socket.getOutputStream
+  def write(array: Array[Byte], offset: Int, length: Int) = os.write(array, offset, length)
+  def renegotiate() = socket.startHandshake()
   def close() = socket.close()
-
 }
 
-class SocketChannelWriter(socket: ByteChannel, rawSocket: SocketChannel) extends Writer with Matchers {
+class TlsSocketChannelWriter(val socket: TlsSocketChannel) extends Writer with Matchers {
 
   def write(array: Array[Byte], offset: Int, length: Int) = {
     val buffer = ByteBuffer.wrap(array, offset, length)
@@ -33,14 +27,8 @@ class SocketChannelWriter(socket: ByteChannel, rawSocket: SocketChannel) extends
       assert(c != 0, "blocking write cannot return 0")
     }
   }
-
+  
+  def renegotiate(): Unit = socket.renegotiate()
   def close() = socket.close()
-
-}
-
-class TlsSocketChannelWriter(socket: TlsSocketChannel, rawSocket: SocketChannel)
-    extends SocketChannelWriter(socket, rawSocket) with Matchers {
-
-  override def renegotiate() = socket.renegotiate()
 
 }

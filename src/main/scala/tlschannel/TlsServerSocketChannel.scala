@@ -12,6 +12,7 @@ import java.nio.channels.ReadableByteChannel
 import java.nio.channels.ByteChannel
 import javax.net.ssl.SSLSession
 import Util.withLock
+import java.nio.channels.SocketChannel
 
 class TlsServerSocketChannel(
   val wrapped: ByteChannel,

@@ -5,6 +5,7 @@ import java.nio.ByteBuffer
 import javax.net.ssl.SSLEngine
 import java.nio.channels.ByteChannel
 import javax.net.ssl.SSLSession
+import java.nio.channels.SocketChannel
 
 class TlsClientSocketChannel(
     val wrapped: ByteChannel, 
