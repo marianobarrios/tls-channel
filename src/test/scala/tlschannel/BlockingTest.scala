@@ -8,7 +8,7 @@ import TestUtil.functionToRunnable
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 
-class IntegrationTest extends FunSuite with Matchers {
+class BlockingTest extends FunSuite with Matchers {
 
   import SocketWrappers._
     
@@ -29,7 +29,7 @@ class IntegrationTest extends FunSuite with Matchers {
   def writerLoop(writer: Writer, idx: Int, renegotiate: Boolean = false) = TestUtil.cannotFail(s"Error in writer $idx") {
     var remaining = dataSize
     while (remaining > 0) {
-      if (renegotiate && Random.nextInt(10) == 0)
+      if (renegotiate)
         writer.renegotiate()
       val chunkSize = Random.nextInt(remaining) + 1 // 1 <= chunkSize <= remaining
       writer.write(data, dataSize - remaining, chunkSize)
@@ -37,7 +37,7 @@ class IntegrationTest extends FunSuite with Matchers {
     }
   }
 
-  def readerLoop(cipher: String, reader: Reader, idx: Int = 0) = TestUtil.cannotFail(s"Error in reader $idx") {
+  def readerLoop(reader: Reader, idx: Int = 0) = TestUtil.cannotFail(s"Error in reader $idx") {
     val receivedData = Array.ofDim[Byte](dataSize + margin)
     var remaining = dataSize
     while (remaining > 0) {
@@ -58,7 +58,7 @@ class IntegrationTest extends FunSuite with Matchers {
   def simplexStream(cipher: String, writer: Writer, reader: Reader) {
     val (_, elapsed) = TestUtil.time {
       val writerThread = new Thread(() => writerLoop(writer, idx = 0, renegotiate = true), "writer")
-      val readerThread = new Thread(() => readerLoop(cipher, reader), "reader")
+      val readerThread = new Thread(() => readerLoop(reader), "reader")
       Seq(readerThread, writerThread).foreach(_.start())
       Seq(readerThread, writerThread).foreach(_.join())
       writer.close()
@@ -75,8 +75,8 @@ class IntegrationTest extends FunSuite with Matchers {
     val (_, elapsed) = TestUtil.time {
       val clientWriterThread = new Thread(() => writerLoop(clientWriter, idx), s"client-writer-$idx")
       val serverWriterThread = new Thread(() => writerLoop(serverWriter, idx), s"server-writer-$idx")
-      val clientReaderThread = new Thread(() => readerLoop(cipher, clientReader, idx), s"client-reader-$idx")
-      val serverReaderThread = new Thread(() => readerLoop(cipher, serverReader, idx), s"server-reader-$idx")
+      val clientReaderThread = new Thread(() => readerLoop(clientReader, idx), s"client-reader-$idx")
+      val serverReaderThread = new Thread(() => readerLoop(serverReader, idx), s"server-reader-$idx")
       Seq(serverReaderThread, clientWriterThread).foreach(_.start())
       Seq(serverReaderThread, clientWriterThread).foreach(_.join())
       clientReaderThread.start()
@@ -100,8 +100,8 @@ class IntegrationTest extends FunSuite with Matchers {
     val (_, elapsed) = TestUtil.time {
       val clientWriterThread = new Thread(() => writerLoop(clientWriter, idx), s"client-writer-$idx")
       val serverWriterThread = new Thread(() => writerLoop(serverWriter, idx), s"server-writer-$idx")
-      val clientReaderThread = new Thread(() => readerLoop(cipher, clientReader, idx), s"client-reader-$idx")
-      val serverReaderThread = new Thread(() => readerLoop(cipher, serverReader, idx), s"server-reader-$idx")
+      val clientReaderThread = new Thread(() => readerLoop(clientReader, idx), s"client-reader-$idx")
+      val serverReaderThread = new Thread(() => readerLoop(serverReader, idx), s"server-reader-$idx")
       Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
       Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
       clientWriter.close()
