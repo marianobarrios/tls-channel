@@ -22,13 +22,8 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
     .filter(_.contains("_anon_"))
 
   val factory = new SocketPairFactory(7777)
-
   val dataSize = 20 * 1024 * 1024 + Random.nextInt(1000)
-
-  logger.debug(s"data size: $dataSize")
-  val data = Array.ofDim[Byte](dataSize)
-  Random.nextBytes(data)
-
+  
   test("selector loop") {
     for (cipher <- ciphers) {
       info(s"Testing with cipher: $cipher")
@@ -40,7 +35,6 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
   }
 
   def testNioLoop(cipher: String) = {
-    
     val (clients, servers) = factory.nioNio(cipher)
     val (tlsClient, rawClient) = clients
     val (tlsServer, rawServer) = servers
@@ -52,49 +46,44 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
     rawClient.register(selector, SelectionKey.OP_WRITE)
     rawServer.register(selector, SelectionKey.OP_READ)
 
-    val margin = Random.nextInt(100)
-    val receivedData = Array.ofDim[Byte](dataSize + margin)
-
-    var remainingWrite = dataSize
-    var remainingRead = dataSize
-
-    def clientWrite() = {
-      while (remainingWrite > 0) {
-        logger.debug("renegotiating...")
-        tlsClient.renegotiate()
-        val chunkSize = Random.nextInt(remainingWrite) + 1 // 1 <= chunkSize <= remainingWrite
-        val ret = tlsClient.write(ByteBuffer.wrap(data, dataSize - remainingWrite, chunkSize))
-        assert(ret > 0) // the necessity of blocking is communicated with exceptions
-        assert(ret <= chunkSize)
-        remainingWrite -= ret
-      }
-    }
-
-    def serverRead() = {
-      while (remainingRead > 0) {
-        val chunkSize = Random.nextInt(remainingRead + margin) + 1 // 1 <= chunkSize <= remainingRead + margin
-        val c = tlsServer.read(ByteBuffer.wrap(receivedData, dataSize - remainingRead, chunkSize))
-        assert(c > 0) // the necessity of blocking is communicated with exceptions
-        assert(c <= remainingRead)
-        remainingRead -= c
-      }
-    }
-
-    while (remainingWrite > 0 || remainingRead > 0) {
+    val originBuffer = ByteBuffer.allocate(dataSize)
+    val targetBuffer = ByteBuffer.allocate(dataSize)
+    
+    Random.nextBytes(originBuffer.array)
+    
+    while (originBuffer.hasRemaining || targetBuffer.hasRemaining) {
       logger.debug(s"selecting...")
       val readyChannels = selector.select() // block
-      val selectedKeys = selector.selectedKeys
-      val it = selectedKeys.iterator
+      val it = selector.selectedKeys.iterator
       while (it.hasNext) {
         val key = it.next()
-        val selected = key.channel()
+        val selected = key.channel
         key.interestOps(0) // delete all operations
         logger.debug(s"selected key: $selected")
         try {
           selected match {
-            case `rawClient` => clientWrite()
-            case `rawServer` => serverRead()
-            case _ => throw new AssertionError
+            case `rawClient` =>
+              logger.debug("renegotiating...")
+              tlsClient.renegotiate()
+              while (originBuffer.hasRemaining) {
+                val chunkSize = Random.nextInt(originBuffer.remaining) + 1 // 1 <= chunkSize <= originBuffer.remaining
+                originBuffer.limit(originBuffer.position + chunkSize)
+                val c = tlsClient.write(originBuffer)
+                originBuffer.limit(originBuffer.capacity)
+                assert(c > 0) // the necessity of blocking is communicated with exceptions
+                assert(c <= chunkSize)
+              }
+            case `rawServer` =>
+              while (targetBuffer.hasRemaining) {
+                val chunkSize = Random.nextInt(targetBuffer.remaining) + 1 // 1 <= chunkSize <= argetBuffer.remaining
+                targetBuffer.limit(targetBuffer.position + chunkSize)
+                val c = tlsServer.read(targetBuffer)
+                targetBuffer.limit(targetBuffer.capacity)
+                assert(c > 0) // the necessity of blocking is communicated with exceptions
+                assert(c <= chunkSize)
+              }
+            case _ => 
+              throw new AssertionError
           }
         } catch {
           case e: NeedsWriteException =>
@@ -108,7 +97,10 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
       }
     }
 
-    assert(receivedData.slice(0, dataSize).deep === data.deep)
+    // flip buffers before comparison, as the equals() operates only in remaining bytes
+    targetBuffer.flip()
+    originBuffer.flip()
+    assert(targetBuffer === originBuffer)
 
   }
 
