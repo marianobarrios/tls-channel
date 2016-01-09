@@ -60,8 +60,6 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 
     def clientWrite() = {
       while (remainingWrite > 0) {
-        logger.debug("doing empty write")
-        tlsClient.write(ByteBuffer.wrap(data, 0, 0))
         logger.debug("renegotiating...")
         tlsClient.renegotiate()
         val chunkSize = Random.nextInt(remainingWrite) + 1 // 1 <= chunkSize <= remainingWrite
@@ -74,11 +72,6 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 
     def serverRead() = {
       while (remainingRead > 0) {
-        {
-          logger.debug("doing empty read")
-          val c = tlsServer.read(ByteBuffer.wrap(Array.ofDim(0), 0, 0))
-          assert(c === 0, "read must return zero when the buffer was empty")
-        }
         val chunkSize = Random.nextInt(remainingRead + margin) + 1 // 1 <= chunkSize <= remainingRead + margin
         val c = tlsServer.read(ByteBuffer.wrap(receivedData, dataSize - remainingRead, chunkSize))
         assert(c > 0) // the necessity of blocking is communicated with exceptions
