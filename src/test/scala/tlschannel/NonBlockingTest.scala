@@ -36,10 +36,13 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 
   def testNioLoop(cipher: String) = {
     val (clients, servers) = factory.nioNio(cipher)
-    val (tlsClient, rawClient) = clients
-    val (tlsServer, rawServer) = servers
+    val (tlsClientOrig, rawClient) = clients
+    val (tlsServerOrig, rawServer) = servers
     val selector = Selector.open()
 
+    val tlsClient = new ChunkingByteChannel(tlsClientOrig)
+    val tlsServer = new ChunkingByteChannel(tlsServerOrig)
+    
     rawClient.configureBlocking(false)
     rawServer.configureBlocking(false)
 
@@ -64,23 +67,15 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
           selected match {
             case `rawClient` =>
               logger.debug("renegotiating...")
-              tlsClient.renegotiate()
+              tlsClientOrig.renegotiate()
               while (originBuffer.hasRemaining) {
-                val chunkSize = Random.nextInt(originBuffer.remaining) + 1 // 1 <= chunkSize <= originBuffer.remaining
-                originBuffer.limit(originBuffer.position + chunkSize)
                 val c = tlsClient.write(originBuffer)
-                originBuffer.limit(originBuffer.capacity)
                 assert(c > 0) // the necessity of blocking is communicated with exceptions
-                assert(c <= chunkSize)
               }
             case `rawServer` =>
               while (targetBuffer.hasRemaining) {
-                val chunkSize = Random.nextInt(targetBuffer.remaining) + 1 // 1 <= chunkSize <= argetBuffer.remaining
-                targetBuffer.limit(targetBuffer.position + chunkSize)
                 val c = tlsServer.read(targetBuffer)
-                targetBuffer.limit(targetBuffer.capacity)
                 assert(c > 0) // the necessity of blocking is communicated with exceptions
-                assert(c <= chunkSize)
               }
             case _ => 
               throw new AssertionError
