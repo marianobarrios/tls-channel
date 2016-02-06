@@ -1,19 +1,25 @@
 package tlschannel
 
-import java.nio.ByteBuffer
 import java.nio.channels.ByteChannel
+import java.nio.ByteBuffer
+import java.util.Random
 
-class ChunkingByteChannel(impl: ByteChannel, chunkSize: Int) extends ByteChannel {
-  
+/**
+ * A special decorating ByteChannel that does not try to use the buffers passed as arguments completely.
+ */
+class RandomizedChunkingByteChannel(impl: ByteChannel) extends ByteChannel {
+
   def close() = impl.close()
   def isOpen() = impl.isOpen()
+
+  private val random = new Random
 
   def read(in: ByteBuffer): Int = {
     if (!in.hasRemaining)
       return 0
     val oldLimit = in.limit
     try {
-      val readSize = math.min(chunkSize, in.remaining)
+      val readSize = random.nextInt(in.remaining) + 1
       in.limit(in.position + readSize)
       impl.read(in)
     } finally {
@@ -26,12 +32,12 @@ class ChunkingByteChannel(impl: ByteChannel, chunkSize: Int) extends ByteChannel
       return 0
     val oldLimit = out.limit
     try {
-      val writeSize = math.min(chunkSize, out.remaining)
+      val writeSize = random.nextInt(out.remaining) + 1
       out.limit(out.position + writeSize)
       impl.write(out)
     } finally {
       out.limit(oldLimit)
     }
   }
-  
+
 }

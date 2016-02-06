@@ -54,7 +54,7 @@ class SocketPairFactory(val port: Int) {
     val rawServer = serverSocket.accept()
     serverSocket.close()
     val server = new TlsServerSocketChannel(
-        new ChunkingByteChannel(rawServer), n => sslContext, e => e.setEnabledCipherSuites(Array(cipher)))
+        new RandomizedChunkingByteChannel(rawServer), n => sslContext, e => e.setEnabledCipherSuites(Array(cipher)))
     (client, (server, rawServer))
   }
 
@@ -64,7 +64,7 @@ class SocketPairFactory(val port: Int) {
     val rawClient = SocketChannel.open(address)
     val rawServer = serverSocket.accept()
     serverSocket.close()
-    val (plainClient, plainServer) = (new ChunkingByteChannel(rawClient), new ChunkingByteChannel(rawServer))
+    val (plainClient, plainServer) = (new RandomizedChunkingByteChannel(rawClient), new RandomizedChunkingByteChannel(rawServer))
     val client = new TlsClientSocketChannel(rawClient, createSslEngine(cipher, client = true))
     val server = new TlsServerSocketChannel(rawServer, n => sslContext, e => e.setEnabledCipherSuites(Array(cipher)))
     ((client, rawClient), (server, rawServer))
@@ -75,7 +75,7 @@ class SocketPairFactory(val port: Int) {
     val rawClient = SocketChannel.open(address)
     val server = serverSocket.accept().asInstanceOf[SSLSocket]
     serverSocket.close()
-    val client = new TlsClientSocketChannel(new ChunkingByteChannel(rawClient), createSslEngine(cipher, client = true))
+    val client = new TlsClientSocketChannel(new RandomizedChunkingByteChannel(rawClient), createSslEngine(cipher, client = true))
     ((client, rawClient), server)
   }
 

@@ -1,6 +1,5 @@
 package tlschannel
 
-import scala.util.control.NonFatal
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 object TestUtil extends StrictLogging {
@@ -8,7 +7,7 @@ object TestUtil extends StrictLogging {
   def cannotFail(msg: String)(thunk: => Unit) {
     try thunk
     catch {
-      case NonFatal(e) =>
+      case e: Throwable =>
         val lastMessage = "An essential thread failed unexpectedly, terminating process: " + msg
         logger.error(lastMessage, e)
         System.err.println(lastMessage)
@@ -30,4 +29,19 @@ object TestUtil extends StrictLogging {
       def run() = fn()
     }
   }
+  
+  implicit class StreamWithTakeWhileInclusive[A](stream: Stream[A]) {
+    def takeWhileInclusive(p: A => Boolean) = {
+      var done = false
+      def newPredicate(a: A): Boolean = {
+        if (done)
+          return false
+        if (!p(a)) 
+          done = true
+        true
+      }
+      stream.takeWhile(newPredicate)
+    }
+  }
+  
 }

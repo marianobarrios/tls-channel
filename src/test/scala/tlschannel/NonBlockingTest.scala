@@ -40,8 +40,8 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
     val (tlsServerOrig, rawServer) = servers
     val selector = Selector.open()
 
-    val tlsClient = new ChunkingByteChannel(tlsClientOrig)
-    val tlsServer = new ChunkingByteChannel(tlsServerOrig)
+    val tlsClient = new RandomizedChunkingByteChannel(tlsClientOrig)
+    val tlsServer = new RandomizedChunkingByteChannel(tlsServerOrig)
     
     rawClient.configureBlocking(false)
     rawServer.configureBlocking(false)

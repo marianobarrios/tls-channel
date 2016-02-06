@@ -29,6 +29,8 @@ fork in Test := true
 connectInput in run := true
 testOptions in Test += Tests.Argument("-oF")
 
+parallelExecution in Test := false
+
 libraryDependencies ++=
   "ch.qos.logback" % "logback-classic" % "1.1.2" % "test" ::
   "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" % "test" ::
