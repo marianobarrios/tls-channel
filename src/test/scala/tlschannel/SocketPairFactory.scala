@@ -78,5 +78,26 @@ class SocketPairFactory(val port: Int) {
     val client = new TlsClientSocketChannel(new RandomizedChunkingByteChannel(rawClient), createSslEngine(cipher, client = true))
     ((client, rawClient), server)
   }
+  
+  def nioNio(
+    cipher: String,
+    externalClientChunkSize: Int,
+    internalClientChunkSize: Int,
+    externalServerChunkSize: Int,
+    internalServerChunkSize: Int) = {
+    val serverSocket = ServerSocketChannel.open()
+    serverSocket.bind(address)
+    val rawClient = SocketChannel.open(address)
+    val rawServer = serverSocket.accept()
+    serverSocket.close()
+    val plainClient = new ChunkingByteChannel(rawClient, chunkSize = externalClientChunkSize)
+    val plainServer = new ChunkingByteChannel(rawServer, chunkSize = externalServerChunkSize)
+    val clientChannel = new TlsClientSocketChannel(rawClient, createSslEngine(cipher, client = true))
+    val serverChannel = new TlsServerSocketChannel(rawServer, n => sslContext, e => e.setEnabledCipherSuites(Array(cipher)))
+    val clientPair = (new ChunkingByteChannel(clientChannel, chunkSize = externalClientChunkSize), clientChannel)
+    val serverPair = (new ChunkingByteChannel(serverChannel, chunkSize = externalClientChunkSize), serverChannel)
+    (clientPair, serverPair)
+  }
+  
 
 }

@@ -18,49 +18,13 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 
 class BlockingTest extends FunSuite with Matchers with StrictLogging {
 
-  val port = 7777
-
-  val localhost = InetAddress.getByName(null)
-
-  val address = new InetSocketAddress(localhost, port)
-
-  val sslContext = SSLContext.getDefault
-
-  private def createSslEngine(cipher: String, client: Boolean): SSLEngine = {
-    val engine = sslContext.createSSLEngine()
-    engine.setUseClientMode(client)
-    engine.setEnabledCipherSuites(Array(cipher))
-    engine
-  }
-
-  def nioNio(
-    cipher: String,
-    externalClientChunkSize: Int,
-    internalClientChunkSize: Int,
-    externalServerChunkSize: Int,
-    internalServerChunkSize: Int) = {
-    val serverSocket = ServerSocketChannel.open()
-    serverSocket.bind(address)
-    val rawClient = SocketChannel.open(address)
-    val rawServer = serverSocket.accept()
-    serverSocket.close()
-    val plainClient = new ChunkingByteChannel(rawClient, chunkSize = externalClientChunkSize)
-    val plainServer = new ChunkingByteChannel(rawServer, chunkSize = externalServerChunkSize)
-    val clientChannel = new TlsClientSocketChannel(rawClient, createSslEngine(cipher, client = true))
-    val serverChannel = new TlsServerSocketChannel(rawServer, n => sslContext, e => e.setEnabledCipherSuites(Array(cipher)))
-    val cli = (new ChunkingByteChannel(clientChannel, chunkSize = externalClientChunkSize), clientChannel)
-    val ser = (new ChunkingByteChannel(serverChannel, chunkSize = externalClientChunkSize), serverChannel)
-    (cli, ser)
-  }
-
+  val factory = new SocketPairFactory(7777)
   val dataSize = TlsSocketChannelImpl.tlsMaxDataSize * 3
 
   val data = Array.ofDim[Byte](dataSize)
   Random.nextBytes(data)
 
-  val sslEngine = SSLContext.getDefault.createSSLEngine()
-
-  val ciphers = sslEngine.getSupportedCipherSuites
+  val ciphers = SSLContext.getDefault.createSSLEngine().getSupportedCipherSuites
     // Java 8 disabled SSL through another mechanism, ignore that protocol here, to avoid errors 
     .filter(_.startsWith("TLS_"))
     // not using authentication
@@ -103,7 +67,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
         val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= TlsSocketChannelImpl.tlsMaxDataSize)
         for ((size1, size2) <- (sizes zip sizes.reverse)) {
           logger.debug(s"Sizes: size1=$size1,size2=$size2")
-          val ((client, clientChannel), (server, serverChannel)) = nioNio(
+          val ((client, clientChannel), (server, serverChannel)) = factory.nioNio(
             cipher,
             internalClientChunkSize = size1,
             externalClientChunkSize = size2,
@@ -140,7 +104,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
       withClue(cipher + ": ") {
         val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= TlsSocketChannelImpl.tlsMaxDataSize)
         for ((size1, size2) <- (sizes zip sizes.reverse)) {
-          val ((client, clientChannel), (server, serverChannel)) = nioNio(cipher,
+          val ((client, clientChannel), (server, serverChannel)) = factory.nioNio(cipher,
             internalClientChunkSize = size1,
             externalClientChunkSize = size2,
             internalServerChunkSize = size1,
