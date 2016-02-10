@@ -60,13 +60,6 @@ class InteroperabilityTest extends FunSuite with Matchers {
 
   val factory = new SocketPairFactory(7777)
 
-  def nioNio(cipher: String) = {
-    val ((client, _), (server, _)) = factory.nioNio(cipher)
-    val clientPair = (new TlsSocketChannelWriter(client), new ByteChannelReader(client))
-    val serverPair = (new TlsSocketChannelWriter(server), new ByteChannelReader(server))
-    (clientPair, serverPair)
-  }
-
   def oldNio(cipher: String) = {
     val (client, (server, _)) = factory.oldNio(cipher)
     val clientPair = (new SSLSocketWriter(client), new SocketReader(client))
@@ -81,15 +74,13 @@ class InteroperabilityTest extends FunSuite with Matchers {
     (clientPair, serverPair)
   }
 
-  val dataSize = 10 * 1024 * 1024 + Random.nextInt(10000)
+  val dataSize = TlsSocketChannelImpl.tlsMaxDataSize * 5
   val data = Array.ofDim[Byte](dataSize)
   Random.nextBytes(data)
 
   val margin = Random.nextInt(100)
 
-  val sslEngine = SSLContext.getDefault.createSSLEngine()
-
-  val ciphers = sslEngine.getSupportedCipherSuites
+  val ciphers = SSLContext.getDefault.createSSLEngine().getSupportedCipherSuites
     // Java 8 disabled SSL through another mechanism, ignore that protocol here, to avoid errors 
     .filter(_.startsWith("TLS_"))
     // not using authentication
