@@ -1,6 +1,7 @@
 package tlschannel
 
 import com.typesafe.scalalogging.slf4j.StrictLogging
+import javax.net.ssl.SSLContext
 
 object TestUtil extends StrictLogging {
 
@@ -43,5 +44,11 @@ object TestUtil extends StrictLogging {
       stream.takeWhile(newPredicate)
     }
   }
+  
+  val annonCiphers = SSLContext.getDefault.createSSLEngine().getSupportedCipherSuites
+    // Java 8 disabled SSL through another mechanism, ignore that protocol here, to avoid errors 
+    .filter(_.startsWith("TLS_"))
+    // not using authentication
+    .filter(_.contains("_anon_"))
   
 }

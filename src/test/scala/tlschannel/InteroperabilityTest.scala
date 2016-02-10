@@ -80,12 +80,6 @@ class InteroperabilityTest extends FunSuite with Matchers {
 
   val margin = Random.nextInt(100)
 
-  val ciphers = SSLContext.getDefault.createSSLEngine().getSupportedCipherSuites
-    // Java 8 disabled SSL through another mechanism, ignore that protocol here, to avoid errors 
-    .filter(_.startsWith("TLS_"))
-    // not using authentication
-    .filter(_.contains("_anon_"))
-
   def writerLoop(writer: Writer, renegotiate: Boolean = false) = TestUtil.cannotFail("Error in writer") {
     var remaining = dataSize
     while (remaining > 0) {
@@ -156,7 +150,7 @@ class InteroperabilityTest extends FunSuite with Matchers {
   // NIO -> OLD IO    
 
   test("nio -> old-io (half duplex)") {
-    for ((cipher) <- ciphers) {
+    for ((cipher) <- TestUtil.annonCiphers) {
       withClue(cipher + ": ") {
         val ((clientWriter, clientReader), (serverWriter, serverReader)) = nioOld(cipher)
         halfDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)
@@ -165,7 +159,7 @@ class InteroperabilityTest extends FunSuite with Matchers {
   }
 
   test("nio -> old-io (full duplex)") {
-    for ((cipher) <- ciphers) {
+    for ((cipher) <- TestUtil.annonCiphers) {
       withClue(cipher + ": ") {
         val ((clientWriter, clientReader), (serverWriter, serverReader)) = nioOld(cipher)
         fullDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)
@@ -176,7 +170,7 @@ class InteroperabilityTest extends FunSuite with Matchers {
   // OLD IO -> NIO    
 
   test("old-io -> nio (half duplex)") {
-    for ((cipher, idx) <- ciphers.zipWithIndex) {
+    for ((cipher, idx) <- TestUtil.annonCiphers.zipWithIndex) {
       withClue(cipher + ": ") {
         val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldNio(cipher)
         halfDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)
@@ -185,7 +179,7 @@ class InteroperabilityTest extends FunSuite with Matchers {
   }
 
   test("old-io -> nio (full duplex)") {
-    for ((cipher, idx) <- ciphers.zipWithIndex) {
+    for ((cipher, idx) <- TestUtil.annonCiphers.zipWithIndex) {
       withClue(cipher + ": ") {
         val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldNio(cipher)
         fullDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)

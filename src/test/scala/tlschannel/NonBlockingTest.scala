@@ -14,17 +14,11 @@ import TestUtil.StreamWithTakeWhileInclusive
 
 class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 
-  val ciphers = SSLContext.getDefault.createSSLEngine.getSupportedCipherSuites
-    // Java 8 disabled SSL through another mechanism, ignore that protocol here, to avoid errors 
-    .filter(_.startsWith("TLS_"))
-    // not using authentication
-    .filter(_.contains("_anon_"))
-
   val factory = new SocketPairFactory(7777)
   val dataSize = TlsSocketChannelImpl.tlsMaxDataSize * 3
 
   test("selector loop") {
-    for (cipher <- ciphers) {
+    for (cipher <- TestUtil.annonCiphers) {
       val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= TlsSocketChannelImpl.tlsMaxDataSize)
       for ((size1, size2) <- (sizes zip sizes.reverse)) {
         val (_, elapsed) = TestUtil.time {

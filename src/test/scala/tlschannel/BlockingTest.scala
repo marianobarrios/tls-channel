@@ -24,12 +24,6 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
   val data = Array.ofDim[Byte](dataSize)
   Random.nextBytes(data)
 
-  val ciphers = SSLContext.getDefault.createSSLEngine().getSupportedCipherSuites
-    // Java 8 disabled SSL through another mechanism, ignore that protocol here, to avoid errors 
-    .filter(_.startsWith("TLS_"))
-    // not using authentication
-    .filter(_.contains("_anon_"))
-
   def writerLoop(writer: ByteChannel, rawWriter: TlsSocketChannel, renegotiate: Boolean = false): Unit = TestUtil.cannotFail("Error in writer") {
     val renegotiatePeriod = 10000
     logger.debug(s"Starting writer loop, renegotiate:$renegotiate")
@@ -62,7 +56,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
    */
   test("half duplex") {
-    for (cipher <- ciphers) {
+    for (cipher <- TestUtil.annonCiphers) {
       withClue(cipher + ": ") {
         val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= TlsSocketChannelImpl.tlsMaxDataSize)
         for ((size1, size2) <- (sizes zip sizes.reverse)) {
@@ -100,7 +94,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
    * Test a full-duplex interaction, without any renegotiation
    */
   test("full duplex") {
-    for (cipher <- ciphers) {
+    for (cipher <- TestUtil.annonCiphers) {
       withClue(cipher + ": ") {
         val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= TlsSocketChannelImpl.tlsMaxDataSize)
         for ((size1, size2) <- (sizes zip sizes.reverse)) {
