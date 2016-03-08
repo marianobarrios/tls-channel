@@ -24,31 +24,25 @@ object TestUtil extends StrictLogging {
     val time = (System.nanoTime() - start) / 1000
     (res, time)
   }
-  
+
   implicit def functionToRunnable(fn: () => Unit): Runnable = {
     new Runnable {
       def run() = fn()
     }
   }
-  
+
   implicit class StreamWithTakeWhileInclusive[A](stream: Stream[A]) {
     def takeWhileInclusive(p: A => Boolean) = {
       var done = false
       def newPredicate(a: A): Boolean = {
         if (done)
           return false
-        if (!p(a)) 
+        if (!p(a))
           done = true
         true
       }
       stream.takeWhile(newPredicate)
     }
   }
-  
-  val annonCiphers = SSLContext.getDefault.createSSLEngine().getSupportedCipherSuites
-    // Java 8 disabled SSL through another mechanism, ignore that protocol here, to avoid errors 
-    .filter(_.startsWith("TLS_"))
-    // not using authentication
-    .filter(_.contains("_anon_"))
-  
+
 }

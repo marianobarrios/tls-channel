@@ -36,6 +36,7 @@ libraryDependencies ++=
   "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" % "test" ::
   "org.easymock" % "easymock" % "3.3" % "test" ::
   "org.scalatest" %% "scalatest" % "2.2.2" % "test" ::
+  "com.jsuereth" %% "scala-arm" % "1.4" % "test" ::
   Nil
 
 autoAPIMappings := true

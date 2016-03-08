@@ -3,10 +3,10 @@ package tlschannel
 import java.nio.ByteBuffer
 import java.nio.channels.ByteChannel
 
-class ChunkingByteChannel(impl: ByteChannel, chunkSize: Int) extends ByteChannel {
+class ChunkingByteChannel(val wrapped: ByteChannel, chunkSize: Int) extends ByteChannel {
   
-  def close() = impl.close()
-  def isOpen() = impl.isOpen()
+  def close() = wrapped.close()
+  def isOpen() = wrapped.isOpen()
 
   def read(in: ByteBuffer): Int = {
     if (!in.hasRemaining)
@@ -15,7 +15,7 @@ class ChunkingByteChannel(impl: ByteChannel, chunkSize: Int) extends ByteChannel
     try {
       val readSize = math.min(chunkSize, in.remaining)
       in.limit(in.position + readSize)
-      impl.read(in)
+      wrapped.read(in)
     } finally {
       in.limit(oldLimit)
     }
@@ -28,7 +28,7 @@ class ChunkingByteChannel(impl: ByteChannel, chunkSize: Int) extends ByteChannel
     try {
       val writeSize = math.min(chunkSize, out.remaining)
       out.limit(out.position + writeSize)
-      impl.write(out)
+      wrapped.write(out)
     } finally {
       out.limit(oldLimit)
     }
