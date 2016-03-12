@@ -12,7 +12,7 @@ import TestUtil.functionToRunnable
 class BlockingTest extends FunSuite with Matchers with StrictLogging {
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext, null, 7777)
+  val factory = new SocketPairFactory(sslContext, null)
   val dataSize = TlsSocketChannelImpl.tlsMaxDataSize * 3
 
   val data = Array.ofDim[Byte](dataSize)
