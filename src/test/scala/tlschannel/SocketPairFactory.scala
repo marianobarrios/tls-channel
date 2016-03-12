@@ -18,13 +18,14 @@ import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.KeyManagerFactory
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import javax.crypto.Cipher
+import javax.net.ssl.SSLParameters
 
 /**
  * Create pairs of connected sockets (using the loopback interface).
  * Additionally, all the raw (non-encrypted) socket channel are wrapped with a chunking decorator that partitions
  * the bytes of any read or write operation.
  */
-class SocketPairFactory(val sslContext: SSLContext, val port: Int) extends StrictLogging {
+class SocketPairFactory(val sslContext: SSLContext, val serverName: String, val port: Int) extends StrictLogging {
 
   val localhost = InetAddress.getByName(null)
 
@@ -35,13 +36,16 @@ class SocketPairFactory(val sslContext: SSLContext, val port: Int) extends Stric
   val sslSocketFactory = sslContext.getSocketFactory
   val sslServerSocketFactory = sslContext.getServerSocketFactory
   
-  private def createSslEngine(cipher: String, client: Boolean): SSLEngine = {
-    val engine = sslContext.createSSLEngine()
-    engine.setUseClientMode(client)
+  private def createClientSslEngine(cipher: String, peerHost: String, peerPort: Integer): SSLEngine = {
+    val engine = sslContext.createSSLEngine(peerHost, peerPort)
+    engine.setUseClientMode(true)
     engine.setEnabledCipherSuites(Array(cipher))
+    val sslParams = engine.getSSLParameters() // returns a value object
+    sslParams.setEndpointIdentificationAlgorithm("HTTPS")
+    engine.setSSLParameters(sslParams)
     engine
-  }
-
+  }  
+  
   private def createSslServerSocket(cipher: String, port: Int): SSLServerSocket = {
     val serverSocket = sslServerSocketFactory.createServerSocket(port).asInstanceOf[SSLServerSocket]
     serverSocket.setEnabledCipherSuites(Array(cipher))
@@ -69,7 +73,7 @@ class SocketPairFactory(val sslContext: SSLContext, val port: Int) extends Stric
     val rawClient = SocketChannel.open(address)
     val server = serverSocket.accept().asInstanceOf[SSLSocket]
     serverSocket.close()
-    val client = new TlsClientSocketChannel(rawClient, createSslEngine(cipher, client = true))
+    val client = new TlsClientSocketChannel(rawClient, createClientSslEngine(cipher, serverName, port))
     ((client, rawClient), server)
   }
 
@@ -79,7 +83,7 @@ class SocketPairFactory(val sslContext: SSLContext, val port: Int) extends Stric
     val rawClient = SocketChannel.open(address)
     val rawServer = serverSocket.accept()
     serverSocket.close()
-    val clientChannel = new TlsClientSocketChannel(rawClient, createSslEngine(cipher, client = true))
+    val clientChannel = new TlsClientSocketChannel(rawClient, createClientSslEngine(cipher, serverName, port))
     val serverChannel = new TlsServerSocketChannel(rawServer, n => sslContext, e => e.setEnabledCipherSuites(Array(cipher)))
     ((clientChannel, rawClient), (serverChannel, rawServer))
   }
@@ -97,7 +101,7 @@ class SocketPairFactory(val sslContext: SSLContext, val port: Int) extends Stric
     serverSocket.close()
     val plainClient = new ChunkingByteChannel(rawClient, chunkSize = externalClientChunkSize)
     val plainServer = new ChunkingByteChannel(rawServer, chunkSize = externalServerChunkSize)
-    val clientChannel = new TlsClientSocketChannel(plainClient, createSslEngine(cipher, client = true))
+    val clientChannel = new TlsClientSocketChannel(plainClient, createClientSslEngine(cipher, serverName, port))
     val serverChannel = new TlsServerSocketChannel(plainServer, n => sslContext, e => e.setEnabledCipherSuites(Array(cipher)))
     val clientPair = (new ChunkingByteChannel(clientChannel, chunkSize = externalClientChunkSize), clientChannel)
     val serverPair = (new ChunkingByteChannel(serverChannel, chunkSize = externalClientChunkSize), serverChannel)

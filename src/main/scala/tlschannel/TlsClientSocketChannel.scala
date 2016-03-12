@@ -10,14 +10,11 @@ import java.nio.channels.SocketChannel
 class TlsClientSocketChannel(
     val wrapped: ByteChannel, 
     val engine: SSLEngine, 
-    val expectedHostName: Option[String] = None,
     val sessionInitCallback: SSLSession => Unit = session => ()) 
   extends TlsSocketChannel {
 
   if (!engine.getUseClientMode)
     throw new IllegalArgumentException("SSLEngine must be in client mode")
-  
-  // TODO: validate host name
   
   private val inBuffer = ByteBuffer.allocate(TlsSocketChannelImpl.tlsMaxRecordSize)
       

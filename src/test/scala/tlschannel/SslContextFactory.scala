@@ -7,6 +7,8 @@ import java.io.FileInputStream
 import java.security.KeyStore
 
 object SslContextFactory {
+    
+  val certificateCommonName = "name" // must match what's in the certificates
   
   val authenticatedContext = {
     val sslContext = SSLContext.getInstance("TLSv1.2")

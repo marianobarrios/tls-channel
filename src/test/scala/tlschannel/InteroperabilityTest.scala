@@ -60,7 +60,7 @@ class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
   }
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext, 7777)
+  val factory = new SocketPairFactory(sslContext, null, 7777)
 
   def oldNio(cipher: String) = {
     val (client, (server, _)) = factory.oldNio(cipher)
