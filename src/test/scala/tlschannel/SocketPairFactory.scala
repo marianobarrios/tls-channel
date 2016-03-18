@@ -19,6 +19,9 @@ import javax.net.ssl.KeyManagerFactory
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import javax.crypto.Cipher
 import javax.net.ssl.SSLParameters
+import TestUtil.fnToFunction
+import TestUtil.fnToConsumer
+import javax.net.ssl.SSLSession
 
 /**
  * Create pairs of connected sockets (using the loopback interface).
@@ -45,7 +48,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
   }  
   
   private def createSslServerSocket(cipher: String): SSLServerSocket = {
-    val serverSocket = sslServerSocketFactory.createServerSocket(0).asInstanceOf[SSLServerSocket]
+    val serverSocket = sslServerSocketFactory.createServerSocket(0 /* find free port */).asInstanceOf[SSLServerSocket]
     serverSocket.setEnabledCipherSuites(Array(cipher))
     serverSocket
   }
@@ -63,7 +66,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     val client = createSslSocket(cipher, localhost, chosenPort)
     val rawServer = serverSocket.accept()
     serverSocket.close()
-    val server = new TlsServerSocketChannel(rawServer, n => sslContext, e => e.setEnabledCipherSuites(Array(cipher)))
+    val server = new TlsServerSocketChannel(rawServer, sslContext, (e: SSLEngine) => e.setEnabledCipherSuites(Array(cipher)))
     (client, (server, rawServer))
   }
 
@@ -87,7 +90,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     val rawServer = serverSocket.accept()
     serverSocket.close()
     val clientChannel = new TlsClientSocketChannel(rawClient, createClientSslEngine(cipher, serverName, chosenPort))
-    val serverChannel = new TlsServerSocketChannel(rawServer, n => sslContext, e => e.setEnabledCipherSuites(Array(cipher)))
+    val serverChannel = new TlsServerSocketChannel(rawServer, sslContext, (e: SSLEngine) => e.setEnabledCipherSuites(Array(cipher)))
     ((clientChannel, rawClient), (serverChannel, rawServer))
   }
     
@@ -107,7 +110,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     val plainClient = new ChunkingByteChannel(rawClient, chunkSize = externalClientChunkSize)
     val plainServer = new ChunkingByteChannel(rawServer, chunkSize = externalServerChunkSize)
     val clientChannel = new TlsClientSocketChannel(plainClient, createClientSslEngine(cipher, serverName, chosenPort))
-    val serverChannel = new TlsServerSocketChannel(plainServer, n => sslContext, e => e.setEnabledCipherSuites(Array(cipher)))
+    val serverChannel = new TlsServerSocketChannel(plainServer, sslContext, (e: SSLEngine) => e.setEnabledCipherSuites(Array(cipher)))
     val clientPair = (new ChunkingByteChannel(clientChannel, chunkSize = externalClientChunkSize), clientChannel)
     val serverPair = (new ChunkingByteChannel(serverChannel, chunkSize = externalClientChunkSize), serverChannel)
     (clientPair, serverPair)

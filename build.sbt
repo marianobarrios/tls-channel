@@ -29,9 +29,12 @@ fork in Test := true
 connectInput in run := true
 testOptions in Test += Tests.Argument("-oF")
 
+autoScalaLibrary := false
+
 parallelExecution in Test := false
 
 libraryDependencies ++=
+  "org.scala-lang" % "scala-library" % "2.11.6" % "test" ::
   "ch.qos.logback" % "logback-classic" % "1.1.2" % "test" ::
   "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" % "test" ::
   "org.easymock" % "easymock" % "3.3" % "test" ::

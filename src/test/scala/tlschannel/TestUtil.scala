@@ -2,6 +2,7 @@ package tlschannel
 
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import javax.net.ssl.SSLContext
+import java.util.function.Consumer
 
 object TestUtil extends StrictLogging {
 
@@ -28,6 +29,18 @@ object TestUtil extends StrictLogging {
   implicit def functionToRunnable(fn: () => Unit): Runnable = {
     new Runnable {
       def run() = fn()
+    }
+  }
+  
+  implicit def fnToConsumer[A](fn: A => Unit): Consumer[A] = {
+    new Consumer[A] {
+      def accept(a: A) = fn(a)
+    }
+  }
+  
+  implicit def fnToFunction[A, B](fn: A => B): java.util.function.Function[A, B] = {
+    new java.util.function.Function[A, B] {
+      def apply(a: A): B = fn(a)
     }
   }
 

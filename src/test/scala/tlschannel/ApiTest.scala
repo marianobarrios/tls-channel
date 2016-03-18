@@ -8,6 +8,11 @@ import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.io.IOException
 import javax.net.ssl.SSLContext
+import java.util.function.Consumer
+import javax.net.ssl.SSLEngine
+import javax.net.ssl.SSLSession
+
+import TestUtil.fnToConsumer
 
 class ApiTest extends FunSuite with Matchers {
 
@@ -19,7 +24,7 @@ class ApiTest extends FunSuite with Matchers {
 
   def newSocket() = {
     val sslEngine = SSLContext.getDefault.createSSLEngine
-    new TlsSocketChannelImpl(readChannel, writeChannel, sslEngine, ByteBuffer.allocate(inEncryptedSize), s => ())
+    new TlsSocketChannelImpl(readChannel, writeChannel, sslEngine, ByteBuffer.allocate(inEncryptedSize), (_: SSLSession) => ())
   }
   
   test("reading into a read-only buffer") {

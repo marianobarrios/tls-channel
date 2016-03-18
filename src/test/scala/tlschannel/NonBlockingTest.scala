@@ -33,8 +33,8 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 
         val selector = Selector.open()
 
-        val rawClient = clientChannel.wrapped.asInstanceOf[ChunkingByteChannel].wrapped.asInstanceOf[SocketChannel]
-        val rawServer = serverChannel.wrapped.asInstanceOf[ChunkingByteChannel].wrapped.asInstanceOf[SocketChannel]
+        val rawClient = clientChannel.getWrapped.asInstanceOf[ChunkingByteChannel].wrapped.asInstanceOf[SocketChannel]
+        val rawServer = serverChannel.getWrapped.asInstanceOf[ChunkingByteChannel].wrapped.asInstanceOf[SocketChannel]
 
         rawClient.configureBlocking(false)
         rawServer.configureBlocking(false)
