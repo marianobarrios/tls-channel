@@ -22,10 +22,18 @@ import javax.net.ssl.StandardConstants;
 
 public class TlsServerSocketChannel implements TlsSocketChannel {
 
+	public static class DefaultSSLEngineFactory implements Function<SSLContext, SSLEngine> {
+		public SSLEngine apply(SSLContext sslContext) {
+			SSLEngine engine = sslContext.createSSLEngine();
+			engine.setUseClientMode(false);
+			return engine;
+		}
+	}
+	
 	private final ByteChannel wrapped;
 	private final Function<Optional<String>, SSLContext> contextFactory;
-	private final Consumer<SSLEngine> engineConfigurator; // engine => ()
-	private final Consumer<SSLSession> sessionInitCallback; // session => ()
+	private final Function<SSLContext, SSLEngine> engineFactory;
+	private final Consumer<SSLSession> sessionInitCallback;
 
 	private final Lock initLock = new ReentrantLock();
 	private final ByteBuffer buffer = ByteBuffer.allocate(TlsSocketChannelImpl.tlsMaxRecordSize);
@@ -37,11 +45,11 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	public TlsServerSocketChannel(
 			ByteChannel wrapped, 
 			Function<Optional<String>, SSLContext> contextFactory,
-			Consumer<SSLEngine> engineConfigurator, 
+			Function<SSLContext, SSLEngine> engineFactory, 
 			Consumer<SSLSession> sessionInitCallback) {
 		this.wrapped = wrapped;
 		this.contextFactory = contextFactory;
-		this.engineConfigurator = engineConfigurator;
+		this.engineFactory = engineFactory;
 		this.sessionInitCallback = sessionInitCallback;
 	}
 	// @formatter:on
@@ -50,14 +58,14 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	public TlsServerSocketChannel(
 			ByteChannel wrapped, 
 			Function<Optional<String>, SSLContext> contextFactory, 
-			Consumer<SSLEngine> engineConfigurator) {
-		this(wrapped, contextFactory, engineConfigurator, session -> {});
+			Function<SSLContext, SSLEngine> engineFactory) {
+		this(wrapped, contextFactory, engineFactory, session -> {});
 	}
 	// @formatter:on
 
 	public TlsServerSocketChannel(ByteChannel wrapped, Function<Optional<String>, SSLContext> contextFactory) {
 		// @formatter:off
-		this(wrapped, contextFactory, engine -> {}, session -> {});
+		this(wrapped, contextFactory, new DefaultSSLEngineFactory(), session -> {});
 		// @formatter:on
 	}
 	
@@ -65,21 +73,21 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	public TlsServerSocketChannel(
 			ByteChannel wrapped, 
 			SSLContext sslContext, 
-			Consumer<SSLEngine> engineConfigurator, 
+			Function<SSLContext, SSLEngine> engineFactory, 
 			Consumer<SSLSession> sessionInitCallback) {
-		this(wrapped, name -> sslContext, engineConfigurator, sessionInitCallback);
+		this(wrapped, name -> sslContext, engineFactory, sessionInitCallback);
 	}
 	// @formatter:on
 	
-	public TlsServerSocketChannel(ByteChannel wrapped, SSLContext sslContext, Consumer<SSLEngine> engineConfigurator) {
+	public TlsServerSocketChannel(ByteChannel wrapped, SSLContext sslContext, Function<SSLContext, SSLEngine> engineFactory) {
 		// @formatter:off
-		this(wrapped, name -> sslContext, engineConfigurator, session -> {});
+		this(wrapped, name -> sslContext, engineFactory, session -> {});
 		// @formatter:on
 	}
 
 	public TlsServerSocketChannel(ByteChannel wrapped, SSLContext sslContext) {
 		// @formatter:off
-		this(wrapped, name -> sslContext, engine -> {}, session -> {});
+		this(wrapped, name -> sslContext, new DefaultSSLEngineFactory(), session -> {});
 		// @formatter:on
 	}
 
@@ -129,7 +137,6 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		if (impl != null)
 			impl.close();
 		Util.closeChannel(wrapped);
-
 	}
 
 	@Override
@@ -153,9 +160,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 				Optional<String> nameOpt = getServerNameIndication(wrapped, buffer);
 				// call client code
 				SSLContext sslContext = contextFactory.apply(nameOpt);
-				SSLEngine engine = sslContext.createSSLEngine();
-				engineConfigurator.accept(engine); // call client code
-				engine.setUseClientMode(false);
+				SSLEngine engine = engineFactory.apply(sslContext);
 				impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, buffer, sessionInitCallback);
 				sniRead = true;
 			}
