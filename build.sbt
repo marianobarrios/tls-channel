@@ -34,6 +34,7 @@ autoScalaLibrary := false
 parallelExecution in Test := false
 
 libraryDependencies ++=
+  "org.slf4j" % "slf4j-api" % "1.7.19" ::
   "org.scala-lang" % "scala-library" % "2.11.6" % "test" ::
   "ch.qos.logback" % "logback-classic" % "1.1.2" % "test" ::
   "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" % "test" ::

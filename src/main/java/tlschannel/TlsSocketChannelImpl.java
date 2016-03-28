@@ -16,10 +16,16 @@ import javax.net.ssl.SSLHandshakeException;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
 public class TlsSocketChannelImpl implements ByteChannel {
+
+	private static final Logger logger = LoggerFactory.getLogger(TlsSocketChannelImpl.class);
 
 	private final ReadableByteChannel readChannel;
 	private final WritableByteChannel writeChannel;
@@ -30,8 +36,8 @@ public class TlsSocketChannelImpl implements ByteChannel {
 	public TlsSocketChannelImpl(ReadableByteChannel readChannel, WritableByteChannel writeChannel, SSLEngine engine,
 			ByteBuffer inEncrypted, Consumer<SSLSession> initSessionCallback) {
 		if (inEncrypted.capacity() < TlsSocketChannelImpl.tlsMaxRecordSize)
-			throw new IllegalArgumentException(String.format("inEncrypted capacity must be at least %s bytes",
-					TlsSocketChannelImpl.tlsMaxRecordSize));
+			throw new IllegalArgumentException(String.format("inEncrypted capacity must be at least %d bytes (was %d)",
+					TlsSocketChannelImpl.tlsMaxRecordSize, inEncrypted.capacity()));
 		this.readChannel = readChannel;
 		this.writeChannel = writeChannel;
 		this.engine = engine;
@@ -135,6 +141,10 @@ public class TlsSocketChannelImpl implements ByteChannel {
 			do {
 				try {
 					result = engine.unwrap(inEncrypted, inPlain);
+					if (logger.isTraceEnabled()) {
+						logger.trace("engine.unwrap() result [{}]. Engine status: {}; inEncrypted {}; inPlain: {}",
+								resultToString(result), engine.getHandshakeStatus(), inEncrypted, inPlain);
+					}
 				} catch (SSLException e) {
 					// something bad was received from the network, we cannot
 					// continue
@@ -155,7 +165,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 					 * underflow (apparently the check is before). Our inPlain
 					 * buffer should be big enough, so an overflow should mean
 					 * that everything was decrypted, and more data is needed.
-					 * So the inPlan must contain something.
+					 * So the inPlain must contain something.
 					 */
 					Util.assertTrue(inPlain.position() > 0);
 					break;
@@ -175,7 +185,9 @@ public class TlsSocketChannelImpl implements ByteChannel {
 		Util.assertTrue(inEncrypted.hasRemaining());
 		int res;
 		try {
+			logger.trace("Reading from network");
 			res = readChannel.read(inEncrypted);// IO block
+			logger.trace("Read from network; inEncrypted: {}", inEncrypted);
 		} catch (IOException e) {
 			// after a failed read, buffers can be in any state, close
 			invalid = true;
@@ -222,6 +234,10 @@ public class TlsSocketChannelImpl implements ByteChannel {
 				if (bytesConsumed == bytesToConsume)
 					return bytesToConsume;
 				SSLEngineResult result = engine.wrap(srcBuffer, outEncrypted);
+				if (logger.isTraceEnabled()) {
+					logger.trace("engine.wrap() result: [{}]; engine status: {}; srcBuffer: {}, outEncripted: {}",
+							resultToString(result), engine.getHandshakeStatus(), srcBuffer, outEncrypted);
+				}
 				Util.assertTrue(engine.getHandshakeStatus() != NEED_TASK);
 				switch (result.getStatus()) {
 				case OK:
@@ -276,6 +292,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 	}
 
 	protected int writeToNetwork(ByteBuffer out) throws IOException {
+		logger.trace("Writing to network: {}", out);
 		return writeChannel.write(out);
 	}
 
@@ -361,8 +378,10 @@ public class TlsSocketChannelImpl implements ByteChannel {
 			if (c < bytesToWrite)
 				throw new NeedsWriteException();
 		}
-		if (active)
+		if (active) {
 			engine.beginHandshake();
+			logger.trace("Called engine.beginHandshake()");
+		}
 		handShakeLoop();
 	}
 
@@ -374,6 +393,10 @@ public class TlsSocketChannelImpl implements ByteChannel {
 				case NEED_WRAP:
 					Util.assertTrue(outEncrypted.position() == 0);
 					SSLEngineResult result = engine.wrap(dummyOut, outEncrypted);
+					if (logger.isTraceEnabled()) {
+						logger.trace("engine.wrap() result: [{}]; engine status: {}; outEncrypted: {}",
+								resultToString(result), engine.getHandshakeStatus(), outEncrypted);
+					}
 					assert engine.getHandshakeStatus() != NEED_TASK;
 					assert result.getStatus() == Status.OK;
 					int bytesToWrite = outEncrypted.position();
@@ -430,6 +453,10 @@ public class TlsSocketChannelImpl implements ByteChannel {
 					Util.assertTrue(outEncrypted.position() == 0);
 					try {
 						SSLEngineResult result = engine.wrap(dummyOut, outEncrypted);
+						if (logger.isTraceEnabled()) {
+							logger.trace("engine.wrap() result: [{}]; engine status: {}; outEncrypted: {}",
+									resultToString(result), engine.getHandshakeStatus(), outEncrypted);
+						}
 						Util.assertTrue(result.getStatus() == Status.CLOSED);
 						flipAndWriteToNetwork(); // IO block
 					} catch (Exception e) {
@@ -470,10 +497,17 @@ public class TlsSocketChannelImpl implements ByteChannel {
 			20; // SHA1 hash
 	// @formatter:on
 
-	static int tlsMaxDataSize = 32768; // 2^15 bytes of data
-
 	public SSLEngine engine() {
 		return engine;
 	}
 
+	/**
+	 * Convert a {@link SSLEngineResult} into a {@link String}, this is needed
+	 * because the supplied method includes a log-breaking newline.
+	 */
+	private static String resultToString(SSLEngineResult result) {
+		return String.format("status=%s,handshakeStatus=%s,bytesProduced=%d,bytesConsumed=%d", result.getStatus(),
+				result.getHandshakeStatus(), result.bytesProduced(), result.bytesConsumed());
+	}
+	
 }
