@@ -411,6 +411,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 						int bytesRead = readFromNetwork(); // IO block
 						if (bytesRead == 0)
 							throw new NeedsReadException();
+						Util.assertTrue(inEncrypted.position() > 0);
 						unwrapLoop(NEED_UNWRAP /* statusLoopCondition */);
 					}
 					/*
