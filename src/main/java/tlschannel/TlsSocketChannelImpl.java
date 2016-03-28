@@ -488,6 +488,9 @@ public class TlsSocketChannelImpl implements ByteChannel {
 			throw new NullPointerException();
 	}
 
+	// TODO: Find out why this is needed even if the TLS max size is 2^14
+	static final int tlsMaxDataSize = 32768; // 2^15 bytes of data
+
 	// @formatter:off
 	static int tlsMaxRecordSize = 
 			5 + // header
