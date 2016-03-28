@@ -85,6 +85,12 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		// @formatter:on
 	}
 
+	public TlsServerSocketChannel(ByteChannel wrapped, SSLContext sslContext, SSLEngine engine) {
+		// @formatter:off
+		this(wrapped, name -> sslContext, c -> engine, session -> {});
+		// @formatter:on
+	}
+
 	public TlsServerSocketChannel(ByteChannel wrapped, SSLContext sslContext) {
 		// @formatter:off
 		this(wrapped, name -> sslContext, new DefaultSSLEngineFactory(), session -> {});
