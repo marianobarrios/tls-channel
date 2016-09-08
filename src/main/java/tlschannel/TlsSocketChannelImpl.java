@@ -12,6 +12,8 @@ import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLEngineResult.Status;
 import javax.net.ssl.SSLEngine;
 import java.nio.channels.ByteChannel;
+import java.nio.channels.ClosedChannelException;
+
 import javax.net.ssl.SSLHandshakeException;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import javax.net.ssl.SSLException;
@@ -208,14 +210,14 @@ public class TlsSocketChannelImpl implements ByteChannel {
 		if (bytesToConsume == 0)
 			return 0;
 		if (invalid)
-			throw new IOException("Socket closed");
+			throw new ClosedChannelException();
 		if (!initialHandshaked)
 			doHandshake();
 		int bytesConsumed = 0;
 		writeLock.lock();
 		try {
 			if (invalid)
-				throw new IOException("Socket closed");
+				throw new ClosedChannelException();
 			while (true) {
 				if (outEncrypted.position() > 0) {
 					flipAndWriteToNetwork(); // IO block
@@ -248,7 +250,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 					throw new AssertionError();
 				case CLOSED:
 					invalid = true;
-					throw new IOException("Socket closed");
+					throw new ClosedChannelException();
 				case BUFFER_UNDERFLOW:
 					// it does not make sense to ask more data from a client if
 					// it does not have any more
