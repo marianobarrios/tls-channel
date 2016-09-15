@@ -2,16 +2,17 @@ package tlschannel;
 
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 
+import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLEngineResult.Status;
 import javax.net.ssl.SSLEngine;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.ClosedChannelException;
 
 import javax.net.ssl.SSLHandshakeException;
@@ -25,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-public class TlsSocketChannelImpl implements ByteChannel {
+public class TlsSocketChannelImpl {
 
 	private static final Logger logger = LoggerFactory.getLogger(TlsSocketChannelImpl.class);
 
@@ -71,9 +72,10 @@ public class TlsSocketChannelImpl implements ByteChannel {
 
 	// read
 
-	public int read(ByteBuffer dstBuffer) throws IOException {
-		TlsSocketChannelImpl.checkReadBuffer(dstBuffer);
-		if (!dstBuffer.hasRemaining())
+	public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
+		TlsSocketChannelImpl.checkReadBuffer(dstBuffers, offset, length);
+		long dstRemaining = Arrays.stream(dstBuffers, offset, offset + length).mapToLong(b -> b.remaining()).sum();
+		if (dstRemaining == 0)
 			return 0;
 		if (invalid)
 			return -1;
@@ -83,7 +85,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 		readLock.lock();
 		try {
 			while (true) {
-				int transfered = transferPendingPlain(dstBuffer);
+				long transfered = transferPendingPlain(dstBuffers, offset, length);
 				if (transfered > 0)
 					return transfered;
 				Util.assertTrue(inPlain.position() == 0);
@@ -106,7 +108,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 						while (inPlain.position() == 0 && engine.getHandshakeStatus() == NOT_HANDSHAKING) {
 							int c = readFromNetwork(); // IO block
 							if (c == 0) {
-								int t = transferPendingPlain(dstBuffer);
+								long t = transferPendingPlain(dstBuffers, offset, length);
 								if (t > 0)
 									return t;
 								else
@@ -126,13 +128,20 @@ public class TlsSocketChannelImpl implements ByteChannel {
 		}
 	}
 
-	private int transferPendingPlain(ByteBuffer dstBuffer) {
+	private long transferPendingPlain(ByteBuffer[] dstBuffers, int offset, int length) {
 		inPlain.flip(); // will read
-		int bytes = Math.min(inPlain.remaining(), dstBuffer.remaining());
-		dstBuffer.put(inPlain.array(), inPlain.position(), bytes);
-		inPlain.position(inPlain.position() + bytes);
+		long totalBytes = 0;
+		for (int i = offset; i < offset + length; i++) {
+			if (!inPlain.hasRemaining())
+				break;
+			ByteBuffer dstBuffer = dstBuffers[i];
+			int bytes = Math.min(inPlain.remaining(), dstBuffer.remaining());
+			dstBuffer.put(inPlain.array(), inPlain.position(), bytes);
+			inPlain.position(inPlain.position() + bytes);
+			totalBytes += bytes;
+		}
 		inPlain.compact(); // will write
-		return bytes;
+		return totalBytes;
 	}
 
 	private void unwrapLoop(HandshakeStatus statusLoopCondition) throws SSLException, EOFException {
@@ -204,16 +213,16 @@ public class TlsSocketChannelImpl implements ByteChannel {
 
 	// write
 
-	public int write(ByteBuffer srcBuffer) throws IOException {
-		TlsSocketChannelImpl.checkWriteBuffer(srcBuffer);
-		int bytesToConsume = srcBuffer.remaining();
+	public long write(ByteBuffer[] srcBuffers, int offset, int length) throws IOException {
+		TlsSocketChannelImpl.checkWriteBuffer(srcBuffers, offset, length);
+		long bytesToConsume = Arrays.stream(srcBuffers, offset, offset + length).mapToLong(bb -> bb.remaining()).sum();
 		if (bytesToConsume == 0)
 			return 0;
 		if (invalid)
 			throw new ClosedChannelException();
 		if (!initialHandshaked)
 			doHandshake();
-		int bytesConsumed = 0;
+		long bytesConsumed = 0;
 		writeLock.lock();
 		try {
 			if (invalid)
@@ -235,10 +244,12 @@ public class TlsSocketChannelImpl implements ByteChannel {
 				}
 				if (bytesConsumed == bytesToConsume)
 					return bytesToConsume;
-				SSLEngineResult result = engine.wrap(srcBuffer, outEncrypted);
+				SSLEngineResult result = engine.wrap(srcBuffers, offset, length, outEncrypted);
 				if (logger.isTraceEnabled()) {
 					logger.trace("engine.wrap() result: [{}]; engine status: {}; srcBuffer: {}, outEncripted: {}",
-							resultToString(result), engine.getHandshakeStatus(), srcBuffer, outEncrypted);
+							resultToString(result), engine.getHandshakeStatus(),
+							Arrays.stream(srcBuffers, offset, offset + length).collect(Collectors.toList()),
+							outEncrypted);
 				}
 				Util.assertTrue(engine.getHandshakeStatus() != NEED_TASK);
 				switch (result.getStatus()) {
@@ -479,16 +490,24 @@ public class TlsSocketChannelImpl implements ByteChannel {
 		return writeChannel.isOpen() && readChannel.isOpen();
 	}
 
-	static void checkReadBuffer(ByteBuffer in) {
-		if (in == null)
+	static void checkReadBuffer(ByteBuffer[] dstBuffers, int offset, int length) {
+		if (dstBuffers == null)
 			throw new NullPointerException();
-		if (in.isReadOnly())
-			throw new IllegalArgumentException();
+		for (int i = offset; i < offset + length; i++) {
+			if (dstBuffers[i] == null)
+				throw new NullPointerException();
+			if (dstBuffers[i].isReadOnly())
+				throw new IllegalArgumentException();
+		}
 	}
 
-	public static void checkWriteBuffer(ByteBuffer out) {
-		if (out == null)
+	public static void checkWriteBuffer(ByteBuffer[] srcBuffers, int offset, int length) {
+		if (srcBuffers == null)
 			throw new NullPointerException();
+		for (int i = offset; i < offset + length; i++) {
+			if (srcBuffers[i] == null)
+				throw new NullPointerException();
+		}
 	}
 
 	// TODO: Find out why this is needed even if the TLS max size is 2^14
@@ -515,5 +534,5 @@ public class TlsSocketChannelImpl implements ByteChannel {
 		return String.format("status=%s,handshakeStatus=%s,bytesProduced=%d,bytesConsumed=%d", result.getStatus(),
 				result.getHandshakeStatus(), result.bytesProduced(), result.bytesConsumed());
 	}
-	
+
 }

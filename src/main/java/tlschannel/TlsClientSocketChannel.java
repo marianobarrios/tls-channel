@@ -13,7 +13,7 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 	private final SSLEngine engine;
 	private final TlsSocketChannelImpl impl;
 	private final ByteBuffer inBuffer = ByteBuffer.allocate(TlsSocketChannelImpl.tlsMaxRecordSize);
-	
+
 	public TlsClientSocketChannel(ByteChannel wrapped, SSLEngine engine, Consumer<SSLSession> sessionInitCallback) {
 		if (!engine.getUseClientMode())
 			throw new IllegalArgumentException("SSLEngine must be in client mode");
@@ -28,6 +28,7 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 		// @formatter:on
 	}
 
+	@Override
 	public SSLSession getSession() {
 		return engine.getSession();
 	}
@@ -37,34 +38,62 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 		return wrapped;
 	}
 
-	public int read(ByteBuffer in) throws IOException {
-		TlsSocketChannelImpl.checkReadBuffer(in);
-		return impl.read(in);
+	@Override
+	public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
+		TlsSocketChannelImpl.checkReadBuffer(dstBuffers, offset, length);
+		return impl.read(dstBuffers, offset, length);
 	}
 
-	public int write(ByteBuffer out) throws IOException {
-		TlsSocketChannelImpl.checkWriteBuffer(out);
-		return impl.write(out);
+	@Override
+	public long read(ByteBuffer[] dstBuffers) throws IOException {
+		return read(dstBuffers, 0, dstBuffers.length);
 	}
 
+	@Override
+	public int read(ByteBuffer dstBuffer) throws IOException {
+		return (int) read(new ByteBuffer[] { dstBuffer });
+	}
+	
+	@Override
+	public long write(ByteBuffer[] srcBuffers, int offset, int length) throws IOException {
+		TlsSocketChannelImpl.checkWriteBuffer(srcBuffers, offset, length);
+		return impl.write(srcBuffers, offset, length);
+	}
+	
+	@Override
+	public long write(ByteBuffer[] outs) throws IOException {
+		return write(outs, 0, outs.length);
+	}
+
+	@Override
+	public int write(ByteBuffer srcBuffer) throws IOException {
+		return (int) write(new ByteBuffer[] { srcBuffer });
+	}
+
+	@Override
 	public void renegotiate() throws IOException {
 		impl.renegotiate();
 	}
 
+	@Override
 	public void doPassiveHandshake() throws IOException {
 		impl.doPassiveHandshake();
 	}
 
+	@Override
 	public void doHandshake() throws IOException {
 		impl.doHandshake();
 	}
 
+	@Override
 	public void close() {
 		impl.close();
 	}
 
+	@Override
 	public boolean isOpen() {
 		return impl.isOpen();
 	}
+
 
 }

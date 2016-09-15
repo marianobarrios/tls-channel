@@ -29,7 +29,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 			return engine;
 		}
 	}
-	
+
 	private final ByteChannel wrapped;
 	private final Function<Optional<String>, SSLContext> contextFactory;
 	private final Function<SSLContext, SSLEngine> engineFactory;
@@ -68,7 +68,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		this(wrapped, contextFactory, new DefaultSSLEngineFactory(), session -> {});
 		// @formatter:on
 	}
-	
+
 	// @formatter:off
 	public TlsServerSocketChannel(
 			ByteChannel wrapped, 
@@ -78,8 +78,9 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		this(wrapped, name -> sslContext, engineFactory, sessionInitCallback);
 	}
 	// @formatter:on
-	
-	public TlsServerSocketChannel(ByteChannel wrapped, SSLContext sslContext, Function<SSLContext, SSLEngine> engineFactory) {
+
+	public TlsServerSocketChannel(ByteChannel wrapped, SSLContext sslContext,
+			Function<SSLContext, SSLEngine> engineFactory) {
 		// @formatter:off
 		this(wrapped, name -> sslContext, engineFactory, session -> {});
 		// @formatter:on
@@ -103,18 +104,38 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	}
 
 	@Override
-	public int read(ByteBuffer dstBuffer) throws IOException {
-		TlsSocketChannelImpl.checkReadBuffer(dstBuffer);
+	public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
+		TlsSocketChannelImpl.checkReadBuffer(dstBuffers, offset, length);
 		if (!sniRead)
 			initEngine();
-		return impl.read(dstBuffer);
+		return impl.read(dstBuffers, offset, length);
 	}
 
 	@Override
-	public int write(ByteBuffer srcBuffer) throws IOException {
+	public long read(ByteBuffer[] dstBuffers) throws IOException {
+		return read(dstBuffers, 0, dstBuffers.length);
+	}
+
+	@Override
+	public int read(ByteBuffer dstBuffer) throws IOException {
+		return (int) read(new ByteBuffer[] { dstBuffer });
+	}
+
+	@Override
+	public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
 		if (!sniRead)
 			initEngine();
-		return impl.write(srcBuffer);
+		return impl.write(srcs, offset, length);
+	}
+
+	@Override
+	public long write(ByteBuffer[] srcs) throws IOException {
+		return write(srcs, 0, srcs.length);
+	}
+	
+	@Override
+	public int write(ByteBuffer srcBuffer) throws IOException {
+		return (int) write(new ByteBuffer[] { srcBuffer });
 	}
 
 	@Override
@@ -218,5 +239,5 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		}
 		return n;
 	}
-
+	
 }
