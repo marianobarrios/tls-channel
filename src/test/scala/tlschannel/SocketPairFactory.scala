@@ -86,7 +86,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     val rawClient = SocketChannel.open(address)
     val server = serverSocket.accept().asInstanceOf[SSLSocket]
     serverSocket.close()
-    val client = new TlsClientSocketChannel(rawClient, createClientSslEngine(cipher, serverName, chosenPort))
+    val client = new TlsClientSocketChannel.Builder(rawClient, createClientSslEngine(cipher, serverName, chosenPort)).build()
     ((client, rawClient), server)
   }
 
@@ -98,7 +98,8 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     val rawClient = SocketChannel.open(address)
     val rawServer = serverSocket.accept()
     serverSocket.close()
-    val clientChannel = new TlsClientSocketChannel(rawClient, createClientSslEngine(cipher, serverName, chosenPort))
+    val clientChannel = new TlsClientSocketChannel.Builder(rawClient, createClientSslEngine(cipher, serverName, chosenPort))
+      .build()
     val serverChannel = new TlsServerSocketChannel.Builder(rawServer, sslContext)
       .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
       .build()
@@ -120,7 +121,8 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     serverSocket.close()
     val plainClient = new ChunkingByteChannel(rawClient, chunkSize = externalClientChunkSize)
     val plainServer = new ChunkingByteChannel(rawServer, chunkSize = externalServerChunkSize)
-    val clientChannel = new TlsClientSocketChannel(plainClient, createClientSslEngine(cipher, serverName, chosenPort))
+    val clientChannel = new TlsClientSocketChannel.Builder(plainClient, createClientSslEngine(cipher, serverName, chosenPort))
+      .build()
     val serverChannel = new TlsServerSocketChannel.Builder(plainServer, sslContext)
       .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
       .build()

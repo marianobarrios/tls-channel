@@ -9,23 +9,38 @@ import java.util.function.Consumer;
 
 public class TlsClientSocketChannel implements TlsSocketChannel {
 
+	public static class Builder {
+		
+		private final ByteChannel wrapped;
+		private final SSLEngine engine;
+		private Consumer<SSLSession> sessionInitCallback = session -> {};
+		
+		public Builder(ByteChannel wrapped, SSLEngine engine) {
+			this.wrapped = wrapped;
+			this.engine = engine;
+		}
+		
+		public Builder withSessionInitCallback(Consumer<SSLSession> sessionInitCallback) {
+			this.sessionInitCallback = sessionInitCallback;
+			return this;
+		}
+		
+		public TlsClientSocketChannel build() {
+			return new TlsClientSocketChannel(wrapped, engine, sessionInitCallback);
+		}
+	}
+	
 	private final ByteChannel wrapped;
 	private final SSLEngine engine;
 	private final TlsSocketChannelImpl impl;
 	private final ByteBuffer inBuffer = ByteBuffer.allocate(TlsSocketChannelImpl.tlsMaxRecordSize);
 
-	public TlsClientSocketChannel(ByteChannel wrapped, SSLEngine engine, Consumer<SSLSession> sessionInitCallback) {
+	private TlsClientSocketChannel(ByteChannel wrapped, SSLEngine engine, Consumer<SSLSession> sessionInitCallback) {
 		if (!engine.getUseClientMode())
 			throw new IllegalArgumentException("SSLEngine must be in client mode");
 		this.wrapped = wrapped;
 		this.engine = engine;
 		impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, inBuffer, sessionInitCallback);
-	}
-
-	public TlsClientSocketChannel(ByteChannel wrapped, SSLEngine engine) {
-		// @formatter:off
-		this(wrapped, engine, session -> {});
-		// @formatter:on
 	}
 
 	@Override
