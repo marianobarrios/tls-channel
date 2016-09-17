@@ -22,12 +22,43 @@ import javax.net.ssl.StandardConstants;
 
 public class TlsServerSocketChannel implements TlsSocketChannel {
 
-	public static class DefaultSSLEngineFactory implements Function<SSLContext, SSLEngine> {
-		public SSLEngine apply(SSLContext sslContext) {
-			SSLEngine engine = sslContext.createSSLEngine();
-			engine.setUseClientMode(false);
-			return engine;
+	private static SSLEngine defaultSSLEngineFactory(SSLContext sslContext) {
+		SSLEngine engine = sslContext.createSSLEngine();
+		engine.setUseClientMode(false);
+		return engine;
+	}
+
+	public static class Builder {
+
+		private final ByteChannel wrapped;
+		private final Function<Optional<String>, SSLContext> contextFactory;
+		private Function<SSLContext, SSLEngine> engineFactory = TlsServerSocketChannel::defaultSSLEngineFactory;
+		private Consumer<SSLSession> sessionInitCallback = session -> {};
+
+		public Builder(ByteChannel wrapped, SSLContext context) {
+			this.wrapped = wrapped;
+			this.contextFactory = name -> context;
 		}
+
+		public Builder(ByteChannel wrapped, Function<Optional<String>, SSLContext> contextFactory) {
+			this.wrapped = wrapped;
+			this.contextFactory = contextFactory;
+		}
+
+		public Builder withEngineFactory(Function<SSLContext, SSLEngine> engineFactory) {
+			this.engineFactory = engineFactory;
+			return this;
+		}
+
+		public Builder withSessionInitCallback(Consumer<SSLSession> sessionInitCallback) {
+			this.sessionInitCallback = sessionInitCallback;
+			return this;
+		}
+
+		public TlsServerSocketChannel build() {
+			return new TlsServerSocketChannel(wrapped, contextFactory, engineFactory, sessionInitCallback);
+		}
+
 	}
 
 	private final ByteChannel wrapped;
@@ -42,7 +73,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	private TlsSocketChannelImpl impl = null;
 
 	// @formatter:off
-	public TlsServerSocketChannel(
+	private TlsServerSocketChannel(
 			ByteChannel wrapped, 
 			Function<Optional<String>, SSLContext> contextFactory,
 			Function<SSLContext, SSLEngine> engineFactory, 
@@ -53,50 +84,6 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		this.sessionInitCallback = sessionInitCallback;
 	}
 	// @formatter:on
-
-	// @formatter:off
-	public TlsServerSocketChannel(
-			ByteChannel wrapped, 
-			Function<Optional<String>, SSLContext> contextFactory, 
-			Function<SSLContext, SSLEngine> engineFactory) {
-		this(wrapped, contextFactory, engineFactory, session -> {});
-	}
-	// @formatter:on
-
-	public TlsServerSocketChannel(ByteChannel wrapped, Function<Optional<String>, SSLContext> contextFactory) {
-		// @formatter:off
-		this(wrapped, contextFactory, new DefaultSSLEngineFactory(), session -> {});
-		// @formatter:on
-	}
-
-	// @formatter:off
-	public TlsServerSocketChannel(
-			ByteChannel wrapped, 
-			SSLContext sslContext, 
-			Function<SSLContext, SSLEngine> engineFactory, 
-			Consumer<SSLSession> sessionInitCallback) {
-		this(wrapped, name -> sslContext, engineFactory, sessionInitCallback);
-	}
-	// @formatter:on
-
-	public TlsServerSocketChannel(ByteChannel wrapped, SSLContext sslContext,
-			Function<SSLContext, SSLEngine> engineFactory) {
-		// @formatter:off
-		this(wrapped, name -> sslContext, engineFactory, session -> {});
-		// @formatter:on
-	}
-
-	public TlsServerSocketChannel(ByteChannel wrapped, SSLContext sslContext, SSLEngine engine) {
-		// @formatter:off
-		this(wrapped, name -> sslContext, c -> engine, session -> {});
-		// @formatter:on
-	}
-
-	public TlsServerSocketChannel(ByteChannel wrapped, SSLContext sslContext) {
-		// @formatter:off
-		this(wrapped, name -> sslContext, new DefaultSSLEngineFactory(), session -> {});
-		// @formatter:on
-	}
 
 	@Override
 	public ByteChannel getWrapped() {
@@ -132,7 +119,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	public long write(ByteBuffer[] srcs) throws IOException {
 		return write(srcs, 0, srcs.length);
 	}
-	
+
 	@Override
 	public int write(ByteBuffer srcBuffer) throws IOException {
 		return (int) write(new ByteBuffer[] { srcBuffer });
@@ -239,5 +226,5 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		}
 		return n;
 	}
-	
+
 }
