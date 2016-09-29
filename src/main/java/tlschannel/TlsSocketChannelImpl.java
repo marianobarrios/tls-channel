@@ -14,6 +14,7 @@ import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLEngineResult.Status;
 import javax.net.ssl.SSLEngine;
 import java.nio.channels.ClosedChannelException;
+import java.nio.channels.IllegalSelectorException;
 
 import javax.net.ssl.SSLHandshakeException;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
@@ -93,7 +94,9 @@ public class TlsSocketChannelImpl {
 					close();
 					return -1;
 				}
-				if (engine.getHandshakeStatus() == NEED_UNWRAP || engine.getHandshakeStatus() == NEED_WRAP) {
+				switch (engine.getHandshakeStatus()) {
+				case NEED_UNWRAP:
+				case NEED_WRAP:
 					// handshake needs both read and write locks, we already
 					// have one, take the other
 					writeLock.lock();
@@ -102,7 +105,8 @@ public class TlsSocketChannelImpl {
 					} finally {
 						writeLock.unlock();
 					}
-				} else {
+					break;
+				case NOT_HANDSHAKING:
 					try {
 						unwrapLoop(NOT_HANDSHAKING /* statusLoopCondition */);
 						while (inPlain.position() == 0 && engine.getHandshakeStatus() == NOT_HANDSHAKING) {
@@ -117,10 +121,16 @@ public class TlsSocketChannelImpl {
 							unwrapLoop(NOT_HANDSHAKING /* statusLoopCondition */);
 						}
 						// exit loop after we either have something to answer or
-						// the counterpart wants a handshake
+						// the counterpart wants a handshake, or we need to run a task
 					} catch (EOFException e) {
 						return -1;
 					}
+					break;
+				case NEED_TASK:
+					engine.getDelegatedTask().run();
+					break;
+				case FINISHED:
+					throw new IllegalStateException("engine.getHandshakeStatus() returned FINISHED");
 				}
 			}
 		} finally {
@@ -162,9 +172,6 @@ public class TlsSocketChannelImpl {
 					invalid = true;
 					throw e;
 				}
-				if (engine.getHandshakeStatus() == NEED_TASK)
-					engine.getDelegatedTask().run();
-				Util.assertTrue(engine.getHandshakeStatus() != NEED_TASK);
 				switch (result.getStatus()) {
 				case OK:
 				case BUFFER_UNDERFLOW:
@@ -227,6 +234,7 @@ public class TlsSocketChannelImpl {
 		try {
 			if (invalid)
 				throw new ClosedChannelException();
+			Util.assertTrue(engine.getHandshakeStatus() == NOT_HANDSHAKING);
 			while (true) {
 				if (outEncrypted.position() > 0) {
 					flipAndWriteToNetwork(); // IO block
@@ -245,13 +253,13 @@ public class TlsSocketChannelImpl {
 				if (bytesConsumed == bytesToConsume)
 					return bytesToConsume;
 				SSLEngineResult result = engine.wrap(srcBuffers, offset, length, outEncrypted);
+				Util.assertTrue(engine.getHandshakeStatus() == NOT_HANDSHAKING);
 				if (logger.isTraceEnabled()) {
 					logger.trace("engine.wrap() result: [{}]; engine status: {}; srcBuffer: {}, outEncripted: {}",
 							resultToString(result), engine.getHandshakeStatus(),
 							Arrays.stream(srcBuffers, offset, offset + length).collect(Collectors.toList()),
 							outEncrypted);
 				}
-				Util.assertTrue(engine.getHandshakeStatus() != NEED_TASK);
 				switch (result.getStatus()) {
 				case OK:
 					break;
@@ -265,7 +273,7 @@ public class TlsSocketChannelImpl {
 				case BUFFER_UNDERFLOW:
 					// it does not make sense to ask more data from a client if
 					// it does not have any more
-					throw new AssertionError();
+					throw new IllegalStateException("wrap returned BUFFER_UNDERFLOW");
 				}
 				bytesConsumed += result.bytesConsumed();
 			}
@@ -410,7 +418,6 @@ public class TlsSocketChannelImpl {
 						logger.trace("engine.wrap() result: [{}]; engine status: {}; outEncrypted: {}",
 								resultToString(result), engine.getHandshakeStatus(), outEncrypted);
 					}
-					assert engine.getHandshakeStatus() != NEED_TASK;
 					assert result.getStatus() == Status.OK;
 					int bytesToWrite = outEncrypted.position();
 					int c = flipAndWriteToNetwork(); // IO block
@@ -437,9 +444,12 @@ public class TlsSocketChannelImpl {
 						return;
 					break;
 				case NOT_HANDSHAKING:
-				case FINISHED:
-				case NEED_TASK:
 					return;
+				case NEED_TASK:
+					engine.getDelegatedTask().run();
+					break;
+				case FINISHED:
+					throw new IllegalStateException("engine.getHandshakeStatus() returned FINISHED");
 				}
 			}
 		} catch (TlsNonBlockingNecessityException e) {
