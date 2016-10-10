@@ -65,11 +65,7 @@ public class TlsSocketChannelImpl {
 
 	// handshake wrap() method calls need a buffer to read from, even when they
 	// actually do not read anything
-	private final ByteBuffer dummyOut = ByteBuffer.allocate(0);
-
-	{
-		dummyOut.flip(); // always ready to be read (and empty)
-	}
+	private final ByteBuffer[] dummyOut = new ByteBuffer[] { };
 
 	// read
 
@@ -252,34 +248,40 @@ public class TlsSocketChannelImpl {
 				}
 				if (bytesConsumed == bytesToConsume)
 					return bytesToConsume;
-				SSLEngineResult result = engine.wrap(srcBuffers, offset, length, outEncrypted);
+				int c = wrapLoop(srcBuffers, offset, length);
 				Util.assertTrue(engine.getHandshakeStatus() == NOT_HANDSHAKING);
-				if (logger.isTraceEnabled()) {
-					logger.trace("engine.wrap() result: [{}]; engine status: {}; srcBuffer: {}, outEncripted: {}",
-							resultToString(result), engine.getHandshakeStatus(),
-							Arrays.stream(srcBuffers, offset, offset + length).collect(Collectors.toList()),
-							outEncrypted);
-				}
-				switch (result.getStatus()) {
-				case OK:
-					break;
-				case BUFFER_OVERFLOW:
-					// this could happen in theory, but does not happen if
-					// outEncrypted is at least of packet size
-					throw new AssertionError();
-				case CLOSED:
-					invalid = true;
-					throw new ClosedChannelException();
-				case BUFFER_UNDERFLOW:
-					// it does not make sense to ask more data from a client if
-					// it does not have any more
-					throw new IllegalStateException("wrap returned BUFFER_UNDERFLOW");
-				}
-				bytesConsumed += result.bytesConsumed();
+				bytesConsumed += c;
 			}
 		} finally {
 			writeLock.unlock();
 		}
+	}
+
+	private int wrapLoop(ByteBuffer[] outPlain, int effOffset, int effLength)
+			throws SSLException, AssertionError, ClosedChannelException {
+		SSLEngineResult result = engine.wrap(outPlain, effOffset, effLength, outEncrypted);
+		if (logger.isTraceEnabled()) {
+			logger.trace("engine.wrap() result: [{}]; engine status: {}; srcBuffer: {}, outEncripted: {}",
+					resultToString(result), engine.getHandshakeStatus(),
+					Arrays.stream(outPlain, effOffset, effOffset + effLength).collect(Collectors.toList()),
+					outEncrypted);
+		}
+		switch (result.getStatus()) {
+		case OK:
+			break;
+		case BUFFER_OVERFLOW:
+			// this could happen in theory, but does not happen if
+			// outEncrypted is at least of packet size
+			throw new AssertionError();
+		case CLOSED:
+			invalid = true;
+			throw new ClosedChannelException();
+		case BUFFER_UNDERFLOW:
+			// it does not make sense to ask more data from a client if
+			// it does not have any more
+			throw new IllegalStateException("wrap returned BUFFER_UNDERFLOW");
+		}
+		return result.bytesConsumed();
 	}
 
 	private int flipAndWriteToNetwork() throws IOException {
@@ -413,12 +415,7 @@ public class TlsSocketChannelImpl {
 				switch (engine.getHandshakeStatus()) {
 				case NEED_WRAP:
 					Util.assertTrue(outEncrypted.position() == 0);
-					SSLEngineResult result = engine.wrap(dummyOut, outEncrypted);
-					if (logger.isTraceEnabled()) {
-						logger.trace("engine.wrap() result: [{}]; engine status: {}; outEncrypted: {}",
-								resultToString(result), engine.getHandshakeStatus(), outEncrypted);
-					}
-					assert result.getStatus() == Status.OK;
+					wrapLoop(dummyOut, 0, 0);
 					int bytesToWrite = outEncrypted.position();
 					int c = flipAndWriteToNetwork(); // IO block
 					if (c < bytesToWrite)
