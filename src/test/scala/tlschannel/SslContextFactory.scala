@@ -52,4 +52,6 @@ object SslContextFactory {
       .filter(_.startsWith("TLS_"))
   }
   
+  val tlsMaxDataSize = math.pow(2, 14).toInt
+  
 }

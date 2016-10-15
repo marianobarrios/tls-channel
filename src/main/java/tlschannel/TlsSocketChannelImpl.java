@@ -3,6 +3,7 @@ package tlschannel;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -14,7 +15,6 @@ import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLEngineResult.Status;
 import javax.net.ssl.SSLEngine;
 import java.nio.channels.ClosedChannelException;
-import java.nio.channels.IllegalSelectorException;
 
 import javax.net.ssl.SSLHandshakeException;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
@@ -31,22 +31,28 @@ public class TlsSocketChannelImpl {
 
 	private static final Logger logger = LoggerFactory.getLogger(TlsSocketChannelImpl.class);
 
+	private static int buffersInitialSize = 2048;
+
 	private final ReadableByteChannel readChannel;
 	private final WritableByteChannel writeChannel;
 	private final SSLEngine engine;
-	private final ByteBuffer inEncrypted;
+	private ByteBuffer inEncrypted;
 	private final Consumer<SSLSession> initSessionCallback;
 
+	private final int tlsMaxDataSize;
+	private final int tlsMaxRecordSize;
+
 	public TlsSocketChannelImpl(ReadableByteChannel readChannel, WritableByteChannel writeChannel, SSLEngine engine,
-			ByteBuffer inEncrypted, Consumer<SSLSession> initSessionCallback) {
-		if (inEncrypted.capacity() < TlsSocketChannelImpl.tlsMaxRecordSize)
-			throw new IllegalArgumentException(String.format("inEncrypted capacity must be at least %d bytes (was %d)",
-					TlsSocketChannelImpl.tlsMaxRecordSize, inEncrypted.capacity()));
+			Optional<ByteBuffer> inEncrypted, Consumer<SSLSession> initSessionCallback) {
 		this.readChannel = readChannel;
 		this.writeChannel = writeChannel;
 		this.engine = engine;
-		this.inEncrypted = inEncrypted;
+		this.inEncrypted = inEncrypted.orElseGet(() -> ByteBuffer.allocate(buffersInitialSize));
 		this.initSessionCallback = initSessionCallback;
+		// about 2^14
+		this.tlsMaxDataSize = engine.getSession().getApplicationBufferSize();
+		// about 2^14 + overhead
+		this.tlsMaxRecordSize = engine.getSession().getPacketBufferSize();
 	}
 
 	private final Lock initLock = new ReentrantLock();
@@ -58,14 +64,14 @@ public class TlsSocketChannelImpl {
 	private boolean tlsClosePending = false;
 
 	// decrypted data from inEncrypted
-	private final ByteBuffer inPlain = ByteBuffer.allocate(TlsSocketChannelImpl.tlsMaxDataSize);
+	private ByteBuffer inPlain = ByteBuffer.allocate(buffersInitialSize);
 
 	// contains data encrypted to send to the network
-	private final ByteBuffer outEncrypted = ByteBuffer.allocate(TlsSocketChannelImpl.tlsMaxRecordSize);
+	private ByteBuffer outEncrypted = ByteBuffer.allocate(buffersInitialSize);
 
 	// handshake wrap() method calls need a buffer to read from, even when they
 	// actually do not read anything
-	private final ByteBuffer[] dummyOut = new ByteBuffer[] { };
+	private final ByteBuffer[] dummyOut = new ByteBuffer[] {};
 
 	// read
 
@@ -106,18 +112,17 @@ public class TlsSocketChannelImpl {
 					try {
 						unwrapLoop(NOT_HANDSHAKING /* statusLoopCondition */);
 						while (inPlain.position() == 0 && engine.getHandshakeStatus() == NOT_HANDSHAKING) {
+							if (!inEncrypted.hasRemaining())
+								enlargeInEncrypted();
 							int c = readFromNetwork(); // IO block
 							if (c == 0) {
-								long t = transferPendingPlain(dstBuffers, offset, length);
-								if (t > 0)
-									return t;
-								else
-									throw new NeedsReadException();
+								throw new NeedsReadException();
 							}
 							unwrapLoop(NOT_HANDSHAKING /* statusLoopCondition */);
 						}
 						// exit loop after we either have something to answer or
-						// the counterpart wants a handshake, or we need to run a task
+						// the counterpart wants a handshake, or we need to run
+						// a task
 					} catch (EOFException e) {
 						return -1;
 					}
@@ -152,10 +157,10 @@ public class TlsSocketChannelImpl {
 
 	private void unwrapLoop(HandshakeStatus statusLoopCondition) throws SSLException, EOFException {
 		inEncrypted.flip();
-		SSLEngineResult result = null;
-		Util.assertTrue(inPlain.position() == 0);
+		SSLEngineResult result;
 		try {
 			do {
+				Util.assertTrue(inPlain.position() == 0);
 				try {
 					result = engine.unwrap(inEncrypted, inPlain);
 					if (logger.isTraceEnabled()) {
@@ -170,26 +175,30 @@ public class TlsSocketChannelImpl {
 				}
 				switch (result.getStatus()) {
 				case OK:
-				case BUFFER_UNDERFLOW:
-					// nothing
+					if (inPlain.position() > 0) {
+						return;
+					}
 					break;
+				case BUFFER_UNDERFLOW:
+					return;
 				case BUFFER_OVERFLOW:
 					/*
-					 * The engine can respond overflow even where there also is
-					 * underflow (apparently the check is before). Our inPlain
-					 * buffer should be big enough, so an overflow should mean
-					 * that everything was decrypted, and more data is needed.
-					 * So the inPlain must contain something.
+					 * The engine can respond overflow even data was already
+					 * written. In that case, return it.
 					 */
-					Util.assertTrue(inPlain.position() > 0);
+					if (inPlain.position() > 0) {
+						return;
+					}
+					enlargeInPlain();
 					break;
 				case CLOSED:
 					tlsClosePending = true;
-					if (inPlain.position() == 0)
+					if (inPlain.position() > 0)
+						return;
+					else
 						throw new EOFException();
-					break;
 				}
-			} while (result.getStatus() == Status.OK && engine.getHandshakeStatus() == statusLoopCondition);
+			} while (engine.getHandshakeStatus() == statusLoopCondition);
 		} finally {
 			inEncrypted.compact();
 		}
@@ -259,29 +268,60 @@ public class TlsSocketChannelImpl {
 
 	private int wrapLoop(ByteBuffer[] outPlain, int effOffset, int effLength)
 			throws SSLException, AssertionError, ClosedChannelException {
-		SSLEngineResult result = engine.wrap(outPlain, effOffset, effLength, outEncrypted);
-		if (logger.isTraceEnabled()) {
-			logger.trace("engine.wrap() result: [{}]; engine status: {}; srcBuffer: {}, outEncripted: {}",
-					resultToString(result), engine.getHandshakeStatus(),
-					Arrays.stream(outPlain, effOffset, effOffset + effLength).collect(Collectors.toList()),
-					outEncrypted);
+		int bytesConsumed = 0;
+		SSLEngineResult result;
+		do {
+			result = engine.wrap(outPlain, effOffset, effLength, outEncrypted);
+			if (logger.isTraceEnabled()) {
+				logger.trace("engine.wrap() result: [{}]; engine status: {}; srcBuffer: {}, outEncrypted: {}",
+						resultToString(result), engine.getHandshakeStatus(),
+						Arrays.stream(outPlain, effOffset, effOffset + effLength).collect(Collectors.toList()),
+						outEncrypted);
+			}
+			switch (result.getStatus()) {
+			case OK:
+				break;
+			case BUFFER_OVERFLOW:
+				enlargeOutEncrypted();
+				break;
+			case CLOSED:
+				invalid = true;
+				throw new ClosedChannelException();
+			case BUFFER_UNDERFLOW:
+				// it does not make sense to ask more data from a client if
+				// it does not have any more
+				throw new IllegalStateException("wrap() returned BUFFER_UNDERFLOW");
+			}
+			bytesConsumed += result.bytesConsumed();
+		} while (result.getStatus() == Status.BUFFER_OVERFLOW);
+		logger.trace("Returning bytes consumed: {}", bytesConsumed);
+		return bytesConsumed;
+	}
+
+	private void enlargeOutEncrypted() {
+		outEncrypted = enlarge(outEncrypted, "outEncrypted", tlsMaxRecordSize);
+	}
+
+	private void enlargeInPlain() {
+		inPlain = enlarge(inPlain, "inPlain", tlsMaxDataSize);
+	}
+
+	private void enlargeInEncrypted() {
+		inEncrypted = enlarge(inEncrypted, "inEncrypted", tlsMaxRecordSize);
+	}
+
+	private static ByteBuffer enlarge(ByteBuffer buffer, String name, int maxSize) {
+		if (buffer.capacity() >= maxSize) {
+			throw new IllegalStateException(
+					String.format("%s buffer insufficient despite having capacity of %d", name, buffer.capacity()));
 		}
-		switch (result.getStatus()) {
-		case OK:
-			break;
-		case BUFFER_OVERFLOW:
-			// this could happen in theory, but does not happen if
-			// outEncrypted is at least of packet size
-			throw new AssertionError();
-		case CLOSED:
-			invalid = true;
-			throw new ClosedChannelException();
-		case BUFFER_UNDERFLOW:
-			// it does not make sense to ask more data from a client if
-			// it does not have any more
-			throw new IllegalStateException("wrap returned BUFFER_UNDERFLOW");
-		}
-		return result.bytesConsumed();
+		int newCapacity = Math.min(buffer.capacity() * 2, maxSize);
+		logger.trace("{} buffer too small, increasing from {} to {}", name, buffer.capacity(), newCapacity);
+		ByteBuffer newBuffer = ByteBuffer.allocate(newCapacity);
+		buffer.flip();
+		newBuffer.put(buffer);
+		buffer.compact();
+		return newBuffer;
 	}
 
 	private int flipAndWriteToNetwork() throws IOException {
@@ -425,6 +465,8 @@ public class TlsSocketChannelImpl {
 					Util.assertTrue(inPlain.position() == 0);
 					unwrapLoop(NEED_UNWRAP /* statusLoopCondition */);
 					while (engine.getHandshakeStatus() == NEED_UNWRAP && inPlain.position() == 0) {
+						if (!inEncrypted.hasRemaining())
+							enlargeInEncrypted();
 						int bytesRead = readFromNetwork(); // IO block
 						if (bytesRead == 0)
 							throw new NeedsReadException();
@@ -516,18 +558,6 @@ public class TlsSocketChannelImpl {
 				throw new NullPointerException();
 		}
 	}
-
-	// TODO: Find out why this is needed even if the TLS max size is 2^14
-	static final int tlsMaxDataSize = 32768; // 2^15 bytes of data
-
-	// @formatter:off
-	static int tlsMaxRecordSize = 
-			5 + // header
-			256 + // IV
-			32768 + // 2^15 bytes of data
-			256 + // max padding
-			20; // SHA1 hash
-	// @formatter:on
 
 	public SSLEngine engine() {
 		return engine;

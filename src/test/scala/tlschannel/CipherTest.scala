@@ -17,7 +17,7 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
   val socketFactories = Map(
     SslContextFactory.authenticatedContext -> factory,
     SslContextFactory.anonContext -> anonFactory)
-  val dataSize = TlsSocketChannelImpl.tlsMaxDataSize * 10
+  val dataSize = SslContextFactory.tlsMaxDataSize * 10
 
   val data = Array.ofDim[Byte](dataSize)
   Random.nextBytes(data)

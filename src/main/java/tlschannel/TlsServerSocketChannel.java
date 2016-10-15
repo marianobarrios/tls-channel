@@ -16,7 +16,6 @@ import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.StandardConstants;
 
@@ -67,7 +66,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	private final Consumer<SSLSession> sessionInitCallback;
 
 	private final Lock initLock = new ReentrantLock();
-	private final ByteBuffer buffer = ByteBuffer.allocate(TlsSocketChannelImpl.tlsMaxRecordSize);
+	private final ByteBuffer buffer = ByteBuffer.allocate(4096);
 
 	private volatile boolean sniRead = false;
 	private TlsSocketChannelImpl impl = null;
@@ -175,7 +174,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 				// call client code
 				SSLContext sslContext = contextFactory.apply(nameOpt);
 				SSLEngine engine = engineFactory.apply(sslContext);
-				impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, buffer, sessionInitCallback);
+				impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, Optional.of(buffer), sessionInitCallback);
 				sniRead = true;
 			}
 		} finally {
@@ -210,8 +209,6 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		}
 		buffer.flip();
 		int recordHeaderSize = TlsExplorer.getRequiredSize(buffer);
-		if (recordHeaderSize > TlsSocketChannelImpl.tlsMaxRecordSize)
-			throw new SSLException("record size too big: " + recordHeaderSize);
 		buffer.compact();
 		return recordHeaderSize;
 	}

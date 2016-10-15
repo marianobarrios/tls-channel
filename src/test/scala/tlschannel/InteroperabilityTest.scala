@@ -76,7 +76,7 @@ class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
     (clientPair, serverPair)
   }
 
-  val dataSize = TlsSocketChannelImpl.tlsMaxDataSize * 10
+  val dataSize = SslContextFactory.tlsMaxDataSize * 10
   val data = Array.ofDim[Byte](dataSize)
   Random.nextBytes(data)
 

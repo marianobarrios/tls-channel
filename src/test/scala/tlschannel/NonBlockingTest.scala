@@ -17,10 +17,10 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
   val (cipher, sslContext) = SslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext, null)
 
-  val dataSize = TlsSocketChannelImpl.tlsMaxDataSize * 3
+  val dataSize = SslContextFactory.tlsMaxDataSize * 3
 
   test("selector loop") {
-    val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= TlsSocketChannelImpl.tlsMaxDataSize)
+    val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     for ((size1, size2) <- (sizes zip sizes.reverse)) {
       val (_, elapsed) = TestUtil.time {
         logger.debug(s"Sizes: size1=$size1,size2=$size2")

@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import javax.net.ssl.SSLEngine;
 import java.nio.channels.ByteChannel;
 import javax.net.ssl.SSLSession;
+
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class TlsClientSocketChannel implements TlsSocketChannel {
@@ -33,14 +35,13 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 	private final ByteChannel wrapped;
 	private final SSLEngine engine;
 	private final TlsSocketChannelImpl impl;
-	private final ByteBuffer inBuffer = ByteBuffer.allocate(TlsSocketChannelImpl.tlsMaxRecordSize);
 
 	private TlsClientSocketChannel(ByteChannel wrapped, SSLEngine engine, Consumer<SSLSession> sessionInitCallback) {
 		if (!engine.getUseClientMode())
 			throw new IllegalArgumentException("SSLEngine must be in client mode");
 		this.wrapped = wrapped;
 		this.engine = engine;
-		impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, inBuffer, sessionInitCallback);
+		impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, Optional.empty(), sessionInitCallback);
 	}
 
 	@Override

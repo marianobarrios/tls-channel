@@ -13,7 +13,7 @@ class ScatheringTest extends FunSuite with Matchers with StrictLogging {
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext, null)
-  val dataSize = TlsSocketChannelImpl.tlsMaxDataSize * 3
+  val dataSize = SslContextFactory.tlsMaxDataSize * 3
 
   val data = Array.ofDim[Byte](dataSize)
   Random.nextBytes(data)
@@ -22,7 +22,7 @@ class ScatheringTest extends FunSuite with Matchers with StrictLogging {
    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
    */
   test("half duplex") {
-    val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= TlsSocketChannelImpl.tlsMaxDataSize)
+    val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val (cipher, sslContext) = SslContextFactory.standardCipher
     val ((client, _), (server, _)) = factory.nioNio(cipher)
     val (_, elapsed) = TestUtil.time {

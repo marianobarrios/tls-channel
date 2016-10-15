@@ -13,7 +13,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext, null)
-  val dataSize = TlsSocketChannelImpl.tlsMaxDataSize * 3
+  val dataSize = SslContextFactory.tlsMaxDataSize * 3
 
   val data = Array.ofDim[Byte](dataSize)
   Random.nextBytes(data)
@@ -22,7 +22,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
    */
   test("half duplex (with renegotiations)") {
-    val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= TlsSocketChannelImpl.tlsMaxDataSize)
+    val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val (cipher, sslContext) = SslContextFactory.standardCipher
     for ((size1, size2) <- (sizes zip sizes.reverse)) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
@@ -57,7 +57,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
    * Test a full-duplex interaction, without any renegotiation
    */
   test("full duplex") {
-    val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= TlsSocketChannelImpl.tlsMaxDataSize)
+    val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     for ((size1, size2) <- (sizes zip sizes.reverse)) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
       val ((client, clientChannel), (server, serverChannel)) = factory.nioNio(cipher,

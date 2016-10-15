@@ -13,18 +13,18 @@ import javax.net.ssl.SSLEngine
 import javax.net.ssl.SSLSession
 
 import TestUtil.fnToConsumer
+import java.util.Optional
 
 class ApiTest extends FunSuite with Matchers {
 
   val arraySize = 1024
-  val inEncryptedSize = 100 * 1024
 
   val readChannel = Channels.newChannel(new ByteArrayInputStream(new Array(arraySize)))
   val writeChannel = Channels.newChannel(new ByteArrayOutputStream(arraySize))
 
   def newSocket() = {
     val sslEngine = SSLContext.getDefault.createSSLEngine
-    new TlsSocketChannelImpl(readChannel, writeChannel, sslEngine, ByteBuffer.allocate(inEncryptedSize), (_: SSLSession) => ())
+    new TlsSocketChannelImpl(readChannel, writeChannel, sslEngine, Optional.empty[ByteBuffer], (_: SSLSession) => ())
   }
 
   test("reading into a read-only buffer") {
