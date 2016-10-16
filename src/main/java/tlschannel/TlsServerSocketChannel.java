@@ -32,7 +32,9 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		private final ByteChannel wrapped;
 		private final Function<Optional<String>, SSLContext> contextFactory;
 		private Function<SSLContext, SSLEngine> engineFactory = TlsServerSocketChannel::defaultSSLEngineFactory;
+		// @formatter:off
 		private Consumer<SSLSession> sessionInitCallback = session -> {};
+		// @formatter:on
 
 		public Builder(ByteChannel wrapped, SSLContext context) {
 			this.wrapped = wrapped;
@@ -91,10 +93,11 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 
 	@Override
 	public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
-		TlsSocketChannelImpl.checkReadBuffer(dstBuffers, offset, length);
+		ByteBufferSet dest = new ByteBufferSet(dstBuffers, offset, length);
+		TlsSocketChannelImpl.checkReadBuffer(dest);
 		if (!sniRead)
 			initEngine();
-		return impl.read(dstBuffers, offset, length);
+		return impl.read(dest);
 	}
 
 	@Override
@@ -109,9 +112,10 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 
 	@Override
 	public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
+		ByteBufferSet source = new ByteBufferSet(srcs, offset, length);
 		if (!sniRead)
 			initEngine();
-		return impl.write(srcs, offset, length);
+		return impl.write(source);
 	}
 
 	@Override

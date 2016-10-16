@@ -56,8 +56,9 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 
 	@Override
 	public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
-		TlsSocketChannelImpl.checkReadBuffer(dstBuffers, offset, length);
-		return impl.read(dstBuffers, offset, length);
+		ByteBufferSet dest = new ByteBufferSet(dstBuffers, offset, length);
+		TlsSocketChannelImpl.checkReadBuffer(dest);
+		return impl.read(dest);
 	}
 
 	@Override
@@ -72,8 +73,8 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 	
 	@Override
 	public long write(ByteBuffer[] srcBuffers, int offset, int length) throws IOException {
-		TlsSocketChannelImpl.checkWriteBuffer(srcBuffers, offset, length);
-		return impl.write(srcBuffers, offset, length);
+		ByteBufferSet source = new ByteBufferSet(srcBuffers, offset, length);
+		return impl.write(source);
 	}
 	
 	@Override

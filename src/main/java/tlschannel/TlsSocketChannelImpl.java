@@ -71,14 +71,13 @@ public class TlsSocketChannelImpl {
 
 	// handshake wrap() method calls need a buffer to read from, even when they
 	// actually do not read anything
-	private final ByteBuffer[] dummyOut = new ByteBuffer[] {};
+	private final ByteBufferSet dummyOut = new ByteBufferSet(new ByteBuffer[] {});
 
 	// read
 
-	public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
-		TlsSocketChannelImpl.checkReadBuffer(dstBuffers, offset, length);
-		long dstRemaining = Arrays.stream(dstBuffers, offset, offset + length).mapToLong(b -> b.remaining()).sum();
-		if (dstRemaining == 0)
+	public long read(ByteBufferSet dest) throws IOException {
+		checkReadBuffer(dest);
+		if (!dest.hasRemaining())
 			return 0;
 		if (invalid)
 			return -1;
@@ -88,7 +87,7 @@ public class TlsSocketChannelImpl {
 		readLock.lock();
 		try {
 			while (true) {
-				long transfered = transferPendingPlain(dstBuffers, offset, length);
+				long transfered = transferPendingPlain(dest);
 				if (transfered > 0)
 					return transfered;
 				Util.assertTrue(inPlain.position() == 0);
@@ -139,20 +138,11 @@ public class TlsSocketChannelImpl {
 		}
 	}
 
-	private long transferPendingPlain(ByteBuffer[] dstBuffers, int offset, int length) {
+	private long transferPendingPlain(ByteBufferSet dstBuffers) {
 		inPlain.flip(); // will read
-		long totalBytes = 0;
-		for (int i = offset; i < offset + length; i++) {
-			if (!inPlain.hasRemaining())
-				break;
-			ByteBuffer dstBuffer = dstBuffers[i];
-			int bytes = Math.min(inPlain.remaining(), dstBuffer.remaining());
-			dstBuffer.put(inPlain.array(), inPlain.position(), bytes);
-			inPlain.position(inPlain.position() + bytes);
-			totalBytes += bytes;
-		}
+		long bytes = dstBuffers.putRemaining(inPlain);
 		inPlain.compact(); // will write
-		return totalBytes;
+		return bytes;
 	}
 
 	private void unwrapLoop(HandshakeStatus statusLoopCondition) throws SSLException, EOFException {
@@ -225,9 +215,8 @@ public class TlsSocketChannelImpl {
 
 	// write
 
-	public long write(ByteBuffer[] srcBuffers, int offset, int length) throws IOException {
-		TlsSocketChannelImpl.checkWriteBuffer(srcBuffers, offset, length);
-		long bytesToConsume = Arrays.stream(srcBuffers, offset, offset + length).mapToLong(bb -> bb.remaining()).sum();
+	public long write(ByteBufferSet source) throws IOException {
+		long bytesToConsume = source.remaining();
 		if (bytesToConsume == 0)
 			return 0;
 		if (invalid)
@@ -257,7 +246,7 @@ public class TlsSocketChannelImpl {
 				}
 				if (bytesConsumed == bytesToConsume)
 					return bytesToConsume;
-				int c = wrapLoop(srcBuffers, offset, length);
+				int c = wrapLoop(source);
 				Util.assertTrue(engine.getHandshakeStatus() == NOT_HANDSHAKING);
 				bytesConsumed += c;
 			}
@@ -266,17 +255,14 @@ public class TlsSocketChannelImpl {
 		}
 	}
 
-	private int wrapLoop(ByteBuffer[] outPlain, int effOffset, int effLength)
-			throws SSLException, AssertionError, ClosedChannelException {
+	private int wrapLoop(ByteBufferSet source) throws SSLException, AssertionError, ClosedChannelException {
 		int bytesConsumed = 0;
 		SSLEngineResult result;
 		do {
-			result = engine.wrap(outPlain, effOffset, effLength, outEncrypted);
+			result = engine.wrap(source.array, source.offset, source.length, outEncrypted);
 			if (logger.isTraceEnabled()) {
 				logger.trace("engine.wrap() result: [{}]; engine status: {}; srcBuffer: {}, outEncrypted: {}",
-						resultToString(result), engine.getHandshakeStatus(),
-						Arrays.stream(outPlain, effOffset, effOffset + effLength).collect(Collectors.toList()),
-						outEncrypted);
+						resultToString(result), engine.getHandshakeStatus(), source, outEncrypted);
 			}
 			switch (result.getStatus()) {
 			case OK:
@@ -455,7 +441,7 @@ public class TlsSocketChannelImpl {
 				switch (engine.getHandshakeStatus()) {
 				case NEED_WRAP:
 					Util.assertTrue(outEncrypted.position() == 0);
-					wrapLoop(dummyOut, 0, 0);
+					wrapLoop(dummyOut);
 					int bytesToWrite = outEncrypted.position();
 					int c = flipAndWriteToNetwork(); // IO block
 					if (c < bytesToWrite)
@@ -515,7 +501,7 @@ public class TlsSocketChannelImpl {
 					// response.
 					Util.assertTrue(outEncrypted.position() == 0);
 					try {
-						SSLEngineResult result = engine.wrap(dummyOut, outEncrypted);
+						SSLEngineResult result = engine.wrap(dummyOut.array, dummyOut.offset, dummyOut.length, outEncrypted);
 						if (logger.isTraceEnabled()) {
 							logger.trace("engine.wrap() result: [{}]; engine status: {}; outEncrypted: {}",
 									resultToString(result), engine.getHandshakeStatus(), outEncrypted);
@@ -539,24 +525,9 @@ public class TlsSocketChannelImpl {
 		return writeChannel.isOpen() && readChannel.isOpen();
 	}
 
-	static void checkReadBuffer(ByteBuffer[] dstBuffers, int offset, int length) {
-		if (dstBuffers == null)
-			throw new NullPointerException();
-		for (int i = offset; i < offset + length; i++) {
-			if (dstBuffers[i] == null)
-				throw new NullPointerException();
-			if (dstBuffers[i].isReadOnly())
-				throw new IllegalArgumentException();
-		}
-	}
-
-	public static void checkWriteBuffer(ByteBuffer[] srcBuffers, int offset, int length) {
-		if (srcBuffers == null)
-			throw new NullPointerException();
-		for (int i = offset; i < offset + length; i++) {
-			if (srcBuffers[i] == null)
-				throw new NullPointerException();
-		}
+	static void checkReadBuffer(ByteBufferSet dest) {
+		if (dest.isReadOnly())
+			throw new IllegalArgumentException();
 	}
 
 	public SSLEngine engine() {

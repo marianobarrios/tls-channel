@@ -30,27 +30,27 @@ class ApiTest extends FunSuite with Matchers {
   test("reading into a read-only buffer") {
     val socket = newSocket()
     intercept[IllegalArgumentException] {
-      socket.read(Array(ByteBuffer.allocate(1).asReadOnlyBuffer()), 0, 1)
+      socket.read(new ByteBufferSet(ByteBuffer.allocate(1).asReadOnlyBuffer()))
     }
   }
 
   test("reading into a buffer without remaining capacity") {
     val socket = newSocket()
-    assert(socket.read(Array(ByteBuffer.allocate(0)), 0, 1) === 0, "read must return zero when the buffer was empty")
+    assert(socket.read(new ByteBufferSet(ByteBuffer.allocate(0))) === 0, "read must return zero when the buffer was empty")
   }
 
   test("writing from an empty buffer should work") {
     val socket = newSocket()
-    socket.write(Array(ByteBuffer.allocate(0)), 0, 1) // empty write
+    socket.write(new ByteBufferSet(ByteBuffer.allocate(0))) // empty write
   }
 
   test("using socket after close") {
     val socket = newSocket()
     socket.close()
     intercept[IOException] {
-      socket.write(Array(ByteBuffer.allocate(arraySize)), 0, 1)
+      socket.write(new ByteBufferSet(ByteBuffer.allocate(arraySize)))
     }
-    assert(-1 === socket.read(Array(ByteBuffer.allocate(arraySize)), 0, 1))
+    assert(-1 === socket.read(new ByteBufferSet(ByteBuffer.allocate(arraySize))))
   }
 
 }
