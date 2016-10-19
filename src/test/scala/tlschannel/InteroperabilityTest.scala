@@ -63,15 +63,15 @@ class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
   val factory = new SocketPairFactory(sslContext, null)
 
   def oldNio(cipher: String) = {
-    val (client, (server, _)) = factory.oldNio(cipher)
+    val (client, server) = factory.oldNio(cipher)
     val clientPair = (new SSLSocketWriter(client), new SocketReader(client))
-    val serverPair = (new TlsSocketChannelWriter(server), new ByteChannelReader(server))
+    val serverPair = (new TlsSocketChannelWriter(server.tls), new ByteChannelReader(server.tls))
     (clientPair, serverPair)
   }
 
   def nioOld(cipher: String) = {
-    val ((client, _), server) = factory.nioOld(cipher)
-    val clientPair = (new TlsSocketChannelWriter(client), new ByteChannelReader(client))
+    val (client, server) = factory.nioOld(cipher)
+    val clientPair = (new TlsSocketChannelWriter(client.tls), new ByteChannelReader(client.tls))
     val serverPair = (new SSLSocketWriter(server), new SocketReader(server))
     (clientPair, serverPair)
   }

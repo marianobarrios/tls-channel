@@ -26,7 +26,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
     val (cipher, sslContext) = SslContextFactory.standardCipher
     for ((size1, size2) <- (sizes zip sizes.reverse)) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
-      val ((client, clientChannel), (server, serverChannel)) = factory.nioNio(
+      val SocketPair(SocketGroup(client, clientChannel, _), SocketGroup(server, serverChannel, _)) = factory.nioNio(
         cipher,
         internalClientChunkSize = size1,
         externalClientChunkSize = size2,
@@ -60,20 +60,20 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
     val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     for ((size1, size2) <- (sizes zip sizes.reverse)) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
-      val ((client, clientChannel), (server, serverChannel)) = factory.nioNio(cipher,
+      val SocketPair(client, server) = factory.nioNio(cipher,
         internalClientChunkSize = size1,
         externalClientChunkSize = size2,
         internalServerChunkSize = size1,
         externalServerChunkSize = size2)
       val (_, elapsed) = TestUtil.time {
-        val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client, clientChannel), "client-writer")
-        val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server, serverChannel), "server-write")
-        val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client), "client-reader")
-        val serverReaderThread = new Thread(() => BlockingTest.readerLoop(data, server), "server-reader")
+        val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client.external, client.tls), "client-writer")
+        val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server.external, server.tls), "server-write")
+        val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client.external), "client-reader")
+        val serverReaderThread = new Thread(() => BlockingTest.readerLoop(data, server.external), "server-reader")
         Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
         Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
-        client.close()
-        server.close()
+        client.external.close()
+        server.external.close()
       }
       info(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d - ${elapsed / 1000}%5d ms")
     }

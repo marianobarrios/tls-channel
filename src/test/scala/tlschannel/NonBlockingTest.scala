@@ -24,7 +24,7 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
     for ((size1, size2) <- (sizes zip sizes.reverse)) {
       val (_, elapsed) = TestUtil.time {
         logger.debug(s"Sizes: size1=$size1,size2=$size2")
-        val ((client, clientChannel), (server, serverChannel)) = factory.nioNio(
+        val SocketPair(client, server) = factory.nioNio(
           cipher,
           internalClientChunkSize = size1,
           externalClientChunkSize = size2,
@@ -33,14 +33,11 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 
         val selector = Selector.open()
 
-        val rawClient = clientChannel.getWrapped.asInstanceOf[ChunkingByteChannel].wrapped.asInstanceOf[SocketChannel]
-        val rawServer = serverChannel.getWrapped.asInstanceOf[ChunkingByteChannel].wrapped.asInstanceOf[SocketChannel]
+        client.plain.configureBlocking(false)
+        server.plain.configureBlocking(false)
 
-        rawClient.configureBlocking(false)
-        rawServer.configureBlocking(false)
-
-        rawClient.register(selector, SelectionKey.OP_WRITE)
-        rawServer.register(selector, SelectionKey.OP_READ)
+        client.plain.register(selector, SelectionKey.OP_WRITE)
+        server.plain.register(selector, SelectionKey.OP_READ)
 
         val originBuffer = ByteBuffer.allocate(dataSize)
         val targetBuffer = ByteBuffer.allocate(dataSize)
@@ -58,16 +55,16 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
             logger.debug(s"selected key: $selected")
             try {
               selected match {
-                case `rawClient` =>
+                case client.plain =>
                   logger.debug("renegotiating...")
-                  clientChannel.renegotiate()
+                  client.tls.renegotiate()
                   while (originBuffer.hasRemaining) {
-                    val c = client.write(originBuffer)
+                    val c = client.external.write(originBuffer)
                     assert(c > 0) // the necessity of blocking is communicated with exceptions
                   }
-                case `rawServer` =>
+                case server.plain =>
                   while (targetBuffer.hasRemaining) {
-                    val c = server.read(targetBuffer)
+                    val c = server.external.read(targetBuffer)
                     assert(c > 0) // the necessity of blocking is communicated with exceptions
                   }
                 case _ =>

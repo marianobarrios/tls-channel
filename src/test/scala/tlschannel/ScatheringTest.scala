@@ -24,19 +24,19 @@ class ScatheringTest extends FunSuite with Matchers with StrictLogging {
   test("half duplex") {
     val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val (cipher, sslContext) = SslContextFactory.standardCipher
-    val ((client, _), (server, _)) = factory.nioNio(cipher)
+    val SocketPair(client, server) = factory.nioNio(cipher)
     val (_, elapsed) = TestUtil.time {
-      val clientWriterThread = new Thread(() => ScatheringTest.writerLoop(data, client), "client-writer")
-      val serverWriterThread = new Thread(() => ScatheringTest.writerLoop(data, server), "server-writer")
-      val clientReaderThread = new Thread(() => ScatheringTest.readerLoop(data, client), "client-reader")
-      val serverReaderThread = new Thread(() => ScatheringTest.readerLoop(data, server), "server-reader")
+      val clientWriterThread = new Thread(() => ScatheringTest.writerLoop(data, client.tls), "client-writer")
+      val serverWriterThread = new Thread(() => ScatheringTest.writerLoop(data, server.tls), "server-writer")
+      val clientReaderThread = new Thread(() => ScatheringTest.readerLoop(data, client.tls), "client-reader")
+      val serverReaderThread = new Thread(() => ScatheringTest.readerLoop(data, server.tls), "server-reader")
       Seq(serverReaderThread, clientWriterThread).foreach(_.start())
       Seq(serverReaderThread, clientWriterThread).foreach(_.join())
       clientReaderThread.start()
       serverWriterThread.start()
       Seq(clientReaderThread, serverWriterThread).foreach(_.join())
-      server.close()
-      client.close()
+      server.external.close()
+      client.external.close()
     }
     info(f"${elapsed / 1000}%5d ms")
   }

@@ -29,23 +29,23 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
     for ((cipher, sslContext) <- SslContextFactory.allCiphers) {
       withClue(cipher + ": ") {
         logger.debug(s"Testing cipher: $cipher")
-        val ((client, rawClient), (server, rawServer)) = socketFactories(sslContext).nioNio(cipher)
+        val SocketPair(client, server) = socketFactories(sslContext).nioNio(cipher)
         val (_, elapsed) = TestUtil.time {
-          val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client, client, renegotiate = true), "client-writer")
-          val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server, server, renegotiate = true), "server-writer")
-          val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client), "client-reader")
-          val serverReaderThread = new Thread(() => BlockingTest.readerLoop(data, server), "server-reader")
+          val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client.external, client.tls, renegotiate = true), "client-writer")
+          val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server.external, server.tls, renegotiate = true), "server-writer")
+          val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client.external), "client-reader")
+          val serverReaderThread = new Thread(() => BlockingTest.readerLoop(data, server.external), "server-reader")
           Seq(serverReaderThread, clientWriterThread).foreach(_.start())
           Seq(serverReaderThread, clientWriterThread).foreach(_.join())
           clientReaderThread.start()
           // renegotiate three times, to test idempotency
           for (_ <- 1 to 3) {
-            server.renegotiate()
+            server.tls.renegotiate()
           }
           serverWriterThread.start()
           Seq(clientReaderThread, serverWriterThread).foreach(_.join())
-          server.close()
-          client.close()
+          server.external.close()
+          client.external.close()
         }
         info(f"$cipher%-45s - ${elapsed / 1000}%5d ms")
       }
@@ -59,16 +59,16 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
     for ((cipher, sslContext) <- SslContextFactory.allCiphers) {
       withClue(cipher + ": ") {
         logger.debug(s"Testing cipher: $cipher")
-        val ((client, _), (server, _)) = socketFactories(sslContext).nioNio(cipher)
+        val SocketPair(client, server) = socketFactories(sslContext).nioNio(cipher)
         val (_, elapsed) = TestUtil.time {
-          val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client, client), "client-writer")
-          val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server, server), "server-write")
-          val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client), "client-reader")
-          val serverReaderThread = new Thread(() => BlockingTest.readerLoop(data, server), "server-reader")
+          val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client.external, client.tls), "client-writer")
+          val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server.external, server.tls), "server-write")
+          val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client.external), "client-reader")
+          val serverReaderThread = new Thread(() => BlockingTest.readerLoop(data, server.external), "server-reader")
           Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
           Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
-          client.close()
-          server.close()
+          client.external.close()
+          server.external.close()
         }
         info(f"$cipher%-45s - ${elapsed / 1000}%5d ms")
       }
