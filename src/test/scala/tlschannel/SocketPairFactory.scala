@@ -96,19 +96,28 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
   }
 
   def nioNio(cipher: String): SocketPair = {
+    nioNioN(cipher, 1).head
+  }
+
+  def nioNioN(cipher: String, qtty: Int): Seq[SocketPair] = {
     val serverSocket = ServerSocketChannel.open()
-    serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
-    val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
-    val address = new InetSocketAddress(localhost, chosenPort)
-    val rawClient = SocketChannel.open(address)
-    val rawServer = serverSocket.accept()
-    serverSocket.close()
-    val clientChannel = new TlsClientSocketChannel.Builder(rawClient, createClientSslEngine(cipher, serverName, chosenPort))
-      .build()
-    val serverChannel = new TlsServerSocketChannel.Builder(rawServer, sslContext)
-      .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
-      .build()
-    SocketPair(SocketGroup(clientChannel, clientChannel, rawClient), SocketGroup(serverChannel, serverChannel, rawServer))
+    try {
+      serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
+      val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
+      val address = new InetSocketAddress(localhost, chosenPort)
+      for (i <- 0 until qtty) yield {
+        val rawClient = SocketChannel.open(address)
+        val rawServer = serverSocket.accept()
+        val clientChannel = new TlsClientSocketChannel.Builder(rawClient, createClientSslEngine(cipher, serverName, chosenPort))
+          .build()
+        val serverChannel = new TlsServerSocketChannel.Builder(rawServer, sslContext)
+          .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
+          .build()
+        SocketPair(SocketGroup(clientChannel, clientChannel, rawClient), SocketGroup(serverChannel, serverChannel, rawServer))
+      }
+    } finally {
+      serverSocket.close()
+    }
   }
 
   def nioNio(

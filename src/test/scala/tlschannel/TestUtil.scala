@@ -57,5 +57,11 @@ object TestUtil extends StrictLogging {
       stream.takeWhile(newPredicate)
     }
   }
+  
+  implicit class IterableWithForany[A](iterable: Iterable[A]) {
+    def forany(p: A => Boolean): Boolean = {
+      !iterable.forall(a => !p(a))
+    }
+  }
 
 }
