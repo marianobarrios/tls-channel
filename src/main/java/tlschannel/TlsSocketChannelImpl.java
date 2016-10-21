@@ -197,8 +197,8 @@ public class TlsSocketChannelImpl {
 					}
 					if (dest.isPresent() && effDest == dest.get()) {
 						/*
-						 * The client-supplier buffer is not big enough. Use
-						 * the internal inPlain buffer, also ensure that it is
+						 * The client-supplier buffer is not big enough. Use the
+						 * internal inPlain buffer, also ensure that it is
 						 * bigger than the too-small supplied one.
 						 */
 						ensureInPlainCapacity(((int) dest.get().remaining()) * 2);
@@ -471,8 +471,7 @@ public class TlsSocketChannelImpl {
 		return handShakeLoop(dest);
 	}
 
-	private int handShakeLoop(Optional<ByteBufferSet> dest)
-			throws SSLHandshakeException, TlsNonBlockingNecessityException {
+	private int handShakeLoop(Optional<ByteBufferSet> dest) throws IOException, TlsNonBlockingNecessityException {
 		Util.assertTrue(inPlain.position() == 0);
 		try {
 			while (true) {
@@ -517,15 +516,6 @@ public class TlsSocketChannelImpl {
 			}
 		} catch (TlsNonBlockingNecessityException e) {
 			throw e;
-		} catch (IOException e) {
-			String reason;
-			if (e.getMessage() == null || e.getMessage().isEmpty()) {
-				reason = e.getClass().getCanonicalName();
-			} else {
-				reason = e.getMessage();
-			}
-			// TODO: why hide exception? (can be a real IO problem)
-			throw new SSLHandshakeException("Handshaking aborted. Reason: " + reason);
 		}
 	}
 
