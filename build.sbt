@@ -1,9 +1,9 @@
 scalaVersion := "2.11.6"
 
-organization := "com.despegar"
+organization := "com.github.marianobarrios"
 version := "0.1-SNAPSHOT"
 description := "TLS Socket Channel"
-homepage := Some(url("https://github.com/despegar/tls-socket-channel"))
+homepage := Some(url("https://github.com/marianobarrios/tls-socket-channel"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
 
 publishTo := {
@@ -48,9 +48,9 @@ publishMavenStyle := true
 
 pomExtra := (
   <scm>
-    <url>git@github.com:despegar/tls-socket-channel.git</url>
-    <connection>scm:git:git@github.com:despegar/tls-socket-channel.git</connection>
-    <developerConnection>scm:git:git@github.com:despegar/tls-socket-channel.git</developerConnection>
+    <url>git@github.com:marianobarrios/tls-socket-channel.git</url>
+    <connection>scm:git:git@github.com:marianobarrios/tls-socket-channel.git</connection>
+    <developerConnection>scm:git:git@github.com:marianobarrios/tls-socket-channel.git</developerConnection>
   </scm>
   <developers>
     <developer>
