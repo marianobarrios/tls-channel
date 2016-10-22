@@ -75,7 +75,7 @@ class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging {
     var needReadCount = 0
     var needWriteCount = 0
     var selectorCycles = 0
-    var renegociationCount = 0
+    var renegotiationCount = 0
     val maxRenegotiations = if (renegotiate) totalConnections * 2 * 20 else 0
 
     val random = new Random
@@ -92,9 +92,9 @@ class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging {
             if (endpoint.isClient) {
 
               while (endpoint.buffer.hasRemaining) {
-                if (renegociationCount < maxRenegotiations) {
+                if (renegotiationCount < maxRenegotiations) {
                   if (random.nextBoolean()) {
-                    renegociationCount += 1
+                    renegotiationCount += 1
                     endpoint.socketGroup.tls.renegotiate()
                   }
                 }
@@ -133,7 +133,7 @@ class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging {
     info(s"Selector cycles: $selectorCycles")
     info(s"NeedRead count: $needReadCount")
     info(s"NeedWrite count: $needWriteCount")
-    info(s"Renegociation count: $renegociationCount")
+    info(s"Renegociation count: $renegotiationCount")
     info(s"Asynchronous tasks run: $taskCount")
     info(s"Total asynchronous task running time: ${totalTaskTimeMicros.sum() / 1000} ms")
     info(f"Elapsed: ${elapsed / 1000}%5d ms")
@@ -152,19 +152,19 @@ class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging {
 
   }
 
-  test("running tasks in non-blocking loop - no renegociation") {
+  test("running tasks in non-blocking loop - no renegotiation") {
     testNonBlockingLoop(runTasks = true, renegotiate = false)
   }
 
-  test("running tasks in executor - no renegociation") {
+  test("running tasks in executor - no renegotiation") {
     testNonBlockingLoop(runTasks = false, renegotiate = false)
   }
 
-  test("running tasks in non-blocking loop - with renegociation") {
+  test("running tasks in non-blocking loop - with renegotiation") {
     testNonBlockingLoop(runTasks = true, renegotiate = true)
   }
 
-  test("running tasks in executor - with renegociation") {
+  test("running tasks in executor - with renegotiation") {
     testNonBlockingLoop(runTasks = false, renegotiate = true)
   }
 

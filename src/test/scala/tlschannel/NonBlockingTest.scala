@@ -43,9 +43,9 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 
       Random.nextBytes(originBuffer.array)
 
-      var renegociationCount = 0
+      var renegotiationCount = 0
       val maxRenegotiations = 20
-      
+
       val elapsed = TestUtil.time {
 
         while (originBuffer.hasRemaining || targetBuffer.hasRemaining) {
@@ -59,9 +59,9 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
               selected match {
                 case client.plain =>
                   while (originBuffer.hasRemaining) {
-                    if (renegociationCount < maxRenegotiations) {
+                    if (renegotiationCount < maxRenegotiations) {
                       if (Random.nextBoolean()) {
-                        renegociationCount += 1
+                        renegotiationCount += 1
                         client.tls.renegotiate()
                       }
                     }
@@ -91,7 +91,7 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
         originBuffer.flip()
         assert(targetBuffer === originBuffer)
       }
-      info(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d - ${elapsed / 1000}%5d ms - renegotiations: $renegociationCount)")
+      info(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d - ${elapsed / 1000}%5d ms - renegotiations: $renegotiationCount)")
     }
   }
 

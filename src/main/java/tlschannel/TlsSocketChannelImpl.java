@@ -30,16 +30,16 @@ public class TlsSocketChannelImpl {
 
 	private static int buffersInitialSize = 2048;
 
-	private static class LoopResult {
+	private static class EngineLoopResult {
 		public final int bytes;
 		public final HandshakeStatus lastHandshakeStatus;
 
-		public LoopResult(int bytes, HandshakeStatus lastHandshakeStatus) {
+		public EngineLoopResult(int bytes, HandshakeStatus lastHandshakeStatus) {
 			this.bytes = bytes;
 			this.lastHandshakeStatus = lastHandshakeStatus;
 		}
 	}
-	
+
 	private final ReadableByteChannel readChannel;
 	private final WritableByteChannel writeChannel;
 	private final SSLEngine engine;
@@ -68,7 +68,7 @@ public class TlsSocketChannelImpl {
 	private final Lock readLock = new ReentrantLock();
 	private final Lock writeLock = new ReentrantLock();
 
-	private volatile boolean initialHandshaked = false;
+	private volatile boolean negotiated = false;
 	private volatile boolean invalid = false;
 	private boolean tlsClosePending = false;
 
@@ -90,9 +90,7 @@ public class TlsSocketChannelImpl {
 			return 0;
 		if (invalid)
 			return -1;
-		if (!initialHandshaked) {
-			doHandshake();
-		}
+		negotiateIfNecesary();
 		readLock.lock();
 		try {
 			long transfered = transferPendingPlain(dest);
@@ -108,27 +106,20 @@ public class TlsSocketChannelImpl {
 				switch (handshakeStatus) {
 				case NEED_UNWRAP:
 				case NEED_WRAP:
-					// handshake needs both read and write locks, we already
-					// have one, take the other
-					writeLock.lock();
-					try {
-						int result = handshakeImpl(Optional.of(dest), Optional.of(handshakeStatus), false /* active */);
-						if (result > 0) {
-							if (inPlain.position() == 0) {
-								return result;
-							} else {
-								return transferPendingPlain(dest);
-							}
+					int result = handshake(Optional.of(dest), Optional.of(handshakeStatus));
+					if (result > 0) {
+						if (inPlain.position() == 0) {
+							return result;
+						} else {
+							return transferPendingPlain(dest);
 						}
-						handshakeStatus = HandshakeStatus.NOT_HANDSHAKING;
-					} finally {
-						writeLock.unlock();
 					}
+					handshakeStatus = HandshakeStatus.NOT_HANDSHAKING;
 					break;
 				case NOT_HANDSHAKING:
 				case FINISHED:
 					try {
-						LoopResult res = unwrapLoop(Optional.of(dest), NOT_HANDSHAKING /* statusLoopCondition */);
+						EngineLoopResult res = unwrapLoop(Optional.of(dest), NOT_HANDSHAKING /* statusLoopCondition */);
 						handshakeStatus = res.lastHandshakeStatus;
 						while (res.bytes == 0 && handshakeStatus == NOT_HANDSHAKING) {
 							if (!inEncrypted.hasRemaining())
@@ -176,7 +167,7 @@ public class TlsSocketChannelImpl {
 		return bytes;
 	}
 
-	private LoopResult unwrapLoop(Optional<ByteBufferSet> dest, HandshakeStatus statusLoopCondition)
+	private EngineLoopResult unwrapLoop(Optional<ByteBufferSet> dest, HandshakeStatus statusLoopCondition)
 			throws SSLException, EOFException {
 		ByteBufferSet effDest = dest.orElse(new ByteBufferSet(inPlain));
 		inEncrypted.flip();
@@ -199,11 +190,11 @@ public class TlsSocketChannelImpl {
 				switch (result.getStatus()) {
 				case OK:
 					if (result.bytesProduced() > 0) {
-						return new LoopResult(result.bytesProduced(), result.getHandshakeStatus());
+						return new EngineLoopResult(result.bytesProduced(), result.getHandshakeStatus());
 					}
 					break;
 				case BUFFER_UNDERFLOW:
-					return new LoopResult(result.bytesProduced(), result.getHandshakeStatus());
+					return new EngineLoopResult(result.bytesProduced(), result.getHandshakeStatus());
 				case BUFFER_OVERFLOW:
 					/*
 					 * The engine can respond overflow even data was already
@@ -233,7 +224,7 @@ public class TlsSocketChannelImpl {
 						throw new EOFException();
 				}
 			} while (result.getHandshakeStatus() == statusLoopCondition);
-			return new LoopResult(0, result.getHandshakeStatus());
+			return new EngineLoopResult(0, result.getHandshakeStatus());
 		} finally {
 			inEncrypted.compact();
 		}
@@ -266,41 +257,22 @@ public class TlsSocketChannelImpl {
 			return 0;
 		if (invalid)
 			throw new ClosedChannelException();
-		if (!initialHandshaked)
-			doHandshake();
+		negotiateIfNecesary();
 		long bytesConsumed = 0;
 		writeLock.lock();
 		try {
 			if (invalid)
 				throw new ClosedChannelException();
-			HandshakeStatus handshakeStatus = engine.getHandshakeStatus();
-			if (handshakeStatus != NOT_HANDSHAKING) {
-				readLock.lock();
-				try {
-					handshakeImpl(Optional.empty(), Optional.of(handshakeStatus), true /* active */);
-				} finally {
-					readLock.unlock();
-				}
-			}
 			while (true) {
-				if (outEncrypted.position() > 0) {
-					flipAndWriteToNetwork(); // IO block
-					if (outEncrypted.position() > 0) {
-						/*
-						 * Could not write everything, will not wrap any more.
-						 * Also, at this point we know that the socket is
-						 * non-blocking
-						 */
-						if (bytesConsumed > 0)
-							return bytesConsumed;
-						else
-							throw new NeedsWriteException();
-					}
+				int bytesToWrite = outEncrypted.position();
+				if (bytesToWrite > 0) {
+					int c = flipAndWriteToNetwork(); // IO block
+					if (c < bytesToWrite)
+						throw new NeedsWriteException();
 				}
 				if (bytesConsumed == bytesToConsume)
 					return bytesToConsume;
-				LoopResult res = wrapLoop(source);
-				Util.assertTrue(res.lastHandshakeStatus == NOT_HANDSHAKING);
+				EngineLoopResult res = wrapLoop(source);
 				bytesConsumed += res.bytes;
 			}
 		} finally {
@@ -308,7 +280,8 @@ public class TlsSocketChannelImpl {
 		}
 	}
 
-	private LoopResult wrapLoop(ByteBufferSet source) throws SSLException, AssertionError, ClosedChannelException {
+	private EngineLoopResult wrapLoop(ByteBufferSet source)
+			throws SSLException, AssertionError, ClosedChannelException {
 		int bytesConsumed = 0;
 		SSLEngineResult result;
 		do {
@@ -334,7 +307,7 @@ public class TlsSocketChannelImpl {
 			bytesConsumed += result.bytesConsumed();
 		} while (result.getStatus() == Status.BUFFER_OVERFLOW);
 		logger.trace("Returning bytes consumed: {}", bytesConsumed);
-		return new LoopResult(bytesConsumed, result.getHandshakeStatus());
+		return new EngineLoopResult(bytesConsumed, result.getHandshakeStatus());
 	}
 
 	private void enlargeOutEncrypted() {
@@ -410,18 +383,52 @@ public class TlsSocketChannelImpl {
 	// handshake and close
 
 	/**
-	 * Force new handshake
-	 * 
-	 * @throws IOException
+	 * Force new negotiation
 	 */
 	public void renegotiate() throws IOException {
-		if (!initialHandshaked)
-			doHandshake();
+		negotiate(true /* force */);
+	}
+
+	/**
+	 * Do a negotiation if this connection is new and it hasn't been done
+	 * already.
+	 */
+	public void negotiateIfNecesary() throws IOException {
+		negotiate(false /* force */);
+	}
+
+	private void negotiate(boolean force) throws IOException {
+		if (!force && negotiated)
+			return;
+		initLock.lock();
+		try {
+			if (force || !negotiated) {
+				engine.beginHandshake();
+				logger.trace("Called engine.beginHandshake()");
+				handshake(Optional.empty(), Optional.empty());
+				// call client code
+				initSessionCallback.accept(engine.getSession());
+				negotiated = true;
+			}
+		} finally {
+			initLock.unlock();
+		}
+	}
+
+	private int handshake(Optional<ByteBufferSet> dest, Optional<HandshakeStatus> handshakeStatus) throws IOException {
 		readLock.lock();
 		try {
 			writeLock.lock();
 			try {
-				handshakeImpl(Optional.empty(), Optional.empty(), true /* active */);
+				Util.assertTrue(inPlain.position() == 0);
+				// write any pending bytes
+				int bytesToWrite = outEncrypted.position();
+				if (bytesToWrite > 0) {
+					int c = flipAndWriteToNetwork(); // IO block
+					if (c < bytesToWrite)
+						throw new NeedsWriteException();
+				}
+				return handshakeLoop(dest, handshakeStatus);
 			} finally {
 				writeLock.unlock();
 			}
@@ -430,106 +437,58 @@ public class TlsSocketChannelImpl {
 		}
 	}
 
-	/**
-	 * Initial handshake
-	 * 
-	 * @throws IOException
-	 */
-	public void doHandshake() throws IOException {
-		initLock.lock();
-		try {
-			if (!initialHandshaked) {
-				readLock.lock();
-				try {
-					writeLock.lock();
-					try {
-						handshakeImpl(Optional.empty(), Optional.empty(), true /* active */);
-					} finally {
-						writeLock.unlock();
-					}
-				} finally {
-					readLock.unlock();
-				}
-				// call client code
-				initSessionCallback.accept(engine.getSession());
-				initialHandshaked = true;
-			}
-		} finally {
-			initLock.unlock();
-		}
-	}
-
-	private int handshakeImpl(Optional<ByteBufferSet> dest, Optional<HandshakeStatus> handshakeStatus, boolean active) throws IOException {
+	private int handshakeLoop(Optional<ByteBufferSet> dest, Optional<HandshakeStatus> handshakeStatus)
+			throws IOException {
 		Util.assertTrue(inPlain.position() == 0);
-		// write any pending bytes
-		int bytesToWrite = outEncrypted.position();
-		if (bytesToWrite > 0) {
-			int c = flipAndWriteToNetwork(); // IO block
-			if (c < bytesToWrite)
-				throw new NeedsWriteException();
-		}
-		if (active) {
-			engine.beginHandshake();
-			logger.trace("Called engine.beginHandshake()");
-		}
-		return handShakeLoop(dest, handshakeStatus);
-	}
-
-	private int handShakeLoop(Optional<ByteBufferSet> dest, Optional<HandshakeStatus> handshakeStatus) throws IOException, TlsNonBlockingNecessityException {
-		Util.assertTrue(inPlain.position() == 0);
-		try {
-			HandshakeStatus status = handshakeStatus.orElseGet(() ->engine.getHandshakeStatus());
-			while (true) {
-				switch (status) {
-				case NEED_WRAP:
-					Util.assertTrue(outEncrypted.position() == 0);
-					LoopResult wrapResult = wrapLoop(dummyOut);
-					status = wrapResult.lastHandshakeStatus;
-					int bytesToWrite = outEncrypted.position();
-					int c = flipAndWriteToNetwork(); // IO block
-					if (c < bytesToWrite)
-						throw new NeedsWriteException();
-					break;
-				case NEED_UNWRAP:
-					Util.assertTrue(inPlain.position() == 0);
-					LoopResult res = unwrapLoop(dest, NEED_UNWRAP /* statusLoopCondition */);
+		HandshakeStatus status = handshakeStatus.orElseGet(() -> engine.getHandshakeStatus());
+		while (true) {
+			switch (status) {
+			case NEED_WRAP:
+				Util.assertTrue(outEncrypted.position() == 0);
+				EngineLoopResult wrapResult = wrapLoop(dummyOut);
+				status = wrapResult.lastHandshakeStatus;
+				int bytesToWrite = outEncrypted.position();
+				int c = flipAndWriteToNetwork(); // IO block
+				if (c < bytesToWrite)
+					throw new NeedsWriteException();
+				break;
+			case NEED_UNWRAP:
+				Util.assertTrue(inPlain.position() == 0);
+				EngineLoopResult res = unwrapLoop(dest, NEED_UNWRAP /* statusLoopCondition */);
+				status = res.lastHandshakeStatus;
+				while (status == NEED_UNWRAP && res.bytes == 0) {
+					if (!inEncrypted.hasRemaining())
+						enlargeInEncrypted();
+					int bytesRead = readFromNetwork(); // IO block
+					if (bytesRead == 0)
+						throw new NeedsReadException();
+					Util.assertTrue(inEncrypted.position() > 0);
+					res = unwrapLoop(dest, NEED_UNWRAP /* statusLoopCondition */);
 					status = res.lastHandshakeStatus;
-					while (status == NEED_UNWRAP && res.bytes == 0) {
-						if (!inEncrypted.hasRemaining())
-							enlargeInEncrypted();
-						int bytesRead = readFromNetwork(); // IO block
-						if (bytesRead == 0)
-							throw new NeedsReadException();
-						Util.assertTrue(inEncrypted.position() > 0);
-						res = unwrapLoop(dest, NEED_UNWRAP /* statusLoopCondition */);
-						status = res.lastHandshakeStatus;
-					}
-					/*
-					 * It is possible that in the middle of the handshake loop,
-					 * even when the resulting status is NEED_UNWRAP, some bytes
-					 * are read in the inPlain buffer. If that is the case,
-					 * interrupt the loop.
-					 */
-					if (res.bytes > 0)
-						return res.bytes;
-					break;
-				case NOT_HANDSHAKING:
-					throw new IllegalStateException(
-							"Handshake completion should be signaled with 'FINISHED', not 'NOT_HANDSHAKING'");
-				case NEED_TASK:
-					if (runTasks) {
-						engine.getDelegatedTask().run();
-						status = engine.getHandshakeStatus();
-					} else {
-						throw new NeedsTaskException(engine.getDelegatedTask());
-					}
-					break;
-				case FINISHED:
-					return 0;
 				}
+				/*
+				 * It is possible that in the middle of the handshake loop, even
+				 * when the resulting status is NEED_UNWRAP, some bytes are read
+				 * in the inPlain buffer. If that is the case, interrupt the
+				 * loop.
+				 */
+				if (res.bytes > 0)
+					return res.bytes;
+				break;
+			case NOT_HANDSHAKING:
+				throw new IllegalStateException(
+						"Handshake completion should be signaled with 'FINISHED', not 'NOT_HANDSHAKING'");
+			case NEED_TASK:
+				if (runTasks) {
+					engine.getDelegatedTask().run();
+					status = engine.getHandshakeStatus();
+				} else {
+					throw new NeedsTaskException(engine.getDelegatedTask());
+				}
+				break;
+			case FINISHED:
+				return 0;
 			}
-		} catch (TlsNonBlockingNecessityException e) {
-			throw e;
 		}
 	}
 

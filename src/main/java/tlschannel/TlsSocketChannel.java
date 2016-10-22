@@ -13,7 +13,7 @@ public interface TlsSocketChannel extends ByteChannel, GatheringByteChannel, Sca
 
 	void renegotiate() throws IOException;
 
-	void doHandshake() throws IOException;
+	void negotiate() throws IOException;
 
 	void close();
 

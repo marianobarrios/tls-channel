@@ -99,29 +99,6 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     nioNioN(cipher, 1, None, None, None, None).head
   }
 
-//  def nioNioN(cipher: String, qtty: Int, runTasks: Boolean = true): Seq[SocketPair] = {
-//    val serverSocket = ServerSocketChannel.open()
-//    try {
-//      serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
-//      val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
-//      val address = new InetSocketAddress(localhost, chosenPort)
-//      for (i <- 0 until qtty) yield {
-//        val rawClient = SocketChannel.open(address)
-//        val rawServer = serverSocket.accept()
-//        val clientChannel = new TlsClientSocketChannel.Builder(rawClient, createClientSslEngine(cipher, serverName, chosenPort))
-//          .withRunTasks(runTasks)
-//          .build()
-//        val serverChannel = new TlsServerSocketChannel.Builder(rawServer, sslContext)
-//          .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
-//          .withRunTasks(runTasks)
-//          .build()
-//        SocketPair(SocketGroup(clientChannel, clientChannel, rawClient), SocketGroup(serverChannel, serverChannel, rawServer))
-//      }
-//    } finally {
-//      serverSocket.close()
-//    }
-//  }
-
   def nioNioN(
     cipher: String,
     qtty: Int,

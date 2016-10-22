@@ -107,8 +107,8 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 	}
 
 	@Override
-	public void doHandshake() throws IOException {
-		impl.doHandshake();
+	public void negotiate() throws IOException {
+		impl.negotiateIfNecesary();
 	}
 
 	@Override

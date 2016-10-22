@@ -150,10 +150,10 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	}
 
 	@Override
-	public void doHandshake() throws IOException {
+	public void negotiate() throws IOException {
 		if (!sniRead)
 			initEngine();
-		impl.doHandshake();
+		impl.negotiateIfNecesary();
 	}
 
 	@Override
