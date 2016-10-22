@@ -30,7 +30,7 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
       withClue(cipher + ": ") {
         logger.debug(s"Testing cipher: $cipher")
         val SocketPair(client, server) = socketFactories(sslContext).nioNio(cipher)
-        val (_, elapsed) = TestUtil.time {
+        val elapsed = TestUtil.time {
           val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client.external, client.tls, renegotiate = true), "client-writer")
           val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server.external, server.tls, renegotiate = true), "server-writer")
           val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client.external), "client-reader")
@@ -60,7 +60,7 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
       withClue(cipher + ": ") {
         logger.debug(s"Testing cipher: $cipher")
         val SocketPair(client, server) = socketFactories(sslContext).nioNio(cipher)
-        val (_, elapsed) = TestUtil.time {
+        val elapsed = TestUtil.time {
           val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client.external, client.tls), "client-writer")
           val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server.external, server.tls), "server-write")
           val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client.external), "client-reader")

@@ -112,7 +112,7 @@ class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
    */
   def halfDuplexStream(cipher: String, serverWriter: Writer, clientReader: Reader, clientWriter: Writer, serverReader: Reader) {
-    val (_, elapsed) = TestUtil.time {
+    val elapsed = TestUtil.time {
       val clientWriterThread = new Thread(() => writerLoop(clientWriter, renegotiate = true), "client-writer")
       val serverWriterThread = new Thread(() => writerLoop(serverWriter, renegotiate = true), "server-writer")
       val clientReaderThread = new Thread(() => readerLoop(clientReader), "client-reader")
@@ -136,7 +136,7 @@ class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
    * Test a full-duplex interaction, without any renegotiation
    */
   def fullDuplexStream(cipher: String, serverWriter: Writer, clientReader: Reader, clientWriter: Writer, serverReader: Reader) {
-    val (_, elapsed) = TestUtil.time {
+    val elapsed = TestUtil.time {
       val clientWriterThread = new Thread(() => writerLoop(clientWriter), "client-writer")
       val serverWriterThread = new Thread(() => writerLoop(serverWriter), "server-writer")
       val clientReaderThread = new Thread(() => readerLoop(clientReader), "client-reader")

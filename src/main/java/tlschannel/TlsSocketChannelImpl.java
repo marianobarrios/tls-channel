@@ -2,12 +2,10 @@ package tlschannel;
 
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -16,7 +14,6 @@ import javax.net.ssl.SSLEngineResult.Status;
 import javax.net.ssl.SSLEngine;
 import java.nio.channels.ClosedChannelException;
 
-import javax.net.ssl.SSLHandshakeException;
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
@@ -41,9 +38,10 @@ public class TlsSocketChannelImpl {
 
 	private final int tlsMaxDataSize;
 	private final int tlsMaxRecordSize;
+	private final boolean runTasks;
 
 	public TlsSocketChannelImpl(ReadableByteChannel readChannel, WritableByteChannel writeChannel, SSLEngine engine,
-			Optional<ByteBuffer> inEncrypted, Consumer<SSLSession> initSessionCallback) {
+			Optional<ByteBuffer> inEncrypted, Consumer<SSLSession> initSessionCallback, boolean runTasks) {
 		this.readChannel = readChannel;
 		this.writeChannel = writeChannel;
 		this.engine = engine;
@@ -53,6 +51,7 @@ public class TlsSocketChannelImpl {
 		this.tlsMaxDataSize = engine.getSession().getApplicationBufferSize();
 		// about 2^14 + overhead
 		this.tlsMaxRecordSize = engine.getSession().getPacketBufferSize();
+		this.runTasks = runTasks;
 	}
 
 	private final Lock initLock = new ReentrantLock();
@@ -75,7 +74,7 @@ public class TlsSocketChannelImpl {
 
 	// read
 
-	public long read(ByteBufferSet dest) throws IOException {
+	public long read(ByteBufferSet dest) throws IOException, NeedsTaskException {
 		checkReadBuffer(dest);
 		if (!dest.hasRemaining())
 			return 0;
@@ -141,7 +140,10 @@ public class TlsSocketChannelImpl {
 					}
 					break;
 				case NEED_TASK:
-					engine.getDelegatedTask().run();
+					if (runTasks)
+						engine.getDelegatedTask().run();
+					else
+						throw new NeedsTaskException(engine.getDelegatedTask());
 					break;
 				case FINISHED:
 					throw new IllegalStateException("engine.getHandshakeStatus() returned FINISHED");
@@ -256,7 +258,14 @@ public class TlsSocketChannelImpl {
 		try {
 			if (invalid)
 				throw new ClosedChannelException();
-			Util.assertTrue(engine.getHandshakeStatus() == NOT_HANDSHAKING);
+			if (engine.getHandshakeStatus() != NOT_HANDSHAKING) {
+				readLock.lock();
+				try {
+					handshakeImpl(Optional.empty(), true /* active */);
+				} finally {
+					readLock.unlock();
+				}
+			}
 			while (true) {
 				if (outEncrypted.position() > 0) {
 					flipAndWriteToNetwork(); // IO block
@@ -508,7 +517,10 @@ public class TlsSocketChannelImpl {
 				case NOT_HANDSHAKING:
 					return 0;
 				case NEED_TASK:
-					engine.getDelegatedTask().run();
+					if (runTasks)
+						engine.getDelegatedTask().run();
+					else
+						throw new NeedsTaskException(engine.getDelegatedTask());
 					break;
 				case FINISHED:
 					throw new IllegalStateException("engine.getHandshakeStatus() returned FINISHED");
@@ -561,6 +573,10 @@ public class TlsSocketChannelImpl {
 
 	public SSLEngine engine() {
 		return engine;
+	}
+
+	public boolean getRunTasks() {
+		return runTasks;
 	}
 
 	/**

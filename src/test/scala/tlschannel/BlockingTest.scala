@@ -28,11 +28,11 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
       val SocketPair(SocketGroup(client, clientChannel, _), SocketGroup(server, serverChannel, _)) = factory.nioNio(
         cipher,
-        internalClientChunkSize = size1,
-        externalClientChunkSize = size2,
-        internalServerChunkSize = size1,
-        externalServerChunkSize = size2)
-      val (_, elapsed) = TestUtil.time {
+        internalClientChunkSize = Some(size1),
+        externalClientChunkSize = Some(size2),
+        internalServerChunkSize = Some(size1),
+        externalServerChunkSize = Some(size2))
+      val elapsed = TestUtil.time {
         val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client, clientChannel, renegotiate = true), "client-writer")
         val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server, serverChannel, renegotiate = true), "server-writer")
         val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client), "client-reader")
@@ -61,11 +61,11 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
     for ((size1, size2) <- (sizes zip sizes.reverse)) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
       val SocketPair(client, server) = factory.nioNio(cipher,
-        internalClientChunkSize = size1,
-        externalClientChunkSize = size2,
-        internalServerChunkSize = size1,
-        externalServerChunkSize = size2)
-      val (_, elapsed) = TestUtil.time {
+        internalClientChunkSize = Some(size1),
+        externalClientChunkSize = Some(size2),
+        internalServerChunkSize = Some(size1),
+        externalServerChunkSize = Some(size2))
+      val elapsed = TestUtil.time {
         val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client.external, client.tls), "client-writer")
         val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server.external, server.tls), "server-write")
         val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client.external), "client-reader")

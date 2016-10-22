@@ -25,7 +25,7 @@ class ScatheringTest extends FunSuite with Matchers with StrictLogging {
     val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val (cipher, sslContext) = SslContextFactory.standardCipher
     val SocketPair(client, server) = factory.nioNio(cipher)
-    val (_, elapsed) = TestUtil.time {
+    val elapsed = TestUtil.time {
       val clientWriterThread = new Thread(() => ScatheringTest.writerLoop(data, client.tls), "client-writer")
       val serverWriterThread = new Thread(() => ScatheringTest.writerLoop(data, server.tls), "server-writer")
       val clientReaderThread = new Thread(() => ScatheringTest.readerLoop(data, client.tls), "client-reader")

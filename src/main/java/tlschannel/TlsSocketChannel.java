@@ -23,4 +23,6 @@ public interface TlsSocketChannel extends ByteChannel, GatheringByteChannel, Sca
 
 	SSLSession getSession();
 
+	boolean getRunTasks();
+	
 }

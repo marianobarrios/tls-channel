@@ -12,86 +12,160 @@ import com.typesafe.scalalogging.Logging
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import TestUtil.StreamWithTakeWhileInclusive
 import TestUtil.IterableWithForany
+import java.util.concurrent.Executors
+import TestUtil.functionToRunnable
+import java.util.concurrent.ConcurrentLinkedQueue
+import scala.collection.JavaConversions._
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.LongAdder
+import java.util.concurrent.atomic.LongAdder
+
+case class Endpoint(socketGroup: SocketGroup, isClient: Boolean, buffer: ByteBuffer, var key: SelectionKey)
 
 class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging {
+
+  def getSelectedEndpoints(selector: Selector): Seq[Endpoint] = {
+    val builder = Seq.newBuilder[Endpoint]
+    val it = selector.selectedKeys().iterator()
+    while (it.hasNext) {
+      val key = it.next()
+      key.interestOps(0) // delete all operations
+      builder += key.attachment.asInstanceOf[Endpoint]
+      it.remove()
+    }
+    builder.result()
+  }
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext, null)
 
-  val dataSize = SslContextFactory.tlsMaxDataSize * 100
+  val dataSize = SslContextFactory.tlsMaxDataSize * 5
 
-  test("selector loop") {
-    val (_, elapsed) = TestUtil.time {
-      val pairs = factory.nioNioN(cipher, 100)
+  val masterBuffer = ByteBuffer.allocate(dataSize)
+  Random.nextBytes(masterBuffer.array)
 
-      val selector = Selector.open()
+  val totalConnections = 50
 
-      val masterBuffer = ByteBuffer.allocate(dataSize)
-      Random.nextBytes(masterBuffer.array)
+  def testNonBlockingLoop(runTasks: Boolean, renegotiate: Boolean) {
+    val pairs = factory.nioNioN(cipher, totalConnections, Some(1024), None, Some(1024), None, runTasks)
 
-      val buffers = for (SocketPair(client, server) <- pairs) yield {
-        val originBuffer = masterBuffer.duplicate()
-        val targetBuffer = ByteBuffer.allocate(dataSize)
-        client.plain.configureBlocking(false)
-        server.plain.configureBlocking(false)
+    val selector = Selector.open()
+    val executor = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors - 1)
 
-        client.plain.register(selector, SelectionKey.OP_WRITE, (client, true, originBuffer))
-        server.plain.register(selector, SelectionKey.OP_READ, (server, false, targetBuffer))
-        (originBuffer, targetBuffer)
-      }
-      
-      val originBuffers = buffers.unzip._1
-      val targetBuffers = buffers.unzip._2
+    val readyTaskSockets = new ConcurrentLinkedQueue[Endpoint]
 
-      while (originBuffers.forany(_.hasRemaining) || targetBuffers.forany(_.hasRemaining)) {
-        logger.trace(s"selecting...")
-        val readyChannels = selector.select() // block
-        val it = selector.selectedKeys.iterator
-        while (it.hasNext) {
-          val key = it.next()
-          val (selected, isClient, buffer) = key.attachment.asInstanceOf[(SocketGroup, Boolean, ByteBuffer)]
-          key.interestOps(0) // delete all operations
-          logger.debug(s"selected key: $selected")
+    val endpoints = for (SocketPair(client, server) <- pairs) yield {
+      val originBuffer = masterBuffer.duplicate()
+      val targetBuffer = ByteBuffer.allocate(dataSize)
+      client.plain.configureBlocking(false)
+      server.plain.configureBlocking(false)
+
+      val clientEndpoint = Endpoint(client, true, originBuffer, key = null)
+      val serverEndpoint = Endpoint(server, false, targetBuffer, key = null)
+
+      clientEndpoint.key = client.plain.register(selector, SelectionKey.OP_WRITE, clientEndpoint)
+      serverEndpoint.key = server.plain.register(selector, SelectionKey.OP_READ, serverEndpoint)
+      (clientEndpoint, serverEndpoint)
+    }
+
+    val originEndpoints = endpoints.unzip._1
+    val targetEndpoints = endpoints.unzip._2
+
+    var taskCount = 0
+    var needReadCount = 0
+    var needWriteCount = 0
+    var selectorCycles = 0
+    var renegociationCount = 0
+    val maxRenegotiations = if (renegotiate) totalConnections * 2 * 20 else 0
+
+    val random = new Random
+
+    val totalTaskTimeMicros = new LongAdder
+
+    val elapsed = TestUtil.time {
+      while (originEndpoints.forany(_.buffer.hasRemaining) || targetEndpoints.forany(_.buffer.hasRemaining)) {
+        selectorCycles += 1
+        selector.select() // block
+
+        for (endpoint <- getSelectedEndpoints(selector) ++ TestUtil.removeAndCollect(readyTaskSockets.iterator())) {
           try {
-            if (isClient) {
-              logger.trace("renegotiating...")
-              selected.tls.renegotiate()
-              while (buffer.hasRemaining) {
-                val c = selected.external.write(buffer)
+            if (endpoint.isClient) {
+
+              while (endpoint.buffer.hasRemaining) {
+                if (renegociationCount < maxRenegotiations) {
+                  if (random.nextBoolean()) {
+                    renegociationCount += 1
+                    endpoint.socketGroup.tls.renegotiate()
+                  }
+                }
+                val c = endpoint.socketGroup.external.write(endpoint.buffer)
                 assert(c > 0) // the necessity of blocking is communicated with exceptions
               }
             } else {
-              while (buffer.hasRemaining) {
-                val c = selected.external.read(buffer)
+              while (endpoint.buffer.hasRemaining) {
+                val c = endpoint.socketGroup.external.read(endpoint.buffer)
                 assert(c > 0) // the necessity of blocking is communicated with exceptions
               }
             }
           } catch {
             case e: NeedsWriteException =>
-              logger.debug(s"read threw exception: ${e.getClass}")
-              key.interestOps(SelectionKey.OP_WRITE)
+              needWriteCount += 1
+              endpoint.key.interestOps(SelectionKey.OP_WRITE)
             case e: NeedsReadException =>
-              logger.debug(s"read threw exception: ${e.getClass}")
-              key.interestOps(SelectionKey.OP_READ)
+              needReadCount += 1
+              endpoint.key.interestOps(SelectionKey.OP_READ)
+            case e: NeedsTaskException =>
+              executor.submit { () =>
+                val elapsed = TestUtil.time {
+                  e.getTask.run()
+                }
+                selector.wakeup()
+                readyTaskSockets.add(endpoint)
+                totalTaskTimeMicros.add(elapsed)
+              }
+              taskCount += 1
+              assert(!runTasks)
           }
-          it.remove()
         }
       }
 
-      for (SocketPair(client, server) <- pairs) {
-        client.external.close()
-        server.external.close()
-      }
+    }
+    info(s"Selector cycles: $selectorCycles")
+    info(s"NeedRead count: $needReadCount")
+    info(s"NeedWrite count: $needWriteCount")
+    info(s"Renegociation count: $renegociationCount")
+    info(s"Asynchronous tasks run: $taskCount")
+    info(s"Total asynchronous task running time: ${totalTaskTimeMicros.sum() / 1000} ms")
+    info(f"Elapsed: ${elapsed / 1000}%5d ms")
 
-      for ((originBuffer, targetBuffer) <- buffers) {
-        // flip buffers before comparison, as the equals() operates only in remaining bytes
-        targetBuffer.flip()
-        originBuffer.flip()
-        assert(targetBuffer === originBuffer)
-      }
+    for (SocketPair(client, server) <- pairs) {
+      client.external.close()
+      server.external.close()
     }
 
-    info(f"${elapsed / 1000}%5d ms")
+    for ((origin, target) <- endpoints) {
+      // flip buffers before comparison, as the equals() operates only in remaining bytes
+      target.buffer.flip()
+      origin.buffer.flip()
+      assert(target.buffer === origin.buffer)
+    }
+
+  }
+
+  test("running tasks in non-blocking loop - no renegociation") {
+    testNonBlockingLoop(runTasks = true, renegotiate = false)
+  }
+
+  test("running tasks in executor - no renegociation") {
+    testNonBlockingLoop(runTasks = false, renegotiate = false)
+  }
+
+  test("running tasks in non-blocking loop - with renegociation") {
+    testNonBlockingLoop(runTasks = true, renegotiate = true)
+  }
+
+  test("running tasks in executor - with renegociation") {
+    testNonBlockingLoop(runTasks = false, renegotiate = true)
   }
 
 }

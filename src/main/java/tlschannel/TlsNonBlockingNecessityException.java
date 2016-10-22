@@ -13,4 +13,13 @@ import java.io.IOException;
  */
 public class TlsNonBlockingNecessityException extends IOException {
 
+	/**
+	 * For efficiency, override this method to do nothing, as this is a
+	 * flow-control exception.
+	 */
+	@Override
+	public Throwable fillInStackTrace() {
+		return this;
+	}
+
 }

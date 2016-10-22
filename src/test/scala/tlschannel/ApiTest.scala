@@ -24,7 +24,7 @@ class ApiTest extends FunSuite with Matchers {
 
   def newSocket() = {
     val sslEngine = SSLContext.getDefault.createSSLEngine
-    new TlsSocketChannelImpl(readChannel, writeChannel, sslEngine, Optional.empty[ByteBuffer], (_: SSLSession) => ())
+    new TlsSocketChannelImpl(readChannel, writeChannel, sslEngine, Optional.empty[ByteBuffer], (_: SSLSession) => (), true)
   }
 
   test("reading into a read-only buffer") {

@@ -35,6 +35,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		// @formatter:off
 		private Consumer<SSLSession> sessionInitCallback = session -> {};
 		// @formatter:on
+		private boolean runTasks = true;
 
 		public Builder(ByteChannel wrapped, SSLContext context) {
 			this.wrapped = wrapped;
@@ -56,8 +57,18 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 			return this;
 		}
 
+		/**
+		 * Whether CPU-intensive tasks are run or not. Default is to do run
+		 * them. If setting this {@link false}, the calling code should be
+		 * prepared to handle {@link NeedsTaskException}}
+		 */
+		public Builder withRunTasks(boolean runTasks) {
+			this.runTasks = runTasks;
+			return this;
+		}
+
 		public TlsServerSocketChannel build() {
-			return new TlsServerSocketChannel(wrapped, contextFactory, engineFactory, sessionInitCallback);
+			return new TlsServerSocketChannel(wrapped, contextFactory, engineFactory, sessionInitCallback, runTasks);
 		}
 
 	}
@@ -72,17 +83,20 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 
 	private volatile boolean sniRead = false;
 	private TlsSocketChannelImpl impl = null;
+	private boolean runTasks;
 
 	// @formatter:off
 	private TlsServerSocketChannel(
 			ByteChannel wrapped, 
 			Function<Optional<String>, SSLContext> contextFactory,
 			Function<SSLContext, SSLEngine> engineFactory, 
-			Consumer<SSLSession> sessionInitCallback) {
+			Consumer<SSLSession> sessionInitCallback, 
+			boolean runTasks) {
 		this.wrapped = wrapped;
 		this.contextFactory = contextFactory;
 		this.engineFactory = engineFactory;
 		this.sessionInitCallback = sessionInitCallback;
+		this.runTasks = runTasks;
 	}
 	// @formatter:on
 
@@ -178,7 +192,8 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 				// call client code
 				SSLContext sslContext = contextFactory.apply(nameOpt);
 				SSLEngine engine = engineFactory.apply(sslContext);
-				impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, Optional.of(buffer), sessionInitCallback);
+				impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, Optional.of(buffer), sessionInitCallback,
+						runTasks);
 				sniRead = true;
 			}
 		} finally {
@@ -226,6 +241,11 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 			throw new NeedsReadException();
 		}
 		return n;
+	}
+
+	@Override
+	public boolean getRunTasks() {
+		return impl.getRunTasks();
 	}
 
 }

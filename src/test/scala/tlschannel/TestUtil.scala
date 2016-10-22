@@ -3,6 +3,7 @@ package tlschannel
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import javax.net.ssl.SSLContext
 import java.util.function.Consumer
+import scala.collection.mutable.Builder
 
 object TestUtil extends StrictLogging {
 
@@ -24,6 +25,12 @@ object TestUtil extends StrictLogging {
     val res = thunk
     val time = (System.nanoTime() - start) / 1000
     (res, time)
+  }
+  
+  def time[A](thunk: => Unit): Long = {
+    val start = System.nanoTime()
+    thunk
+    (System.nanoTime() - start) / 1000
   }
 
   implicit def functionToRunnable(fn: () => Unit): Runnable = {
@@ -62,6 +69,15 @@ object TestUtil extends StrictLogging {
     def forany(p: A => Boolean): Boolean = {
       !iterable.forall(a => !p(a))
     }
+  }
+  
+  def removeAndCollect[A](iterator: java.util.Iterator[A]): Seq[A] = {
+    val builder = Seq.newBuilder[A]
+    while (iterator.hasNext) {
+      builder += iterator.next()
+      iterator.remove()
+    }
+    builder.result()
   }
 
 }

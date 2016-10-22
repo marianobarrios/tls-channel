@@ -12,36 +12,50 @@ import java.util.function.Consumer;
 public class TlsClientSocketChannel implements TlsSocketChannel {
 
 	public static class Builder {
-		
+
 		private final ByteChannel wrapped;
 		private final SSLEngine engine;
+		// @formatter:off
 		private Consumer<SSLSession> sessionInitCallback = session -> {};
-		
+		// @formatter:on
+		private boolean runTasks = true;
+
 		public Builder(ByteChannel wrapped, SSLEngine engine) {
 			this.wrapped = wrapped;
 			this.engine = engine;
 		}
-		
+
 		public Builder withSessionInitCallback(Consumer<SSLSession> sessionInitCallback) {
 			this.sessionInitCallback = sessionInitCallback;
 			return this;
 		}
-		
+
+		/**
+		 * Whether CPU-intensive tasks are run or not. Default is to do run
+		 * them. If setting this {@link false}, the calling code should be
+		 * prepared to handle {@link NeedsTaskException}}
+		 */
+		public Builder withRunTasks(boolean runTasks) {
+			this.runTasks = runTasks;
+			return this;
+		}
+
 		public TlsClientSocketChannel build() {
-			return new TlsClientSocketChannel(wrapped, engine, sessionInitCallback);
+			return new TlsClientSocketChannel(wrapped, engine, sessionInitCallback, runTasks);
 		}
 	}
-	
+
 	private final ByteChannel wrapped;
 	private final SSLEngine engine;
 	private final TlsSocketChannelImpl impl;
 
-	private TlsClientSocketChannel(ByteChannel wrapped, SSLEngine engine, Consumer<SSLSession> sessionInitCallback) {
+	private TlsClientSocketChannel(ByteChannel wrapped, SSLEngine engine, Consumer<SSLSession> sessionInitCallback,
+			boolean runTasks) {
 		if (!engine.getUseClientMode())
 			throw new IllegalArgumentException("SSLEngine must be in client mode");
 		this.wrapped = wrapped;
 		this.engine = engine;
-		impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, Optional.empty(), sessionInitCallback);
+		impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, Optional.empty(), sessionInitCallback, runTasks);
 	}
 
 	@Override
@@ -70,13 +84,13 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 	public int read(ByteBuffer dstBuffer) throws IOException {
 		return (int) read(new ByteBuffer[] { dstBuffer });
 	}
-	
+
 	@Override
 	public long write(ByteBuffer[] srcBuffers, int offset, int length) throws IOException {
 		ByteBufferSet source = new ByteBufferSet(srcBuffers, offset, length);
 		return impl.write(source);
 	}
-	
+
 	@Override
 	public long write(ByteBuffer[] outs) throws IOException {
 		return write(outs, 0, outs.length);
@@ -112,5 +126,9 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 		return impl.isOpen();
 	}
 
+	@Override
+	public boolean getRunTasks() {
+		return impl.getRunTasks();
+	}
 
 }
