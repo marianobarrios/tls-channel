@@ -107,11 +107,6 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 	}
 
 	@Override
-	public void doPassiveHandshake() throws IOException {
-		impl.doPassiveHandshake();
-	}
-
-	@Override
 	public void doHandshake() throws IOException {
 		impl.doHandshake();
 	}

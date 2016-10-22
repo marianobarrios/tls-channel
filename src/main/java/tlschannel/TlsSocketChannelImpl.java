@@ -415,27 +415,6 @@ public class TlsSocketChannelImpl {
 	}
 
 	/**
-	 * Process a new handshake initiated by the counter party
-	 * 
-	 * @throws IOException
-	 */
-	public void doPassiveHandshake() throws IOException {
-		if (!initialHandshaked)
-			doHandshake();
-		readLock.lock();
-		try {
-			writeLock.lock();
-			try {
-				handshakeImpl(Optional.empty(), false /* active */);
-			} finally {
-				writeLock.unlock();
-			}
-		} finally {
-			readLock.unlock();
-		}
-	}
-
-	/**
 	 * Initial handshake
 	 * 
 	 * @throws IOException

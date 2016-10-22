@@ -150,13 +150,6 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	}
 
 	@Override
-	public void doPassiveHandshake() throws IOException {
-		if (!sniRead)
-			initEngine();
-		impl.doPassiveHandshake();
-	}
-
-	@Override
 	public void doHandshake() throws IOException {
 		if (!sniRead)
 			initEngine();
