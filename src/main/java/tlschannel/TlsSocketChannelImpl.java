@@ -202,23 +202,28 @@ public class TlsSocketChannelImpl {
 	}
 
 	private int readFromNetwork() throws IOException {
-		Util.assertTrue(inEncrypted.hasRemaining());
-		int res;
 		try {
-			logger.trace("Reading from network");
-			res = readChannel.read(inEncrypted); // IO block
-			logger.trace("Read from network; inEncrypted: {}", inEncrypted);
+			return readFromNetwork(readChannel, inEncrypted);
+		} catch (NeedsReadException e) {
+			throw e;
 		} catch (IOException e) {
 			// after a failed read, buffers can be in any state, close
 			invalid = true;
 			throw e;
 		}
+	}
+
+	static int readFromNetwork(ReadableByteChannel readChannel, ByteBuffer buffer) throws IOException {
+		Util.assertTrue(buffer.hasRemaining());
+		logger.trace("Reading from network");
+		int res = readChannel.read(buffer); // IO block
+		logger.trace("Read from network; buffer: {}", buffer);
 		if (res == -1) {
-			invalid = true;
 			throw new EOFException();
 		}
-		if (res == 0)
+		if (res == 0) {
 			throw new NeedsReadException();
+		}
 		return res;
 	}
 
@@ -307,7 +312,7 @@ public class TlsSocketChannelImpl {
 			inPlain = resize(inPlain, newCapacity);
 	}
 
-	private static ByteBuffer enlarge(ByteBuffer buffer, String name, int maxSize) {
+	static ByteBuffer enlarge(ByteBuffer buffer, String name, int maxSize) {
 		if (buffer.capacity() >= maxSize) {
 			throw new IllegalStateException(
 					String.format("%s buffer insufficient despite having capacity of %d", name, buffer.capacity()));

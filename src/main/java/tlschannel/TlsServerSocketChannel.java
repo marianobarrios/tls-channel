@@ -1,6 +1,5 @@
 package tlschannel;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
@@ -72,6 +71,8 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		}
 
 	}
+	
+	private final static int maxTlsPacketSize = 16 * 1024;
 
 	private final ByteChannel wrapped;
 	private final Function<Optional<String>, SSLContext> contextFactory;
@@ -79,8 +80,9 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	private final Consumer<SSLSession> sessionInitCallback;
 
 	private final Lock initLock = new ReentrantLock();
-	private final ByteBuffer buffer = ByteBuffer.allocate(4096);
-
+	
+	private ByteBuffer buffer = ByteBuffer.allocate(4096);
+	
 	private volatile boolean sniRead = false;
 	private TlsSocketChannelImpl impl = null;
 	private boolean runTasks;
@@ -181,7 +183,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		try {
 			if (!sniRead) {
 				// IO block
-				Optional<String> nameOpt = getServerNameIndication(wrapped, buffer);
+				Optional<String> nameOpt = getServerNameIndication(wrapped);
 				// call client code
 				SSLContext sslContext = contextFactory.apply(nameOpt);
 				SSLEngine engine = engineFactory.apply(sslContext);
@@ -194,14 +196,15 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		}
 	}
 
-	private Optional<Integer> recordHeaderSize = Optional.empty();
-
-	private Optional<String> getServerNameIndication(ReadableByteChannel channel, ByteBuffer buffer)
+	private Optional<String> getServerNameIndication(ReadableByteChannel channel)
 			throws IOException {
-		if (!recordHeaderSize.isPresent())
-			recordHeaderSize = Optional.of(readRecordHeaderSize(channel, buffer));
-		while (buffer.position() < recordHeaderSize.get()) {
-			readFromNetwork(channel, buffer); // IO block
+		Util.assertTrue(buffer.position() == 0);
+		int recordHeaderSize = readRecordHeaderSize(channel);
+		while (buffer.position() < recordHeaderSize) {
+			if (!buffer.hasRemaining()) {
+				buffer = TlsSocketChannelImpl.enlarge(buffer, "inEncryptedPreFetch", maxTlsPacketSize);
+			}
+			TlsSocketChannelImpl.readFromNetwork(channel, buffer); // IO block
 		}
 		buffer.flip();
 		Map<Integer, SNIServerName> serverNames = TlsExplorer.explore(buffer);
@@ -215,25 +218,17 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		}
 	}
 
-	private int readRecordHeaderSize(ReadableByteChannel channel, ByteBuffer buffer) throws IOException {
+	private int readRecordHeaderSize(ReadableByteChannel channel) throws IOException {
 		while (buffer.position() < TlsExplorer.RECORD_HEADER_SIZE) {
-			readFromNetwork(channel, buffer); // IO block
+			if (!buffer.hasRemaining()) {
+				buffer = TlsSocketChannelImpl.enlarge(buffer, "inEncryptedPreFetch", TlsExplorer.RECORD_HEADER_SIZE);
+			}
+			TlsSocketChannelImpl.readFromNetwork(channel, buffer); // IO block
 		}
 		buffer.flip();
 		int recordHeaderSize = TlsExplorer.getRequiredSize(buffer);
 		buffer.compact();
 		return recordHeaderSize;
-	}
-
-	private int readFromNetwork(ReadableByteChannel channel, ByteBuffer buffer) throws IOException {
-		int n = channel.read(buffer); // IO block
-		if (n == -1)
-			throw new EOFException();
-		if (n == 0) {
-			// This can only happen if the socket is non-blocking
-			throw new NeedsReadException();
-		}
-		return n;
 	}
 
 	@Override

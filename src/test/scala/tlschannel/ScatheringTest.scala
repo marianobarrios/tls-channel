@@ -12,7 +12,7 @@ import TestUtil.functionToRunnable
 class ScatheringTest extends FunSuite with Matchers with StrictLogging {
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext, null)
+  val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
   val dataSize = SslContextFactory.tlsMaxDataSize * 3
 
   val data = Array.ofDim[Byte](dataSize)

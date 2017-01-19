@@ -12,7 +12,7 @@ import TestUtil.functionToRunnable
 class CipherTest extends FunSuite with Matchers with StrictLogging {
 
   val factory = new SocketPairFactory(SslContextFactory.authenticatedContext, SslContextFactory.certificateCommonName)
-  val anonFactory = new SocketPairFactory(SslContextFactory.anonContext, null)
+  val anonFactory = new SocketPairFactory(SslContextFactory.anonContext, SslContextFactory.certificateCommonName)
 
   val socketFactories = Map(
     SslContextFactory.authenticatedContext -> factory,

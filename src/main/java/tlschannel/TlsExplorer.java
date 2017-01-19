@@ -182,7 +182,7 @@ public final class TlsExplorer {
 		if (input.remaining() > 0)
 			return exploreExtensions(input);
 		else
-		    return new HashMap<Integer, SNIServerName>();
+		    return new HashMap<>();
 	}
 
 	/*
@@ -209,7 +209,7 @@ public final class TlsExplorer {
 			}
 			length -= extLen + 4;
 		}
-		return new HashMap<Integer, SNIServerName>();
+		return new HashMap<>();
 	}
 
 	/*

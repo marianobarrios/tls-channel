@@ -23,6 +23,10 @@ import TestUtil.fnToFunction
 import TestUtil.fnToConsumer
 import javax.net.ssl.SSLSession
 import java.nio.channels.ByteChannel
+import java.util.Optional
+import sun.security.ssl.SSLSocketImpl
+import javax.net.ssl.SNIHostName
+import scala.collection.JavaConversions._
 
 case class SocketPair(client: SocketGroup, server: SocketGroup)
 
@@ -41,6 +45,14 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     engine.setEnabledCipherSuites(Array(cipher))
     engine
   }
+  
+  def sslContextFactory(expectedName: String, sslContext: SSLContext)(name: Optional[String]): SSLContext = {
+    name.ifPresent { (n: String) => 
+      logger.debug("ContextFactory, requested name: " + n)
+      Util.assertTrue(n == expectedName)
+    }
+    sslContext
+  }
 
   val localhost = InetAddress.getByName(null)
 
@@ -55,6 +67,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     engine.setEnabledCipherSuites(Array(cipher))
     val sslParams = engine.getSSLParameters() // returns a value object
     sslParams.setEndpointIdentificationAlgorithm("HTTPS")
+    sslParams.setServerNames(Seq(new SNIHostName(serverName)))
     engine.setSSLParameters(sslParams)
     engine
   }
@@ -65,9 +78,10 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     serverSocket
   }
 
-  private def createSslSocket(cipher: String, host: InetAddress, port: Int): SSLSocket = {
-    val socket = sslSocketFactory.createSocket(host, port).asInstanceOf[SSLSocket]
+  private def createSslSocket(cipher: String, host: InetAddress, port: Int, requestedHost: String): SSLSocket = {
+    val socket = sslSocketFactory.createSocket(host, port).asInstanceOf[SSLSocketImpl]
     socket.setEnabledCipherSuites(Array(cipher))
+    socket.setHost(requestedHost)
     socket
   }
 
@@ -75,10 +89,10 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     val serverSocket = ServerSocketChannel.open()
     serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
     val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
-    val client = createSslSocket(cipher, localhost, chosenPort)
+    val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
     val rawServer = serverSocket.accept()
     serverSocket.close()
-    val server = new TlsServerSocketChannel.Builder(rawServer, sslContext)
+    val server = new TlsServerSocketChannel.Builder(rawServer, sslContextFactory(serverName, sslContext) _)
       .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
       .build()
     (client, SocketGroup(server, server, rawServer))
@@ -128,7 +142,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
         val clientChannel = new TlsClientSocketChannel.Builder(plainClient, createClientSslEngine(cipher, serverName, chosenPort))
           .withRunTasks(runTasks)
           .build()
-        val serverChannel = new TlsServerSocketChannel.Builder(plainServer, sslContext)
+        val serverChannel = new TlsServerSocketChannel.Builder(plainServer, sslContextFactory(serverName, sslContext) _)
           .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
           .withRunTasks(runTasks)
           .build()
