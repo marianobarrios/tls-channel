@@ -25,6 +25,8 @@ import javax.net.ssl.SSLSession
 import java.nio.channels.ByteChannel
 import java.util.Optional
 import sun.security.ssl.SSLSocketImpl
+import tlschannel.util.Util;
+
 import javax.net.ssl.SNIHostName
 import scala.collection.JavaConversions._
 

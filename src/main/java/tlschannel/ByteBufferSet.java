@@ -12,6 +12,10 @@ public class ByteBufferSet {
 	public ByteBufferSet(ByteBuffer[] array, int offset, int length) {
 		if (array == null)
 			throw new NullPointerException();
+		if (array.length < offset) 
+			throw new IllegalArgumentException();
+		if (array.length < offset + length) 
+			throw new IllegalArgumentException();
 		for (int i = offset; i < offset + length; i++) {
 			if (array[i] == null)
 				throw new NullPointerException();

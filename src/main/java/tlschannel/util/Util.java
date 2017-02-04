@@ -1,4 +1,4 @@
-package tlschannel;
+package tlschannel.util;
 
 import java.nio.channels.Channel;
 
