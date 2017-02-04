@@ -439,8 +439,13 @@ public class TlsSocketChannelImpl implements ByteChannel {
 					return res.bytes;
 				break;
 			case NOT_HANDSHAKING:
-				throw new IllegalStateException(
-						"Handshake completion should be signaled with 'FINISHED', not 'NOT_HANDSHAKING'");
+				/*
+				 * This should not really happen using SSLEngine, because
+				 * handshaking ends with a FINISHED status. However, we accept
+				 * this value to permit the use of a pass-through stub engine
+				 * with no encryption.
+				 */
+				return 0;
 			case NEED_TASK:
 				handleTask();
 				status = engine.getHandshakeStatus();
