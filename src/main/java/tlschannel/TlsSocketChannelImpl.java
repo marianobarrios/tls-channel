@@ -330,7 +330,6 @@ public class TlsSocketChannelImpl implements ByteChannel {
 		ByteBuffer newBuffer = ByteBuffer.allocate(newCapacity);
 		buffer.flip();
 		newBuffer.put(buffer);
-		buffer.compact();
 		return newBuffer;
 	}
 
