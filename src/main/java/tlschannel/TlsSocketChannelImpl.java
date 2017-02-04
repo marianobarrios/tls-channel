@@ -12,6 +12,8 @@ import java.nio.ByteBuffer;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLEngineResult.Status;
 import javax.net.ssl.SSLEngine;
+
+import java.nio.channels.ByteChannel;
 import java.nio.channels.ClosedChannelException;
 
 import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
@@ -21,10 +23,12 @@ import javax.net.ssl.SSLSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import tlschannel.util.Util;
+
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-public class TlsSocketChannelImpl {
+public class TlsSocketChannelImpl implements ByteChannel {
 
 	private static final Logger logger = LoggerFactory.getLogger(TlsSocketChannelImpl.class);
 
@@ -522,6 +526,16 @@ public class TlsSocketChannelImpl {
 	private static String resultToString(SSLEngineResult result) {
 		return String.format("status=%s,handshakeStatus=%s,bytesProduced=%d,bytesConsumed=%d", result.getStatus(),
 				result.getHandshakeStatus(), result.bytesProduced(), result.bytesConsumed());
+	}
+
+	@Override
+	public int read(ByteBuffer dst) throws IOException {
+		return (int) read(new ByteBufferSet(dst));
+	}
+
+	@Override
+	public int write(ByteBuffer src) throws IOException {
+		return (int) write(new ByteBufferSet(src));
 	}
 
 }
