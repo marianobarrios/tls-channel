@@ -44,7 +44,9 @@ public class ByteBufferSet {
 				break;
 			ByteBuffer dstBuffer = array[i];
 			int bytes = Math.min(from.remaining(), dstBuffer.remaining());
-			dstBuffer.put(from.array(), from.arrayOffset() + from.position(), bytes);
+			ByteBuffer tmp = from.duplicate();
+			tmp.limit(from.position() + bytes);
+			dstBuffer.put(tmp);
 			from.position(from.position() + bytes);
 			totalBytes += bytes;
 		}
