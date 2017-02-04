@@ -1,9 +1,8 @@
-package tlschannel
+package tlschannel.helpers
 
 import javax.net.ssl.SSLContext
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.TrustManagerFactory
-import java.io.FileInputStream
 import java.security.KeyStore
 
 object SslContextFactory {

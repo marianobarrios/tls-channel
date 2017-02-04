@@ -10,15 +10,17 @@ import java.nio.channels.SelectionKey
 import java.nio.channels.SocketChannel
 import com.typesafe.scalalogging.Logging
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import TestUtil.StreamWithTakeWhileInclusive
-import TestUtil.IterableWithForany
+import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
+import tlschannel.helpers.TestUtil.IterableWithForany
 import java.util.concurrent.Executors
-import TestUtil.functionToRunnable
+import tlschannel.helpers.TestUtil.functionToRunnable
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.collection.JavaConversions._
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.atomic.LongAdder
+import tlschannel.helpers.TestUtil
+import tlschannel.helpers.SslContextFactory
 
 case class Endpoint(socketGroup: SocketGroup, isClient: Boolean, buffer: ByteBuffer, var key: SelectionKey)
 

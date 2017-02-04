@@ -12,8 +12,9 @@ import java.util.function.Consumer
 import javax.net.ssl.SSLEngine
 import javax.net.ssl.SSLSession
 
-import TestUtil.fnToConsumer
+import tlschannel.helpers.TestUtil.fnToConsumer
 import java.util.Optional
+import tlschannel.helpers.TestUtil
 
 class ApiTest extends FunSuite with Matchers {
 

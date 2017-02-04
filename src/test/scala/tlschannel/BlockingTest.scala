@@ -4,10 +4,12 @@ import org.scalatest.FunSuite
 import org.scalatest.Matchers
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import java.nio.channels.ByteChannel
-import TestUtil.StreamWithTakeWhileInclusive
+import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
 import java.nio.ByteBuffer
 import scala.util.Random
-import TestUtil.functionToRunnable
+import tlschannel.helpers.TestUtil.functionToRunnable
+import tlschannel.helpers.TestUtil
+import tlschannel.helpers.SslContextFactory
 
 class BlockingTest extends FunSuite with Matchers with StrictLogging {
 

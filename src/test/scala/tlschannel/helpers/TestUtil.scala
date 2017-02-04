@@ -1,9 +1,7 @@
-package tlschannel
+package tlschannel.helpers
 
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import javax.net.ssl.SSLContext
 import java.util.function.Consumer
-import scala.collection.mutable.Builder
 
 object TestUtil extends StrictLogging {
 

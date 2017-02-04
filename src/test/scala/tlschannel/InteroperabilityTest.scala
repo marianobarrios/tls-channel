@@ -4,7 +4,7 @@ import org.scalatest.FunSuite
 import org.scalatest.Matchers
 import scala.util.Random
 import java.io.IOException
-import TestUtil.functionToRunnable
+import tlschannel.helpers.TestUtil.functionToRunnable
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import java.net.Socket
@@ -12,6 +12,8 @@ import java.nio.channels.ByteChannel
 import javax.net.ssl.SSLSocket
 import java.nio.ByteBuffer
 import com.typesafe.scalalogging.slf4j.StrictLogging
+import tlschannel.helpers.TestUtil
+import tlschannel.helpers.SslContextFactory
 
 class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
 

@@ -10,7 +10,9 @@ import java.nio.channels.SelectionKey
 import java.nio.channels.SocketChannel
 import com.typesafe.scalalogging.Logging
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import TestUtil.StreamWithTakeWhileInclusive
+import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
+import tlschannel.helpers.TestUtil
+import tlschannel.helpers.SslContextFactory
 
 class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 

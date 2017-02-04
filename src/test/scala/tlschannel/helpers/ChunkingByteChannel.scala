@@ -1,4 +1,4 @@
-package tlschannel
+package tlschannel.helpers
 
 import java.nio.ByteBuffer
 import java.nio.channels.ByteChannel

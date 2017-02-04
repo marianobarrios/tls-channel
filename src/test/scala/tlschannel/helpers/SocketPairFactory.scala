@@ -19,8 +19,8 @@ import javax.net.ssl.KeyManagerFactory
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import javax.crypto.Cipher
 import javax.net.ssl.SSLParameters
-import TestUtil.fnToFunction
-import TestUtil.fnToConsumer
+import tlschannel.helpers.TestUtil.fnToFunction
+import tlschannel.helpers.TestUtil.fnToConsumer
 import javax.net.ssl.SSLSession
 import java.nio.channels.ByteChannel
 import java.util.Optional
@@ -29,6 +29,8 @@ import tlschannel.util.Util;
 
 import javax.net.ssl.SNIHostName
 import scala.collection.JavaConversions._
+import tlschannel.helpers.TestUtil
+import tlschannel.helpers.ChunkingByteChannel
 
 case class SocketPair(client: SocketGroup, server: SocketGroup)
 
