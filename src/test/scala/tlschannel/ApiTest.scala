@@ -13,6 +13,9 @@ import javax.net.ssl.SSLEngine
 import javax.net.ssl.SSLSession
 
 import tlschannel.helpers.TestUtil.fnToConsumer
+import tlschannel.impl.ByteBufferSet;
+import tlschannel.impl.TlsSocketChannelImpl;
+
 import java.util.Optional
 import tlschannel.helpers.TestUtil
 

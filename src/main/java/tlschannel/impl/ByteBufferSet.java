@@ -1,4 +1,4 @@
-package tlschannel;
+package tlschannel.impl;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;

@@ -18,6 +18,9 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.StandardConstants;
 
+import tlschannel.impl.ByteBufferSet;
+import tlschannel.impl.TlsExplorer;
+import tlschannel.impl.TlsSocketChannelImpl;
 import tlschannel.util.Util;
 
 public class TlsServerSocketChannel implements TlsSocketChannel {

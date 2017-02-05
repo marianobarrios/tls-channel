@@ -6,7 +6,7 @@ import java.nio.ByteBuffer
 import javax.net.ssl.SSLEngineResult
 import javax.net.ssl.SSLEngineResult.Status
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import tlschannel.ByteBufferSet
+import tlschannel.impl.ByteBufferSet
 
 /*
  * "Null" {@link SSLEngine} that does nothing to the bytes.

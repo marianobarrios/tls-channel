@@ -1,4 +1,4 @@
-package tlschannel;
+package tlschannel.impl;
 
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 
@@ -23,6 +23,10 @@ import javax.net.ssl.SSLSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import tlschannel.BufferAllocator;
+import tlschannel.NeedsReadException;
+import tlschannel.NeedsTaskException;
+import tlschannel.NeedsWriteException;
 import tlschannel.util.Util;
 
 import java.nio.channels.ReadableByteChannel;
@@ -32,7 +36,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 
 	private static final Logger logger = LoggerFactory.getLogger(TlsSocketChannelImpl.class);
 
-	static int buffersInitialSize = 4096;
+	public static final int buffersInitialSize = 4096;
 
 	private static class EngineLoopResult {
 		public final int bytes;
@@ -232,7 +236,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 		}
 	}
 
-	static int readFromNetwork(ReadableByteChannel readChannel, ByteBuffer buffer) throws IOException {
+	public static int readFromNetwork(ReadableByteChannel readChannel, ByteBuffer buffer) throws IOException {
 		Util.assertTrue(buffer.hasRemaining());
 		logger.trace("Reading from network");
 		int res = readChannel.read(buffer); // IO block
@@ -511,7 +515,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 		return writeChannel.isOpen() && readChannel.isOpen();
 	}
 
-	static void checkReadBuffer(ByteBufferSet dest) {
+	public static void checkReadBuffer(ByteBufferSet dest) {
 		if (dest.isReadOnly())
 			throw new IllegalArgumentException();
 	}

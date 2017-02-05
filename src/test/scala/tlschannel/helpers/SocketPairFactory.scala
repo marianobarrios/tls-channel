@@ -33,6 +33,7 @@ import tlschannel.helpers.TestUtil
 import tlschannel.helpers.ChunkingByteChannel
 import tlschannel.helpers.NullSslEngine
 import com.sun.webkit.network.ByteBufferAllocator
+import tlschannel.impl.TlsSocketChannelImpl
 
 case class SocketPair(client: SocketGroup, server: SocketGroup)
 
