@@ -32,7 +32,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 
 	private static final Logger logger = LoggerFactory.getLogger(TlsSocketChannelImpl.class);
 
-	private static int buffersInitialSize = 2048;
+	static int buffersInitialSize = 4096;
 
 	private static class EngineLoopResult {
 		public final int bytes;
@@ -53,19 +53,34 @@ public class TlsSocketChannelImpl implements ByteChannel {
 	private final int tlsMaxDataSize;
 	private final int tlsMaxRecordSize;
 	private final boolean runTasks;
+	private final BufferAllocator encryptedBufferAllocator;
+	private final BufferAllocator plainBufferAllocator;
 
-	public TlsSocketChannelImpl(ReadableByteChannel readChannel, WritableByteChannel writeChannel, SSLEngine engine,
-			Optional<ByteBuffer> inEncrypted, Consumer<SSLSession> initSessionCallback, boolean runTasks) {
+	// @formatter:off
+	public TlsSocketChannelImpl(
+			ReadableByteChannel readChannel, 
+			WritableByteChannel writeChannel, 
+			SSLEngine engine,
+			Optional<ByteBuffer> inEncrypted, 
+			Consumer<SSLSession> initSessionCallback, 
+			boolean runTasks,
+			BufferAllocator plainBufferAllocator,
+			BufferAllocator encryptedBufferAllocator) {
+	// @formatter:on
 		this.readChannel = readChannel;
 		this.writeChannel = writeChannel;
 		this.engine = engine;
-		this.inEncrypted = inEncrypted.orElseGet(() -> ByteBuffer.allocate(buffersInitialSize));
+		this.inEncrypted = inEncrypted.orElseGet(() -> encryptedBufferAllocator.allocate(buffersInitialSize));
 		this.initSessionCallback = initSessionCallback;
 		// about 2^14
 		this.tlsMaxDataSize = engine.getSession().getApplicationBufferSize();
 		// about 2^14 + overhead
 		this.tlsMaxRecordSize = engine.getSession().getPacketBufferSize();
 		this.runTasks = runTasks;
+		this.plainBufferAllocator = plainBufferAllocator;
+		this.encryptedBufferAllocator = encryptedBufferAllocator;
+		inPlain = plainBufferAllocator.allocate(buffersInitialSize);
+		outEncrypted = encryptedBufferAllocator.allocate(buffersInitialSize);
 	}
 
 	private final Lock initLock = new ReentrantLock();
@@ -77,10 +92,10 @@ public class TlsSocketChannelImpl implements ByteChannel {
 	private boolean tlsClosePending = false;
 
 	// decrypted data from inEncrypted
-	private ByteBuffer inPlain = ByteBuffer.allocate(buffersInitialSize);
+	private ByteBuffer inPlain;
 
 	// contains data encrypted to send to the network
-	private ByteBuffer outEncrypted = ByteBuffer.allocate(buffersInitialSize);
+	private ByteBuffer outEncrypted;
 
 	// handshake wrap() method calls need a buffer to read from, even when they
 	// actually do not read anything
@@ -194,7 +209,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 			SSLEngineResult result = engine.unwrap(inEncrypted, dest.array, dest.offset, dest.length);
 			if (logger.isTraceEnabled()) {
 				logger.trace("engine.unwrap() result [{}]. Engine status: {}; inEncrypted {}; inPlain: {}",
-						resultToString(result), result.getHandshakeStatus(), inEncrypted, dest);
+						Util.resultToString(result), result.getHandshakeStatus(), inEncrypted, dest);
 			}
 			return result;
 		} catch (SSLException e) {
@@ -290,7 +305,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 			SSLEngineResult result = engine.wrap(source.array, source.offset, source.length, outEncrypted);
 			if (logger.isTraceEnabled()) {
 				logger.trace("engine.wrap() result: [{}]; engine status: {}; srcBuffer: {}, outEncrypted: {}",
-						resultToString(result), result.getHandshakeStatus(), source, outEncrypted);
+						Util.resultToString(result), result.getHandshakeStatus(), source, outEncrypted);
 			}
 			return result;
 		} catch (SSLException e) {
@@ -300,37 +315,20 @@ public class TlsSocketChannelImpl implements ByteChannel {
 	}
 
 	private void enlargeOutEncrypted() {
-		outEncrypted = enlarge(outEncrypted, "outEncrypted", tlsMaxRecordSize);
+		outEncrypted = Util.enlarge(encryptedBufferAllocator, outEncrypted, "outEncrypted", tlsMaxRecordSize);
 	}
 
 	private void enlargeInPlain() {
-		inPlain = enlarge(inPlain, "inPlain", tlsMaxDataSize);
+		inPlain = Util.enlarge(plainBufferAllocator, inPlain, "inPlain", tlsMaxDataSize);
 	}
 
 	private void enlargeInEncrypted() {
-		inEncrypted = enlarge(inEncrypted, "inEncrypted", tlsMaxRecordSize);
+		inEncrypted = Util.enlarge(encryptedBufferAllocator, inEncrypted, "inEncrypted", tlsMaxRecordSize);
 	}
 
 	private void ensureInPlainCapacity(int newCapacity) {
 		if (inPlain.capacity() < newCapacity)
-			inPlain = resize(inPlain, newCapacity);
-	}
-
-	static ByteBuffer enlarge(ByteBuffer buffer, String name, int maxSize) {
-		if (buffer.capacity() >= maxSize) {
-			throw new IllegalStateException(
-					String.format("%s buffer insufficient despite having capacity of %d", name, buffer.capacity()));
-		}
-		int newCapacity = Math.min(buffer.capacity() * 2, maxSize);
-		logger.trace("{} buffer too small, increasing from {} to {}", name, buffer.capacity(), newCapacity);
-		return resize(buffer, newCapacity);
-	}
-
-	private static ByteBuffer resize(ByteBuffer buffer, int newCapacity) {
-		ByteBuffer newBuffer = ByteBuffer.allocate(newCapacity);
-		buffer.flip();
-		newBuffer.put(buffer);
-		return newBuffer;
+			inPlain = Util.resize(plainBufferAllocator, inPlain, newCapacity);
 	}
 
 	private int flipAndWriteToNetwork() throws IOException {
@@ -489,7 +487,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 								outEncrypted);
 						if (logger.isTraceEnabled()) {
 							logger.trace("engine.wrap() result: [{}]; engine status: {}; outEncrypted: {}",
-									resultToString(result), result.getHandshakeStatus(), outEncrypted);
+									Util.resultToString(result), result.getHandshakeStatus(), outEncrypted);
 						}
 						Util.assertTrue(result.getStatus() == Status.CLOSED);
 						flipAndWriteToNetwork(); // IO block
@@ -504,6 +502,9 @@ public class TlsSocketChannelImpl implements ByteChannel {
 		} finally {
 			writeLock.unlock();
 		}
+		plainBufferAllocator.free(inPlain);
+		encryptedBufferAllocator.free(inEncrypted);
+		encryptedBufferAllocator.free(outEncrypted);
 	}
 
 	public boolean isOpen() {
@@ -521,15 +522,6 @@ public class TlsSocketChannelImpl implements ByteChannel {
 
 	public boolean getRunTasks() {
 		return runTasks;
-	}
-
-	/**
-	 * Convert a {@link SSLEngineResult} into a {@link String}, this is needed
-	 * because the supplied method includes a log-breaking newline.
-	 */
-	private static String resultToString(SSLEngineResult result) {
-		return String.format("status=%s,handshakeStatus=%s,bytesProduced=%d,bytesConsumed=%d", result.getStatus(),
-				result.getHandshakeStatus(), result.bytesProduced(), result.bytesConsumed());
 	}
 
 	@Override

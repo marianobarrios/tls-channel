@@ -19,6 +19,8 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 		private Consumer<SSLSession> sessionInitCallback = session -> {};
 		// @formatter:on
 		private boolean runTasks = true;
+		private BufferAllocator plainBufferAllocator = new HeapBufferAllocator();
+		private BufferAllocator encryptedBufferAllocator = new DirectBufferAllocator();
 
 		public Builder(ByteChannel wrapped, SSLEngine engine) {
 			this.wrapped = wrapped;
@@ -40,8 +42,27 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 			return this;
 		}
 
+		/**
+		 * Set which buffer to use for decrypted data. By default a
+		 * {@link HeapBufferAllocator} is used.
+		 */
+		public Builder withPlainBufferAllocator(BufferAllocator bufferAllocator) {
+			this.plainBufferAllocator = bufferAllocator;
+			return this;
+		}
+
+		/**
+		 * Set which buffer to use for encrypted data. By default a
+		 * {@link DirectBufferAllocator} is used.
+		 */
+		public Builder withEncryptedBufferAllocator(BufferAllocator bufferAllocator) {
+			this.encryptedBufferAllocator = bufferAllocator;
+			return this;
+		}
+
 		public TlsClientSocketChannel build() {
-			return new TlsClientSocketChannel(wrapped, engine, sessionInitCallback, runTasks);
+			return new TlsClientSocketChannel(wrapped, engine, sessionInitCallback, runTasks, plainBufferAllocator,
+					encryptedBufferAllocator);
 		}
 	}
 
@@ -50,12 +71,13 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 	private final TlsSocketChannelImpl impl;
 
 	private TlsClientSocketChannel(ByteChannel wrapped, SSLEngine engine, Consumer<SSLSession> sessionInitCallback,
-			boolean runTasks) {
+			boolean runTasks, BufferAllocator plainBufferAllocator, BufferAllocator encryptedBufferAllocator) {
 		if (!engine.getUseClientMode())
 			throw new IllegalArgumentException("SSLEngine must be in client mode");
 		this.wrapped = wrapped;
 		this.engine = engine;
-		impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, Optional.empty(), sessionInitCallback, runTasks);
+		impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, Optional.empty(), sessionInitCallback, runTasks,
+				plainBufferAllocator, encryptedBufferAllocator);
 	}
 
 	@Override

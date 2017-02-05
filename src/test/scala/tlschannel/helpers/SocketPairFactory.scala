@@ -32,6 +32,7 @@ import scala.collection.JavaConversions._
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.ChunkingByteChannel
 import tlschannel.helpers.NullSslEngine
+import com.sun.webkit.network.ByteBufferAllocator
 
 case class SocketPair(client: SocketGroup, server: SocketGroup)
 
@@ -50,9 +51,9 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     engine.setEnabledCipherSuites(Array(cipher))
     engine
   }
-  
+
   def sslContextFactory(expectedName: String, sslContext: SSLContext)(name: Optional[String]): SSLContext = {
-    name.ifPresent { (n: String) => 
+    name.ifPresent { (n: String) =>
       logger.debug("ContextFactory, requested name: " + n)
       Util.assertTrue(n == expectedName)
     }
@@ -178,16 +179,18 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     internalServerChunkSize: Option[Int]): SocketPair = {
     nioNioN(cipher, 1, externalClientChunkSize, internalClientChunkSize, externalServerChunkSize, internalServerChunkSize).head
   }
-  
-  def nullNioNio(internalClientChunkSize: Option[Int], internalServerChunkSize: Option[Int]): (ByteChannel, ByteChannel) = {
-    nullNioNioN(1, internalClientChunkSize, internalServerChunkSize).head
+
+  def nullNioNio(internalClientChunkSize: Option[Int], internalServerChunkSize: Option[Int],
+    encryptedBufferAllocator: BufferAllocator): (ByteChannel, ByteChannel) = {
+    nullNioNioN(1, internalClientChunkSize, internalServerChunkSize, true, encryptedBufferAllocator).head
   }
 
   def nullNioNioN(
     qtty: Int,
     internalClientChunkSize: Option[Int],
     internalServerChunkSize: Option[Int],
-    runTasks: Boolean = true): Seq[(ByteChannel, ByteChannel)] = {
+    runTasks: Boolean = true,
+    encryptedBufferAllocator: BufferAllocator): Seq[(ByteChannel, ByteChannel)] = {
     val serverSocket = ServerSocketChannel.open()
     try {
       serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
@@ -206,8 +209,24 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
           case None => rawServer
         }
 
-        val clientChannel = new TlsSocketChannelImpl(plainClient, plainClient, new NullSslEngine, Optional.empty(), (s: SSLSession) => {}, true)
-        val serverChannel = new TlsSocketChannelImpl(plainServer, plainServer, new NullSslEngine, Optional.empty(), (s: SSLSession) => {}, true)
+        val clientChannel = new TlsSocketChannelImpl(
+          plainClient,
+          plainClient,
+          new NullSslEngine,
+          Optional.empty(),
+          (s: SSLSession) => {},
+          true /* runTasks */ ,
+          new HeapBufferAllocator /* plainBufferAllocator */ ,
+          encryptedBufferAllocator)
+        val serverChannel = new TlsSocketChannelImpl(
+          plainServer,
+          plainServer,
+          new NullSslEngine,
+          Optional.empty(),
+          (s: SSLSession) => {},
+          true /* runTasks */ ,
+          new HeapBufferAllocator /* plainBufferAllocator */ ,
+          encryptedBufferAllocator)
 
         (clientChannel, serverChannel)
       }
