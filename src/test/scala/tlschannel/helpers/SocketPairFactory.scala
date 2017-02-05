@@ -31,6 +31,7 @@ import javax.net.ssl.SNIHostName
 import scala.collection.JavaConversions._
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.ChunkingByteChannel
+import tlschannel.helpers.NullSslEngine
 
 case class SocketPair(client: SocketGroup, server: SocketGroup)
 
@@ -177,5 +178,41 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     internalServerChunkSize: Option[Int]): SocketPair = {
     nioNioN(cipher, 1, externalClientChunkSize, internalClientChunkSize, externalServerChunkSize, internalServerChunkSize).head
   }
+  
+  def nullNioNio(internalClientChunkSize: Option[Int], internalServerChunkSize: Option[Int]): (ByteChannel, ByteChannel) = {
+    nullNioNioN(1, internalClientChunkSize, internalServerChunkSize).head
+  }
 
+  def nullNioNioN(
+    qtty: Int,
+    internalClientChunkSize: Option[Int],
+    internalServerChunkSize: Option[Int],
+    runTasks: Boolean = true): Seq[(ByteChannel, ByteChannel)] = {
+    val serverSocket = ServerSocketChannel.open()
+    try {
+      serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
+      val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
+      val address = new InetSocketAddress(localhost, chosenPort)
+      for (i <- 0 until qtty) yield {
+        val rawClient = SocketChannel.open(address)
+        val rawServer = serverSocket.accept()
+
+        val plainClient = internalClientChunkSize match {
+          case Some(size) => new ChunkingByteChannel(rawClient, chunkSize = size)
+          case None => rawClient
+        }
+        val plainServer = internalServerChunkSize match {
+          case Some(size) => new ChunkingByteChannel(rawServer, chunkSize = size)
+          case None => rawServer
+        }
+
+        val clientChannel = new TlsSocketChannelImpl(plainClient, plainClient, new NullSslEngine, Optional.empty(), (s: SSLSession) => {}, true)
+        val serverChannel = new TlsSocketChannelImpl(plainServer, plainServer, new NullSslEngine, Optional.empty(), (s: SSLSession) => {}, true)
+
+        (clientChannel, serverChannel)
+      }
+    } finally {
+      serverSocket.close()
+    }
+  }
 }
