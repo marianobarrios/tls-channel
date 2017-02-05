@@ -1,4 +1,4 @@
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.8"
 
 organization := "com.github.marianobarrios"
 version := "0.1-SNAPSHOT"
@@ -29,19 +29,22 @@ fork in Test := true
 connectInput in run := true
 testOptions in Test += Tests.Argument("-oF")
 
+// to only use scala-library for testing
 autoScalaLibrary := false
 
 parallelExecution in Test := false
 
 libraryDependencies ++=
-  "org.slf4j" % "slf4j-api" % "1.7.19" ::
-  "org.scala-lang" % "scala-library" % "2.11.6" % "test" ::
-  "ch.qos.logback" % "logback-classic" % "1.1.2" % "test" ::
+  "org.slf4j" % "slf4j-api" % "1.7.22" ::
+  "org.scala-lang" % "scala-library" % "2.11.8" % "test" ::
+  "ch.qos.logback" % "logback-classic" % "1.1.9" % "test" ::
   "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" % "test" ::
-  "org.easymock" % "easymock" % "3.3" % "test" ::
-  "org.scalatest" %% "scalatest" % "2.2.2" % "test" ::
+  "org.scalatest" %% "scalatest" % "2.2.6" % "test" ::
   "com.jsuereth" %% "scala-arm" % "1.4" % "test" ::
   Nil
+
+// Do not put Scala version in the artifact, since Scala is only used for tests.
+crossPaths := false
 
 autoAPIMappings := true
 publishMavenStyle := true
