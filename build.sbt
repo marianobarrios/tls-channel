@@ -46,7 +46,13 @@ libraryDependencies ++=
 // Do not put Scala version in the artifact, since Scala is only used for tests.
 crossPaths := false
 
-autoAPIMappings := true
+javacOptions in (Compile,doc) ++= Seq("-link", "http://docs.oracle.com/javase/8/docs/api/")
+
+sources in (Compile, doc) ~= (_ filter { file =>
+	val parent = file.getParent
+	!parent.endsWith("/engine/misc") && !parent.endsWith("/tlschannel/impl") && !parent.endsWith("/tlschannel/util")  
+})
+
 publishMavenStyle := true
 
 pomExtra := (
