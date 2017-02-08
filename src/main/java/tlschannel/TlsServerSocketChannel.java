@@ -31,64 +31,28 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		return engine;
 	}
 
-	public static class Builder {
+	public static class Builder extends TlsSocketChannelBuilder<Builder> {
 
-		private final ByteChannel wrapped;
 		private final Function<Optional<String>, SSLContext> contextFactory;
 		private Function<SSLContext, SSLEngine> engineFactory = TlsServerSocketChannel::defaultSSLEngineFactory;
-		// @formatter:off
-		private Consumer<SSLSession> sessionInitCallback = session -> {};
-		// @formatter:on
-		private boolean runTasks = true;
-		private BufferAllocator plainBufferAllocator = new HeapBufferAllocator();
-		private BufferAllocator encryptedBufferAllocator = new DirectBufferAllocator();
 
-		public Builder(ByteChannel wrapped, SSLContext context) {
-			this.wrapped = wrapped;
+		private Builder(ByteChannel wrapped, SSLContext context) {
+			super(wrapped);
 			this.contextFactory = name -> context;
 		}
 
-		public Builder(ByteChannel wrapped, Function<Optional<String>, SSLContext> contextFactory) {
-			this.wrapped = wrapped;
+		private Builder(ByteChannel wrapped, Function<Optional<String>, SSLContext> contextFactory) {
+			super(wrapped);
 			this.contextFactory = contextFactory;
+		}
+
+		@Override
+		Builder getThis() {
+			return this;
 		}
 
 		public Builder withEngineFactory(Function<SSLContext, SSLEngine> engineFactory) {
 			this.engineFactory = engineFactory;
-			return this;
-		}
-
-		public Builder withSessionInitCallback(Consumer<SSLSession> sessionInitCallback) {
-			this.sessionInitCallback = sessionInitCallback;
-			return this;
-		}
-
-		/**
-		 * Whether CPU-intensive tasks are run or not. Default is to do run
-		 * them. If setting this {@link false}, the calling code should be
-		 * prepared to handle {@link NeedsTaskException}}
-		 */
-		public Builder withRunTasks(boolean runTasks) {
-			this.runTasks = runTasks;
-			return this;
-		}
-
-		/**
-		 * Set which buffer to use for decrypted data. By default a
-		 * {@link HeapBufferAllocator} is used.
-		 */
-		public Builder withPlainBufferAllocator(BufferAllocator bufferAllocator) {
-			this.plainBufferAllocator = bufferAllocator;
-			return this;
-		}
-
-		/**
-		 * Set which buffer to use for encrypted data. By default a
-		 * {@link DirectBufferAllocator} is used, as this data is usually read
-		 * from or written to native sockets.
-		 */
-		public Builder withEncryptedBufferAllocator(BufferAllocator bufferAllocator) {
-			this.encryptedBufferAllocator = bufferAllocator;
 			return this;
 		}
 
@@ -99,6 +63,15 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 
 	}
 
+	public static Builder newBuilder(ByteChannel wrapped, SSLContext context) {
+		return new Builder(wrapped, context);
+	}
+
+	public static Builder newBuilder(ByteChannel wrapped, Function<Optional<String>, SSLContext> contextFactory) {
+		return new Builder(wrapped, contextFactory);
+	}
+
+	
 	private final static int maxTlsPacketSize = 16 * 1024;
 
 	private final ByteChannel wrapped;

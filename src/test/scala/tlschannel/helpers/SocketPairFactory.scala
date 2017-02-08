@@ -99,7 +99,8 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
     val rawServer = serverSocket.accept()
     serverSocket.close()
-    val server = new TlsServerSocketChannel.Builder(rawServer, sslContextFactory(serverName, sslContext) _)
+    val server = TlsServerSocketChannel
+      .newBuilder(rawServer, sslContextFactory(serverName, sslContext) _)
       .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
       .build()
     (client, SocketGroup(server, server, rawServer))
@@ -112,7 +113,9 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     val rawClient = SocketChannel.open(address)
     val server = serverSocket.accept().asInstanceOf[SSLSocket]
     serverSocket.close()
-    val client = new TlsClientSocketChannel.Builder(rawClient, createClientSslEngine(cipher, serverName, chosenPort)).build()
+    val client = TlsClientSocketChannel
+      .newBuilder(rawClient, createClientSslEngine(cipher, serverName, chosenPort))
+      .build()
     (SocketGroup(client, client, rawClient), server)
   }
 
@@ -146,10 +149,12 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
           case None => rawServer
         }
 
-        val clientChannel = new TlsClientSocketChannel.Builder(plainClient, createClientSslEngine(cipher, serverName, chosenPort))
+        val clientChannel = TlsClientSocketChannel
+          .newBuilder(plainClient, createClientSslEngine(cipher, serverName, chosenPort))
           .withRunTasks(runTasks)
           .build()
-        val serverChannel = new TlsServerSocketChannel.Builder(plainServer, sslContextFactory(serverName, sslContext) _)
+        val serverChannel = TlsServerSocketChannel
+          .newBuilder(plainServer, sslContextFactory(serverName, sslContext) _)
           .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
           .withRunTasks(runTasks)
           .build()

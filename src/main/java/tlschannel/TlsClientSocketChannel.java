@@ -14,59 +14,29 @@ import java.util.function.Consumer;
 
 public class TlsClientSocketChannel implements TlsSocketChannel {
 
-	public static class Builder {
+	public static class Builder extends TlsSocketChannelBuilder<Builder> {
 
-		private final ByteChannel wrapped;
 		private final SSLEngine engine;
-		// @formatter:off
-		private Consumer<SSLSession> sessionInitCallback = session -> {};
-		// @formatter:on
-		private boolean runTasks = true;
-		private BufferAllocator plainBufferAllocator = new HeapBufferAllocator();
-		private BufferAllocator encryptedBufferAllocator = new DirectBufferAllocator();
 
-		public Builder(ByteChannel wrapped, SSLEngine engine) {
-			this.wrapped = wrapped;
+		private Builder(ByteChannel wrapped, SSLEngine engine) {
+			super(wrapped);
 			this.engine = engine;
 		}
 
-		public Builder withSessionInitCallback(Consumer<SSLSession> sessionInitCallback) {
-			this.sessionInitCallback = sessionInitCallback;
+		@Override
+		Builder getThis() {
 			return this;
 		}
-
-		/**
-		 * Whether CPU-intensive tasks are run or not. Default is to do run
-		 * them. If setting this {@link false}, the calling code should be
-		 * prepared to handle {@link NeedsTaskException}}
-		 */
-		public Builder withRunTasks(boolean runTasks) {
-			this.runTasks = runTasks;
-			return this;
-		}
-
-		/**
-		 * Set which buffer to use for decrypted data. By default a
-		 * {@link HeapBufferAllocator} is used.
-		 */
-		public Builder withPlainBufferAllocator(BufferAllocator bufferAllocator) {
-			this.plainBufferAllocator = bufferAllocator;
-			return this;
-		}
-
-		/**
-		 * Set which buffer to use for encrypted data. By default a
-		 * {@link DirectBufferAllocator} is used.
-		 */
-		public Builder withEncryptedBufferAllocator(BufferAllocator bufferAllocator) {
-			this.encryptedBufferAllocator = bufferAllocator;
-			return this;
-		}
-
+		
 		public TlsClientSocketChannel build() {
 			return new TlsClientSocketChannel(wrapped, engine, sessionInitCallback, runTasks, plainBufferAllocator,
 					encryptedBufferAllocator);
 		}
+		
+	}
+	
+	public static Builder newBuilder(ByteChannel wrapped, SSLEngine engine) {
+		return new Builder(wrapped, engine);
 	}
 
 	private final ByteChannel wrapped;
