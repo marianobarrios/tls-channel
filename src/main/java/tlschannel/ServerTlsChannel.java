@@ -34,13 +34,16 @@ public class ServerTlsChannel implements TlsChannel {
 		return engine;
 	}
 
+	/**
+	 * Builder of {@link ServerTlsChannel}
+	 */
 	public static class Builder extends TlsChannelBuilder<Builder> {
 
 		private final Function<Optional<String>, SSLContext> contextFactory;
 		private Function<SSLContext, SSLEngine> engineFactory = ServerTlsChannel::defaultSSLEngineFactory;
 
-		private Builder(ByteChannel wrapped, SSLContext context) {
-			super(wrapped);
+		private Builder(ByteChannel underlying, SSLContext context) {
+			super(underlying);
 			this.contextFactory = name -> context;
 		}
 
@@ -60,24 +63,31 @@ public class ServerTlsChannel implements TlsChannel {
 		}
 
 		public ServerTlsChannel build() {
-			return new ServerTlsChannel(wrapped, contextFactory, engineFactory, sessionInitCallback, runTasks,
+			return new ServerTlsChannel(underlying, contextFactory, engineFactory, sessionInitCallback, runTasks,
 					plainBufferAllocator, encryptedBufferAllocator);
 		}
 
 	}
 
-	public static Builder newBuilder(ByteChannel wrapped, SSLContext context) {
-		return new Builder(wrapped, context);
+	/**
+	 * @param underlying
+	 *            a reference to the underlying {@link ByteChannel}
+	 */
+	public static Builder newBuilder(ByteChannel underlying, SSLContext context) {
+		return new Builder(underlying, context);
 	}
 
-	public static Builder newBuilder(ByteChannel wrapped, Function<Optional<String>, SSLContext> contextFactory) {
-		return new Builder(wrapped, contextFactory);
+	/**
+	 * @param underlying
+	 *            a reference to the underlying {@link ByteChannel}
+	 */
+	public static Builder newBuilder(ByteChannel underlying, Function<Optional<String>, SSLContext> contextFactory) {
+		return new Builder(underlying, contextFactory);
 	}
 
-	
 	private final static int maxTlsPacketSize = 16 * 1024;
 
-	private final ByteChannel wrapped;
+	private final ByteChannel underlying;
 	private final Function<Optional<String>, SSLContext> contextFactory;
 	private final Function<SSLContext, SSLEngine> engineFactory;
 	private final Consumer<SSLSession> sessionInitCallback;
@@ -94,14 +104,14 @@ public class ServerTlsChannel implements TlsChannel {
 
 	// @formatter:off
 	private ServerTlsChannel(
-			ByteChannel wrapped, 
+			ByteChannel underlying, 
 			Function<Optional<String>, SSLContext> contextFactory,
 			Function<SSLContext, SSLEngine> engineFactory, 
 			Consumer<SSLSession> sessionInitCallback, 
 			boolean runTasks,
 			BufferAllocator plainBufferAllocator,
 			BufferAllocator encryptedBufferAllocator) {
-		this.wrapped = wrapped;
+		this.underlying = underlying;
 		this.contextFactory = contextFactory;
 		this.engineFactory = engineFactory;
 		this.sessionInitCallback = sessionInitCallback;
@@ -114,8 +124,8 @@ public class ServerTlsChannel implements TlsChannel {
 	// @formatter:on
 
 	@Override
-	public ByteChannel getWrapped() {
-		return wrapped;
+	public ByteChannel getUnderlying() {
+		return underlying;
 	}
 
 	@Override
@@ -173,12 +183,12 @@ public class ServerTlsChannel implements TlsChannel {
 	public void close() {
 		if (impl != null)
 			impl.close();
-		Util.closeChannel(wrapped);
+		Util.closeChannel(underlying);
 	}
 
 	@Override
 	public boolean isOpen() {
-		return wrapped.isOpen();
+		return underlying.isOpen();
 	}
 
 	@Override
@@ -194,11 +204,11 @@ public class ServerTlsChannel implements TlsChannel {
 		try {
 			if (!sniRead) {
 				// IO block
-				Optional<String> nameOpt = getServerNameIndication(wrapped);
+				Optional<String> nameOpt = getServerNameIndication(underlying);
 				// call client code
 				SSLContext sslContext = contextFactory.apply(nameOpt);
 				SSLEngine engine = engineFactory.apply(sslContext);
-				impl = new TlsChannelImpl(wrapped, wrapped, engine, Optional.of(buffer), sessionInitCallback,
+				impl = new TlsChannelImpl(underlying, underlying, engine, Optional.of(buffer), sessionInitCallback,
 						runTasks, plainBufferAllocator, encryptedBufferAllocator);
 				sniRead = true;
 			}

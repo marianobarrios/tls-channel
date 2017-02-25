@@ -7,7 +7,7 @@ import javax.net.ssl.SSLSession;
 
 abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 
-	final ByteChannel wrapped;
+	final ByteChannel underlying;
 	
 	// @formatter:off
 	Consumer<SSLSession> sessionInitCallback = session -> {};
@@ -16,8 +16,8 @@ abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 	BufferAllocator plainBufferAllocator = new HeapBufferAllocator();
 	BufferAllocator encryptedBufferAllocator = new DirectBufferAllocator();
 
-	TlsChannelBuilder(ByteChannel wrapped) {
-		this.wrapped = wrapped;
+	TlsChannelBuilder(ByteChannel underlying) {
+		this.underlying = underlying;
 	}
 
 	abstract T getThis();

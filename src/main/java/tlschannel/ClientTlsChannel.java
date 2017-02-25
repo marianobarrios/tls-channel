@@ -17,12 +17,15 @@ import java.util.function.Consumer;
  */
 public class ClientTlsChannel implements TlsChannel {
 
+	/**
+	 * Builder of {@link ClientTlsChannel}
+	 */
 	public static class Builder extends TlsChannelBuilder<Builder> {
 
 		private final SSLEngine engine;
 
-		private Builder(ByteChannel wrapped, SSLEngine engine) {
-			super(wrapped);
+		private Builder(ByteChannel underlying, SSLEngine engine) {
+			super(underlying);
 			this.engine = engine;
 		}
 
@@ -30,29 +33,33 @@ public class ClientTlsChannel implements TlsChannel {
 		Builder getThis() {
 			return this;
 		}
-		
+
 		public ClientTlsChannel build() {
-			return new ClientTlsChannel(wrapped, engine, sessionInitCallback, runTasks, plainBufferAllocator,
+			return new ClientTlsChannel(underlying, engine, sessionInitCallback, runTasks, plainBufferAllocator,
 					encryptedBufferAllocator);
 		}
-		
-	}
-	
-	public static Builder newBuilder(ByteChannel wrapped, SSLEngine engine) {
-		return new Builder(wrapped, engine);
+
 	}
 
-	private final ByteChannel wrapped;
+	/**
+	 * @param underlying
+	 *            a reference to the underlying {@link ByteChannel}
+	 */
+	public static Builder newBuilder(ByteChannel underlying, SSLEngine engine) {
+		return new Builder(underlying, engine);
+	}
+
+	private final ByteChannel underlying;
 	private final SSLEngine engine;
 	private final TlsChannelImpl impl;
 
-	private ClientTlsChannel(ByteChannel wrapped, SSLEngine engine, Consumer<SSLSession> sessionInitCallback,
+	private ClientTlsChannel(ByteChannel underlying, SSLEngine engine, Consumer<SSLSession> sessionInitCallback,
 			boolean runTasks, BufferAllocator plainBufferAllocator, BufferAllocator encryptedBufferAllocator) {
 		if (!engine.getUseClientMode())
 			throw new IllegalArgumentException("SSLEngine must be in client mode");
-		this.wrapped = wrapped;
+		this.underlying = underlying;
 		this.engine = engine;
-		impl = new TlsChannelImpl(wrapped, wrapped, engine, Optional.empty(), sessionInitCallback, runTasks,
+		impl = new TlsChannelImpl(underlying, underlying, engine, Optional.empty(), sessionInitCallback, runTasks,
 				plainBufferAllocator, encryptedBufferAllocator);
 	}
 
@@ -62,8 +69,8 @@ public class ClientTlsChannel implements TlsChannel {
 	}
 
 	@Override
-	public ByteChannel getWrapped() {
-		return wrapped;
+	public ByteChannel getUnderlying() {
+		return underlying;
 	}
 
 	@Override

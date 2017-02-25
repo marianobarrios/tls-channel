@@ -9,7 +9,10 @@ import javax.net.ssl.SSLSession;
 
 public interface TlsChannel extends ByteChannel, GatheringByteChannel, ScatteringByteChannel {
 
-	ByteChannel getWrapped();
+	/**
+	 * Return a reference to the underlying {@link ByteChannel}.
+	 */
+	ByteChannel getUnderlying();
 
 	void renegotiate() throws IOException;
 
