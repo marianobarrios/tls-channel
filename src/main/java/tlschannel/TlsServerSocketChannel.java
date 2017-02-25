@@ -23,6 +23,9 @@ import tlschannel.impl.TlsExplorer;
 import tlschannel.impl.TlsSocketChannelImpl;
 import tlschannel.util.Util;
 
+/**
+ * A server-side {@link TlsSocketChannel}.
+ */
 public class TlsServerSocketChannel implements TlsSocketChannel {
 
 	private static SSLEngine defaultSSLEngineFactory(SSLContext sslContext) {

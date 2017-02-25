@@ -2,8 +2,12 @@ package tlschannel;
 
 import java.nio.ByteBuffer;
 
-/*
- * Simple allocator that just creates heap buffers.
+/**
+ * Allocator that creates heap buffers. The {@link #free(ByteBuffer} method is a
+ * no-op, as heap buffer are handled completely by the garbage collector.
+ * 
+ * Direct buffers are generally used as a simple and generally good enough
+ * default solution.
  */
 public class HeapBufferAllocator implements BufferAllocator {
 

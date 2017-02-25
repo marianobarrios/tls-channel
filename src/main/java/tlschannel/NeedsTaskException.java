@@ -3,16 +3,21 @@ package tlschannel;
 import java.io.IOException;
 
 /**
- * Exceptions of the class signal the caller that the operation could not
- * continue because a CPU-intensive operation (usually related to asymmetric
- * cryptography) needs to be executed and the socket is configured to not run
- * tasks. This allows a single thread selector loop to run those tasks in some
- * other threads, taking advantage of having more than one CPU. The operation
- * should be retried once the task supplied in {@link #getTask()} finishes.
- * 
- * Note that this kind of situation doesn't exist in OpenSSL because epoll can
- * be called from multiple threads, but Java {@link Selector}s are single
- * threaded.
+ * This exception signals the caller that the operation could not continue
+ * because a CPU-intensive operation (typically a TLS handshaking) needs to be
+ * executed and the {@link TlsSocketChannel} is configured to not run tasks.
+ * This allows the application to run these tasks in some other threads, in
+ * order to not slow the selection loop. The method that threw the exception
+ * should be retried once the task supplied by {@link #getTask()} is executed
+ * and finished.
+ * <p>
+ * This exception is akin to the SSL_ERROR_WANT_ASYNC error code used by OpenSSL
+ * (but note that in OpenSSL, the task is executed by the library, while with
+ * the {@link TlsSocketChannel}, the calling code is responsible for the
+ * execution).
+ *
+ * @see <a href="https://www.openssl.org/docs/man1.1.0/ssl/SSL_get_error.html">
+ *      OpenSSL error documentation</a>
  */
 public class NeedsTaskException extends IOException {
 

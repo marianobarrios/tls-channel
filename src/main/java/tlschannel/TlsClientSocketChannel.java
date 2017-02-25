@@ -12,6 +12,9 @@ import tlschannel.impl.TlsSocketChannelImpl;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+/**
+ * A client-side {@link TlsSocketChannel}.
+ */
 public class TlsClientSocketChannel implements TlsSocketChannel {
 
 	public static class Builder extends TlsSocketChannelBuilder<Builder> {
