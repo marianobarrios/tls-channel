@@ -1,7 +1,5 @@
 package tlschannel;
 
-import java.io.IOException;
-
 /**
  * This exception signals the caller that the operation could not continue
  * because a CPU-intensive operation (typically a TLS handshaking) needs to be
@@ -19,7 +17,7 @@ import java.io.IOException;
  * @see <a href="https://www.openssl.org/docs/man1.1.0/ssl/SSL_get_error.html">
  *      OpenSSL error documentation</a>
  */
-public class NeedsTaskException extends IOException {
+public class NeedsTaskException extends TlsChannelFlowControlException {
 
 	private Runnable task;
 
@@ -29,15 +27,6 @@ public class NeedsTaskException extends IOException {
 
 	public Runnable getTask() {
 		return task;
-	}
-
-	/**
-	 * For efficiency, override this method to do nothing, as this is a
-	 * flow-control exception.
-	 */
-	@Override
-	public Throwable fillInStackTrace() {
-		return this;
 	}
 
 }

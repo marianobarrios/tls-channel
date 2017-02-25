@@ -25,6 +25,6 @@ import java.nio.channels.SocketChannel;
  *      OpenSSL error documentation</a>
  */
 
-public class NeedsWriteException extends TlsNonBlockingNecessityException {
+public class NeedsWriteException extends TlsChannelFlowControlException {
 
 }
