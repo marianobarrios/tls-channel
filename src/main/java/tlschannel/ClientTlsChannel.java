@@ -7,17 +7,17 @@ import java.nio.channels.ByteChannel;
 import javax.net.ssl.SSLSession;
 
 import tlschannel.impl.ByteBufferSet;
-import tlschannel.impl.TlsSocketChannelImpl;
+import tlschannel.impl.TlsChannelImpl;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * A client-side {@link TlsSocketChannel}.
+ * A client-side {@link TlsChannel}.
  */
-public class TlsClientSocketChannel implements TlsSocketChannel {
+public class ClientTlsChannel implements TlsChannel {
 
-	public static class Builder extends TlsSocketChannelBuilder<Builder> {
+	public static class Builder extends TlsChannelBuilder<Builder> {
 
 		private final SSLEngine engine;
 
@@ -31,8 +31,8 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 			return this;
 		}
 		
-		public TlsClientSocketChannel build() {
-			return new TlsClientSocketChannel(wrapped, engine, sessionInitCallback, runTasks, plainBufferAllocator,
+		public ClientTlsChannel build() {
+			return new ClientTlsChannel(wrapped, engine, sessionInitCallback, runTasks, plainBufferAllocator,
 					encryptedBufferAllocator);
 		}
 		
@@ -44,15 +44,15 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 
 	private final ByteChannel wrapped;
 	private final SSLEngine engine;
-	private final TlsSocketChannelImpl impl;
+	private final TlsChannelImpl impl;
 
-	private TlsClientSocketChannel(ByteChannel wrapped, SSLEngine engine, Consumer<SSLSession> sessionInitCallback,
+	private ClientTlsChannel(ByteChannel wrapped, SSLEngine engine, Consumer<SSLSession> sessionInitCallback,
 			boolean runTasks, BufferAllocator plainBufferAllocator, BufferAllocator encryptedBufferAllocator) {
 		if (!engine.getUseClientMode())
 			throw new IllegalArgumentException("SSLEngine must be in client mode");
 		this.wrapped = wrapped;
 		this.engine = engine;
-		impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, Optional.empty(), sessionInitCallback, runTasks,
+		impl = new TlsChannelImpl(wrapped, wrapped, engine, Optional.empty(), sessionInitCallback, runTasks,
 				plainBufferAllocator, encryptedBufferAllocator);
 	}
 
@@ -69,7 +69,7 @@ public class TlsClientSocketChannel implements TlsSocketChannel {
 	@Override
 	public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
 		ByteBufferSet dest = new ByteBufferSet(dstBuffers, offset, length);
-		TlsSocketChannelImpl.checkReadBuffer(dest);
+		TlsChannelImpl.checkReadBuffer(dest);
 		return impl.read(dest);
 	}
 

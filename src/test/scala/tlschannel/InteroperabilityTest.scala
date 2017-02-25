@@ -46,7 +46,7 @@ class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
     def close() = socket.close()
   }
 
-  class TlsSocketChannelWriter(val socket: TlsSocketChannel) extends Writer with Matchers {
+  class TlsSocketChannelWriter(val socket: TlsChannel) extends Writer with Matchers {
 
     def write(array: Array[Byte], offset: Int, length: Int) = {
       val buffer = ByteBuffer.wrap(array, offset, length)

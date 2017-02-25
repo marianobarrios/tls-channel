@@ -13,8 +13,8 @@ import javax.net.ssl.SSLEngine
 import javax.net.ssl.SSLSession
 
 import tlschannel.helpers.TestUtil.fnToConsumer
-import tlschannel.impl.ByteBufferSet;
-import tlschannel.impl.TlsSocketChannelImpl;
+import tlschannel.impl.ByteBufferSet
+import tlschannel.impl.TlsChannelImpl
 
 import java.util.Optional
 import tlschannel.helpers.TestUtil
@@ -28,7 +28,7 @@ class ApiTest extends FunSuite with Matchers {
 
   def newSocket() = {
     val sslEngine = SSLContext.getDefault.createSSLEngine
-    new TlsSocketChannelImpl(
+    new TlsChannelImpl(
       readChannel,
       writeChannel,
       sslEngine,

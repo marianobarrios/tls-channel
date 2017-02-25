@@ -32,9 +32,9 @@ import tlschannel.util.Util;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-public class TlsSocketChannelImpl implements ByteChannel {
+public class TlsChannelImpl implements ByteChannel {
 
-	private static final Logger logger = LoggerFactory.getLogger(TlsSocketChannelImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(TlsChannelImpl.class);
 
 	public static final int buffersInitialSize = 4096;
 
@@ -61,7 +61,7 @@ public class TlsSocketChannelImpl implements ByteChannel {
 	private final BufferAllocator plainBufferAllocator;
 
 	// @formatter:off
-	public TlsSocketChannelImpl(
+	public TlsChannelImpl(
 			ReadableByteChannel readChannel, 
 			WritableByteChannel writeChannel, 
 			SSLEngine engine,

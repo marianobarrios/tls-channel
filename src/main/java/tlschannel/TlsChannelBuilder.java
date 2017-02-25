@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 
 import javax.net.ssl.SSLSession;
 
-abstract class TlsSocketChannelBuilder<T extends TlsSocketChannelBuilder<T>> {
+abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 
 	final ByteChannel wrapped;
 	
@@ -16,7 +16,7 @@ abstract class TlsSocketChannelBuilder<T extends TlsSocketChannelBuilder<T>> {
 	BufferAllocator plainBufferAllocator = new HeapBufferAllocator();
 	BufferAllocator encryptedBufferAllocator = new DirectBufferAllocator();
 
-	TlsSocketChannelBuilder(ByteChannel wrapped) {
+	TlsChannelBuilder(ByteChannel wrapped) {
 		this.wrapped = wrapped;
 	}
 

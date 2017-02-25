@@ -7,7 +7,7 @@ import java.nio.channels.ScatteringByteChannel;
 
 import javax.net.ssl.SSLSession;
 
-public interface TlsSocketChannel extends ByteChannel, GatheringByteChannel, ScatteringByteChannel {
+public interface TlsChannel extends ByteChannel, GatheringByteChannel, ScatteringByteChannel {
 
 	ByteChannel getWrapped();
 

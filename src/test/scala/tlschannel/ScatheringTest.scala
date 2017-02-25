@@ -47,7 +47,7 @@ class ScatheringTest extends FunSuite with Matchers with StrictLogging {
 
 object ScatheringTest extends Matchers with StrictLogging {
 
-  def writerLoop(data: Array[Byte], writer: TlsSocketChannel): Unit = TestUtil.cannotFail("Error in writer") {
+  def writerLoop(data: Array[Byte], writer: TlsChannel): Unit = TestUtil.cannotFail("Error in writer") {
     val renegotiatePeriod = 10000
     logger.debug(s"Starting writer loop")
     val originData = multiWrap(data)
@@ -68,7 +68,7 @@ object ScatheringTest extends Matchers with StrictLogging {
     buffers.map(_.remaining.toLong).sum
   }
 
-  def readerLoop(data: Array[Byte], reader: TlsSocketChannel): Unit = TestUtil.cannotFail("Error in reader") {
+  def readerLoop(data: Array[Byte], reader: TlsChannel): Unit = TestUtil.cannotFail("Error in reader") {
     logger.debug("Starting reader loop")
     val receivedData = ByteBuffer.allocate(data.length)
     val receivedDataArray = Array(ByteBuffer.allocate(0), receivedData, ByteBuffer.allocate(0))

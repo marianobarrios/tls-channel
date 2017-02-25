@@ -13,7 +13,7 @@ import java.nio.channels.SocketChannel;
  * For {@link SocketChannel}s, a {@link Selector} can be used to find out when
  * the method should be retried.
  * <p>
- * Caveat: Any {@link TlsSocketChannel} I/O method can throw this exception. In
+ * Caveat: Any {@link TlsChannel} I/O method can throw this exception. In
  * particular, <code>read</code> may want to write data. This is because TLS
  * handshakes may occur at any time (initiated by either the client or the
  * server).

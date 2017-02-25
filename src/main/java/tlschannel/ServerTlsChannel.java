@@ -20,13 +20,13 @@ import javax.net.ssl.StandardConstants;
 
 import tlschannel.impl.ByteBufferSet;
 import tlschannel.impl.TlsExplorer;
-import tlschannel.impl.TlsSocketChannelImpl;
+import tlschannel.impl.TlsChannelImpl;
 import tlschannel.util.Util;
 
 /**
- * A server-side {@link TlsSocketChannel}.
+ * A server-side {@link TlsChannel}.
  */
-public class TlsServerSocketChannel implements TlsSocketChannel {
+public class ServerTlsChannel implements TlsChannel {
 
 	private static SSLEngine defaultSSLEngineFactory(SSLContext sslContext) {
 		SSLEngine engine = sslContext.createSSLEngine();
@@ -34,10 +34,10 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		return engine;
 	}
 
-	public static class Builder extends TlsSocketChannelBuilder<Builder> {
+	public static class Builder extends TlsChannelBuilder<Builder> {
 
 		private final Function<Optional<String>, SSLContext> contextFactory;
-		private Function<SSLContext, SSLEngine> engineFactory = TlsServerSocketChannel::defaultSSLEngineFactory;
+		private Function<SSLContext, SSLEngine> engineFactory = ServerTlsChannel::defaultSSLEngineFactory;
 
 		private Builder(ByteChannel wrapped, SSLContext context) {
 			super(wrapped);
@@ -59,8 +59,8 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 			return this;
 		}
 
-		public TlsServerSocketChannel build() {
-			return new TlsServerSocketChannel(wrapped, contextFactory, engineFactory, sessionInitCallback, runTasks,
+		public ServerTlsChannel build() {
+			return new ServerTlsChannel(wrapped, contextFactory, engineFactory, sessionInitCallback, runTasks,
 					plainBufferAllocator, encryptedBufferAllocator);
 		}
 
@@ -90,10 +90,10 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	private ByteBuffer buffer;
 
 	private volatile boolean sniRead = false;
-	private TlsSocketChannelImpl impl = null;
+	private TlsChannelImpl impl = null;
 
 	// @formatter:off
-	private TlsServerSocketChannel(
+	private ServerTlsChannel(
 			ByteChannel wrapped, 
 			Function<Optional<String>, SSLContext> contextFactory,
 			Function<SSLContext, SSLEngine> engineFactory, 
@@ -108,7 +108,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 		this.runTasks = runTasks;
 		this.plainBufferAllocator = plainBufferAllocator;
 		this.encryptedBufferAllocator = encryptedBufferAllocator;
-		buffer = encryptedBufferAllocator.allocate(TlsSocketChannelImpl.buffersInitialSize);
+		buffer = encryptedBufferAllocator.allocate(TlsChannelImpl.buffersInitialSize);
 	}
 	
 	// @formatter:on
@@ -121,7 +121,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 	@Override
 	public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
 		ByteBufferSet dest = new ByteBufferSet(dstBuffers, offset, length);
-		TlsSocketChannelImpl.checkReadBuffer(dest);
+		TlsChannelImpl.checkReadBuffer(dest);
 		if (!sniRead)
 			initEngine();
 		return impl.read(dest);
@@ -198,7 +198,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 				// call client code
 				SSLContext sslContext = contextFactory.apply(nameOpt);
 				SSLEngine engine = engineFactory.apply(sslContext);
-				impl = new TlsSocketChannelImpl(wrapped, wrapped, engine, Optional.of(buffer), sessionInitCallback,
+				impl = new TlsChannelImpl(wrapped, wrapped, engine, Optional.of(buffer), sessionInitCallback,
 						runTasks, plainBufferAllocator, encryptedBufferAllocator);
 				sniRead = true;
 			}
@@ -214,7 +214,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 			if (!buffer.hasRemaining()) {
 				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch", maxTlsPacketSize);
 			}
-			TlsSocketChannelImpl.readFromNetwork(channel, buffer); // IO block
+			TlsChannelImpl.readFromNetwork(channel, buffer); // IO block
 		}
 		buffer.flip();
 		Map<Integer, SNIServerName> serverNames = TlsExplorer.explore(buffer);
@@ -234,7 +234,7 @@ public class TlsServerSocketChannel implements TlsSocketChannel {
 				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch",
 						TlsExplorer.RECORD_HEADER_SIZE);
 			}
-			TlsSocketChannelImpl.readFromNetwork(channel, buffer); // IO block
+			TlsChannelImpl.readFromNetwork(channel, buffer); // IO block
 		}
 		buffer.flip();
 		int recordHeaderSize = TlsExplorer.getRequiredSize(buffer);

@@ -33,11 +33,11 @@ import tlschannel.helpers.TestUtil
 import tlschannel.helpers.ChunkingByteChannel
 import tlschannel.helpers.NullSslEngine
 import com.sun.webkit.network.ByteBufferAllocator
-import tlschannel.impl.TlsSocketChannelImpl
+import tlschannel.impl.TlsChannelImpl
 
 case class SocketPair(client: SocketGroup, server: SocketGroup)
 
-case class SocketGroup(external: ByteChannel, tls: TlsSocketChannel, plain: SocketChannel)
+case class SocketGroup(external: ByteChannel, tls: TlsChannel, plain: SocketChannel)
 
 /**
  * Create pairs of connected sockets (using the loopback interface).
@@ -99,7 +99,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
     val rawServer = serverSocket.accept()
     serverSocket.close()
-    val server = TlsServerSocketChannel
+    val server = ServerTlsChannel
       .newBuilder(rawServer, sslContextFactory(serverName, sslContext) _)
       .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
       .build()
@@ -113,7 +113,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     val rawClient = SocketChannel.open(address)
     val server = serverSocket.accept().asInstanceOf[SSLSocket]
     serverSocket.close()
-    val client = TlsClientSocketChannel
+    val client = ClientTlsChannel
       .newBuilder(rawClient, createClientSslEngine(cipher, serverName, chosenPort))
       .build()
     (SocketGroup(client, client, rawClient), server)
@@ -149,11 +149,11 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
           case None => rawServer
         }
 
-        val clientChannel = TlsClientSocketChannel
+        val clientChannel = ClientTlsChannel
           .newBuilder(plainClient, createClientSslEngine(cipher, serverName, chosenPort))
           .withRunTasks(runTasks)
           .build()
-        val serverChannel = TlsServerSocketChannel
+        val serverChannel = ServerTlsChannel
           .newBuilder(plainServer, sslContextFactory(serverName, sslContext) _)
           .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
           .withRunTasks(runTasks)
@@ -215,7 +215,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
           case None => rawServer
         }
 
-        val clientChannel = new TlsSocketChannelImpl(
+        val clientChannel = new TlsChannelImpl(
           plainClient,
           plainClient,
           new NullSslEngine,
@@ -224,7 +224,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
           true /* runTasks */ ,
           new HeapBufferAllocator /* plainBufferAllocator */ ,
           encryptedBufferAllocator)
-        val serverChannel = new TlsSocketChannelImpl(
+        val serverChannel = new TlsChannelImpl(
           plainServer,
           plainServer,
           new NullSslEngine,

@@ -85,7 +85,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
 
 object BlockingTest extends Matchers with StrictLogging {
 
-  def writerLoop(data: Array[Byte], writer: ByteChannel, rawWriter: TlsSocketChannel, renegotiate: Boolean = false): Unit = TestUtil.cannotFail("Error in writer") {
+  def writerLoop(data: Array[Byte], writer: ByteChannel, rawWriter: TlsChannel, renegotiate: Boolean = false): Unit = TestUtil.cannotFail("Error in writer") {
     val renegotiatePeriod = 10000
     logger.debug(s"Starting writer loop, renegotiate:$renegotiate")
     val originData = ByteBuffer.wrap(data)
