@@ -105,6 +105,18 @@ public class TlsChannelImpl implements ByteChannel {
 	// actually do not read anything
 	private final ByteBufferSet dummyOut = new ByteBufferSet(new ByteBuffer[] {});
 
+	public Consumer<SSLSession> getSessionInitCallback() {
+		return initSessionCallback;
+	}
+
+	public BufferAllocator getPlainBufferAllocator() {
+		return plainBufferAllocator;
+	}
+
+	public BufferAllocator getEncryptedBufferAllocator() {
+		return encryptedBufferAllocator;
+	}
+	
 	// read
 
 	public long read(ByteBufferSet dest) throws IOException, NeedsTaskException {

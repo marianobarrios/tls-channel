@@ -2,6 +2,7 @@ package tlschannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
 import javax.net.ssl.SSLEngine;
 import java.nio.channels.ByteChannel;
 import javax.net.ssl.SSLSession;
@@ -22,11 +23,11 @@ public class ClientTlsChannel implements TlsChannel {
 	 */
 	public static class Builder extends TlsChannelBuilder<Builder> {
 
-		private final SSLEngine engine;
+		private final SSLEngine sslEngine;
 
-		private Builder(ByteChannel underlying, SSLEngine engine) {
+		private Builder(ByteChannel underlying, SSLEngine sslEngine) {
 			super(underlying);
-			this.engine = engine;
+			this.sslEngine = sslEngine;
 		}
 
 		@Override
@@ -35,22 +36,26 @@ public class ClientTlsChannel implements TlsChannel {
 		}
 
 		public ClientTlsChannel build() {
-			return new ClientTlsChannel(underlying, engine, sessionInitCallback, runTasks, plainBufferAllocator,
+			return new ClientTlsChannel(underlying, sslEngine, sessionInitCallback, runTasks, plainBufferAllocator,
 					encryptedBufferAllocator);
 		}
 
 	}
 
 	/**
+	 * Create a new {@link Builder}, configured with a underlying
+	 * {@link Channel} and a fixed {@link SSLEngine}.
+	 * 
 	 * @param underlying
 	 *            a reference to the underlying {@link ByteChannel}
+	 * @param sslEngine
+	 *            the engine to use with this channel
 	 */
-	public static Builder newBuilder(ByteChannel underlying, SSLEngine engine) {
-		return new Builder(underlying, engine);
+	public static Builder newBuilder(ByteChannel underlying, SSLEngine sslEngine) {
+		return new Builder(underlying, sslEngine);
 	}
 
 	private final ByteChannel underlying;
-	private final SSLEngine engine;
 	private final TlsChannelImpl impl;
 
 	private ClientTlsChannel(ByteChannel underlying, SSLEngine engine, Consumer<SSLSession> sessionInitCallback,
@@ -58,19 +63,38 @@ public class ClientTlsChannel implements TlsChannel {
 		if (!engine.getUseClientMode())
 			throw new IllegalArgumentException("SSLEngine must be in client mode");
 		this.underlying = underlying;
-		this.engine = engine;
 		impl = new TlsChannelImpl(underlying, underlying, engine, Optional.empty(), sessionInitCallback, runTasks,
 				plainBufferAllocator, encryptedBufferAllocator);
 	}
 
 	@Override
-	public SSLSession getSession() {
-		return engine.getSession();
+	public ByteChannel getUnderlying() {
+		return underlying;
+	}
+	
+	@Override
+	public SSLEngine getSslEngine() {
+		return impl.engine();
+	}
+	
+	@Override
+	public Consumer<SSLSession> getSessionInitCallback() {
+		return impl.getSessionInitCallback();
+	}
+	
+	@Override
+	public BufferAllocator getPlainBufferAllocator() {
+		return impl.getPlainBufferAllocator();
 	}
 
 	@Override
-	public ByteChannel getUnderlying() {
-		return underlying;
+	public BufferAllocator getEncryptedBufferAllocator() {
+		return impl.getEncryptedBufferAllocator();
+	}
+	
+	@Override
+	public boolean getRunTasks() {
+		return impl.getRunTasks();
 	}
 
 	@Override
@@ -126,9 +150,5 @@ public class ClientTlsChannel implements TlsChannel {
 		return impl.isOpen();
 	}
 
-	@Override
-	public boolean getRunTasks() {
-		return impl.getRunTasks();
-	}
 
 }
