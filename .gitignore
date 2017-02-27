@@ -6,3 +6,4 @@ project/target/
 .cache-main
 .cache-tests
 /bin/
+/log/
