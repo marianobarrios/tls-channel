@@ -38,6 +38,11 @@ public class TlsChannelImpl implements ByteChannel {
 
 	public static final int buffersInitialSize = 4096;
 
+	/**
+	 * Official TLS max data size is 2^14 = 16k. Use 1024 more to account for the overhead
+	 */
+	private final static int maxTlsPacketSize = 17 * 1024;
+	
 	private static class EngineLoopResult {
 		public final int bytes;
 		public final HandshakeStatus lastHandshakeStatus;
@@ -47,15 +52,13 @@ public class TlsChannelImpl implements ByteChannel {
 			this.lastHandshakeStatus = lastHandshakeStatus;
 		}
 	}
-
+	
 	private final ReadableByteChannel readChannel;
 	private final WritableByteChannel writeChannel;
 	private final SSLEngine engine;
 	private ByteBuffer inEncrypted;
 	private final Consumer<SSLSession> initSessionCallback;
 
-	private final int tlsMaxDataSize;
-	private final int tlsMaxRecordSize;
 	private final boolean runTasks;
 	private final BufferAllocator encryptedBufferAllocator;
 	private final BufferAllocator plainBufferAllocator;
@@ -76,10 +79,6 @@ public class TlsChannelImpl implements ByteChannel {
 		this.engine = engine;
 		this.inEncrypted = inEncrypted.orElseGet(() -> encryptedBufferAllocator.allocate(buffersInitialSize));
 		this.initSessionCallback = initSessionCallback;
-		// about 2^14
-		this.tlsMaxDataSize = engine.getSession().getApplicationBufferSize();
-		// about 2^14 + overhead
-		this.tlsMaxRecordSize = engine.getSession().getPacketBufferSize();
 		this.runTasks = runTasks;
 		this.plainBufferAllocator = plainBufferAllocator;
 		this.encryptedBufferAllocator = encryptedBufferAllocator;
@@ -331,15 +330,15 @@ public class TlsChannelImpl implements ByteChannel {
 	}
 
 	private void enlargeOutEncrypted() {
-		outEncrypted = Util.enlarge(encryptedBufferAllocator, outEncrypted, "outEncrypted", tlsMaxRecordSize);
+		outEncrypted = Util.enlarge(encryptedBufferAllocator, outEncrypted, "outEncrypted", maxTlsPacketSize);
 	}
 
 	private void enlargeInPlain() {
-		inPlain = Util.enlarge(plainBufferAllocator, inPlain, "inPlain", tlsMaxDataSize);
+		inPlain = Util.enlarge(plainBufferAllocator, inPlain, "inPlain", maxTlsPacketSize);
 	}
 
 	private void enlargeInEncrypted() {
-		inEncrypted = Util.enlarge(encryptedBufferAllocator, inEncrypted, "inEncrypted", tlsMaxRecordSize);
+		inEncrypted = Util.enlarge(encryptedBufferAllocator, inEncrypted, "inEncrypted", maxTlsPacketSize);
 	}
 
 	private void ensureInPlainCapacity(int newCapacity) {
