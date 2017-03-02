@@ -39,10 +39,11 @@ public class TlsChannelImpl implements ByteChannel {
 	public static final int buffersInitialSize = 4096;
 
 	/**
-	 * Official TLS max data size is 2^14 = 16k. Use 1024 more to account for the overhead
+	 * Official TLS max data size is 2^14 = 16k. Use 1024 more to account for
+	 * the overhead
 	 */
-	private final static int maxTlsPacketSize = 17 * 1024;
-	
+	public final static int maxTlsPacketSize = 17 * 1024;
+
 	private static class EngineLoopResult {
 		public final int bytes;
 		public final HandshakeStatus lastHandshakeStatus;
@@ -52,7 +53,7 @@ public class TlsChannelImpl implements ByteChannel {
 			this.lastHandshakeStatus = lastHandshakeStatus;
 		}
 	}
-	
+
 	private final ReadableByteChannel readChannel;
 	private final WritableByteChannel writeChannel;
 	private final SSLEngine engine;
@@ -115,7 +116,7 @@ public class TlsChannelImpl implements ByteChannel {
 	public BufferAllocator getEncryptedBufferAllocator() {
 		return encryptedBufferAllocator;
 	}
-	
+
 	// read
 
 	public long read(ByteBufferSet dest) throws IOException, NeedsTaskException {
@@ -181,6 +182,7 @@ public class TlsChannelImpl implements ByteChannel {
 		inPlain.flip(); // will read
 		int bytes = dstBuffers.putRemaining(inPlain);
 		inPlain.compact(); // will write
+		Util.zeroRemaining(inPlain);
 		return bytes;
 	}
 
@@ -209,7 +211,7 @@ public class TlsChannelImpl implements ByteChannel {
 					 * internal inPlain buffer, also ensure that it is bigger
 					 * than the too-small supplied one.
 					 */
-					ensureInPlainCapacity(((int) dest.get().remaining()) * 2);
+					ensureInPlainCapacity(Math.min(((int) dest.get().remaining()) * 2, maxTlsPacketSize));
 				} else {
 					enlargeInPlain();
 				}
@@ -330,20 +332,21 @@ public class TlsChannelImpl implements ByteChannel {
 	}
 
 	private void enlargeOutEncrypted() {
-		outEncrypted = Util.enlarge(encryptedBufferAllocator, outEncrypted, "outEncrypted", maxTlsPacketSize);
+		outEncrypted = Util.enlarge(encryptedBufferAllocator, outEncrypted, "outEncrypted", maxTlsPacketSize,
+				false /* zero */);
 	}
 
 	private void enlargeInPlain() {
-		inPlain = Util.enlarge(plainBufferAllocator, inPlain, "inPlain", maxTlsPacketSize);
+		inPlain = Util.enlarge(plainBufferAllocator, inPlain, "inPlain", maxTlsPacketSize, true /* zero */);
 	}
 
 	private void enlargeInEncrypted() {
-		inEncrypted = Util.enlarge(encryptedBufferAllocator, inEncrypted, "inEncrypted", maxTlsPacketSize);
+		inEncrypted = Util.enlarge(encryptedBufferAllocator, inEncrypted, "inEncrypted", maxTlsPacketSize, false /* zero */);
 	}
 
 	private void ensureInPlainCapacity(int newCapacity) {
 		if (inPlain.capacity() < newCapacity)
-			inPlain = Util.resize(plainBufferAllocator, inPlain, newCapacity);
+			inPlain = Util.resize(plainBufferAllocator, inPlain, newCapacity, true /* zero */);
 	}
 
 	private int flipAndWriteToNetwork() throws IOException {
@@ -517,6 +520,8 @@ public class TlsChannelImpl implements ByteChannel {
 		} finally {
 			writeLock.unlock();
 		}
+		inPlain.clear();
+		Util.zeroRemaining(inPlain);
 		plainBufferAllocator.free(inPlain);
 		encryptedBufferAllocator.free(inEncrypted);
 		encryptedBufferAllocator.free(outEncrypted);

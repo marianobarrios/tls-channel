@@ -160,7 +160,7 @@ public class ServerTlsChannel implements TlsChannel {
 	public SSLEngine getSslEngine() {
 		return impl == null ? null : impl.engine();
 	}
-	
+
 	@Override
 	public Consumer<SSLSession> getSessionInitCallback() {
 		return sessionInitCallback;
@@ -180,7 +180,7 @@ public class ServerTlsChannel implements TlsChannel {
 	public BufferAllocator getEncryptedBufferAllocator() {
 		return encryptedBufferAllocator;
 	}
-	
+
 	@Override
 	public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
 		ByteBufferSet dest = new ByteBufferSet(dstBuffers, offset, length);
@@ -267,7 +267,8 @@ public class ServerTlsChannel implements TlsChannel {
 		int recordHeaderSize = readRecordHeaderSize(channel);
 		while (buffer.position() < recordHeaderSize) {
 			if (!buffer.hasRemaining()) {
-				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch", maxTlsPacketSize);
+				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch", maxTlsPacketSize,
+						false /* zero */);
 			}
 			TlsChannelImpl.readFromNetwork(channel, buffer); // IO block
 		}
@@ -287,7 +288,7 @@ public class ServerTlsChannel implements TlsChannel {
 		while (buffer.position() < TlsExplorer.RECORD_HEADER_SIZE) {
 			if (!buffer.hasRemaining()) {
 				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch",
-						TlsExplorer.RECORD_HEADER_SIZE);
+						TlsExplorer.RECORD_HEADER_SIZE, false /* zero */);
 			}
 			TlsChannelImpl.readFromNetwork(channel, buffer); // IO block
 		}
