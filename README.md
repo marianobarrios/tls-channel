@@ -38,7 +38,7 @@ In Java, support for TLS (then SSL) was added in version 1.2 (as an optional pac
 
 #### java.nio
 
-In version 1.4, a [new IO API](https://docs.oracle.com/javase/8/docs/api/java/nio/package-summary.html) was launched (java.nio). It superseeded the old IO API, starting an implicit (and very long) deprecation cycle. New feautures include:
+In version 1.4, a [new IO API](https://docs.oracle.com/javase/8/docs/api/java/nio/package-summary.html) was launched (java.nio). It superseeded the old IO API, starting an implicit (and very long) deprecation cycle. New features include:
 
 - Non-blocking operations.
 - A higher lever API, based on wrapped buffers ([ByteBuffers](https://docs.oracle.com/javase/8/docs/api/java/nio/ByteBuffer.html)).
@@ -106,4 +106,4 @@ TLS Channel has no dependencies. The only necessary jar file size is below 50 KB
 
 ## Credits
 
-This work is based on a preliminaty implementation by [Claudio Martinez](https://github.com/cldmartinez/) and [Mariano Barrios](https://github.com/marianobarrios/) at [Despegar](https://github.com/despegar).
+This work is based on a preliminary implementation by [Claudio Martinez](https://github.com/cldmartinez/) and [Mariano Barrios](https://github.com/marianobarrios/) at [Despegar](https://github.com/despegar).
