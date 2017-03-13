@@ -63,9 +63,34 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 */
 	boolean getRunTasks();
 
+	/**
+	 * Initiates a handshake (initial or renegotiation) on this channel. This
+	 * method is not needed for the initial handshake, as the
+	 * <code>read()</code> and <code>write()</code> methods will implicitly do
+	 * the initial handshake if needed.
+	 * 
+	 * This method may block if the underlying channel if in blocking mode.
+	 * 
+	 * Note that renegotiation is a problematic feature of the TLS protocol,
+	 * that should only be initiated at quiet point of the protocol.
+	 * 
+	 * @throws IOException
+	 *             if the underlying channel throws an IOException
+	 */
 	void renegotiate() throws IOException;
 
-	void negotiate() throws IOException;
+	/**
+	 * Forces the initial TLS handshake. Calling this method is usually not
+	 * needed, as a handshake will happen automatically when doing the first
+	 * <code>read()</code> or <code>write()</code> call. Calling this method
+	 * after the initial handshake has been done has no effect.
+	 * 
+	 * This method may block if the underlying channel if in blocking mode.
+	 * 
+	 * @throws IOException
+	 *             if the underlying channel throws an IOException
+	 */
+	void handshake() throws IOException;
 
 	void close();
 

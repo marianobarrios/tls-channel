@@ -71,17 +71,17 @@ public class ClientTlsChannel implements TlsChannel {
 	public ByteChannel getUnderlying() {
 		return underlying;
 	}
-	
+
 	@Override
 	public SSLEngine getSslEngine() {
 		return impl.engine();
 	}
-	
+
 	@Override
 	public Consumer<SSLSession> getSessionInitCallback() {
 		return impl.getSessionInitCallback();
 	}
-	
+
 	@Override
 	public BufferAllocator getPlainBufferAllocator() {
 		return impl.getPlainBufferAllocator();
@@ -91,7 +91,7 @@ public class ClientTlsChannel implements TlsChannel {
 	public BufferAllocator getEncryptedBufferAllocator() {
 		return impl.getEncryptedBufferAllocator();
 	}
-	
+
 	@Override
 	public boolean getRunTasks() {
 		return impl.getRunTasks();
@@ -136,8 +136,8 @@ public class ClientTlsChannel implements TlsChannel {
 	}
 
 	@Override
-	public void negotiate() throws IOException {
-		impl.negotiateIfNecesary();
+	public void handshake() throws IOException {
+		impl.handshake();
 	}
 
 	@Override
@@ -149,6 +149,5 @@ public class ClientTlsChannel implements TlsChannel {
 	public boolean isOpen() {
 		return impl.isOpen();
 	}
-
 
 }

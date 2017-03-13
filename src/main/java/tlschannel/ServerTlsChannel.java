@@ -226,10 +226,10 @@ public class ServerTlsChannel implements TlsChannel {
 	}
 
 	@Override
-	public void negotiate() throws IOException {
+	public void handshake() throws IOException {
 		if (!sniRead)
 			initEngine();
-		impl.negotiateIfNecesary();
+		impl.handshake();
 	}
 
 	@Override

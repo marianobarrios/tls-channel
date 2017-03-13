@@ -125,7 +125,7 @@ public class TlsChannelImpl implements ByteChannel {
 			return 0;
 		if (invalid)
 			return -1;
-		negotiateIfNecesary();
+		handshake();
 		readLock.lock();
 		try {
 			HandshakeStatus handshakeStatus = engine.getHandshakeStatus();
@@ -271,7 +271,7 @@ public class TlsChannelImpl implements ByteChannel {
 			return 0;
 		if (invalid)
 			throw new ClosedChannelException();
-		negotiateIfNecesary();
+		handshake();
 		long bytesConsumed = 0;
 		writeLock.lock();
 		try {
@@ -390,18 +390,18 @@ public class TlsChannelImpl implements ByteChannel {
 	 * Force new negotiation
 	 */
 	public void renegotiate() throws IOException {
-		negotiate(true /* force */);
+		doHandshake(true /* force */);
 	}
 
 	/**
 	 * Do a negotiation if this connection is new and it hasn't been done
 	 * already.
 	 */
-	public void negotiateIfNecesary() throws IOException {
-		negotiate(false /* force */);
+	public void handshake() throws IOException {
+		doHandshake(false /* force */);
 	}
 
-	private void negotiate(boolean force) throws IOException {
+	private void doHandshake(boolean force) throws IOException {
 		if (!force && negotiated)
 			return;
 		initLock.lock();
