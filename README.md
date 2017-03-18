@@ -20,7 +20,7 @@ Being a API layer, TLS Channel delegates all cryptographic operations to SSLEngi
 - With the exception of a few bytes of parsing at the beginning of the connection, to look for the SNI, the whole protocol implementation is done by the SSLEngine.
 - Both the SSLContext and SSLEngine are supplied by the client; these classes are the ones responsible for protocol configuration, including hostname validation, client-side authentication, etc.
 
-##Rationale
+## Rationale
 
 By far, the most used criptography solution is TLS (a.k.a. SSL). TLS, of course, works on top of the Transport Control Protocol (TCP), maintaining its core abstractions: essentially, two independent byte streams, one in each direction, with ordered at-most-once delivery.
 
