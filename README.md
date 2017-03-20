@@ -3,7 +3,7 @@
 
 TLS Channel is a library that implements a [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html) interface to a [TLS](https://tools.ietf.org/html/rfc5246) (Transport Layer Security) connection. The library delegates all cryptographic operations to the standard Java TLS implementation: [SSLEngine](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLEngine.html); effectively hiding it behind an easy-to-use streamming API, that allows to securitize JVM applications with minimal added complexity.
 
-In other words, a simple library that allows the programmer to have TLS using using the same standard socket API used for plaintext, just like OpenSSL does for C, only for Java.
+In other words, a simple library that allows the programmer to have TLS using the same standard socket API used for plaintext, just like OpenSSL does for C, only for Java.
 
 ### Main features
 
@@ -34,7 +34,7 @@ And many more. All this libraries implement a streaming interface, and most let 
 
 ### The Java TLS problem
 
-In Java, support for TLS (then SSL) was added in version 1.2 (as an optional package) in the form of a subclass of the [Socket](https://docs.oracle.com/javase/8/docs/api/java/net/Socket.html) class: [SSLSocket](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLSocket.html). Being a subclass, once instantiated, the mode of use was exactly the same as the unencrypted original. That worked (and still works) well enough. Nevertheless, the java IO API already had some limitations (most notably, blocking behavior), and an update was due.
+In Java, support for TLS (then SSL) was added in version 1.2 (as an optional package) in the form of a subclass of the [Socket](https://docs.oracle.com/javase/8/docs/api/java/net/Socket.html) class: [SSLSocket](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLSocket.html). Being a subclass, once instantiated, the mode of use was exactly the same as the unencrypted original. That worked (and still works) well enough. Nevertheless, the java IO API already had some limitations, and an update was due.
 
 #### java.nio
 
@@ -57,10 +57,10 @@ Version 1.5 saw the advent of [SSLEngine](https://docs.oracle.com/javase/8/docs/
 
 #### What to do
 
-Of course, many programmers don't manipulate TCP or TLS streams directly, but use protocol libraries (e.g., [Apache HttpClient](https://hc.apache.org/httpcomponents-client-ga/)). However, in the case that direct socket-like access is needed (because, for example, the intent is precisely to write one of those protocol libraries), the programmer has essentially three alternatives:
+Of course, many programmers don't manipulate TCP or TLS streams directly, but use protocol libraries (e.g., [Apache HttpClient](https://hc.apache.org/httpcomponents-client-ga/)). However, in the case that direct socket-like access is needed, the programmer has essentially three alternatives:
 
-- Use the old (implicitly deprecated) socket API. This implies being subject to its limitations, which means, among other things, only blocking behavior.
-- Use SSLEngine directly. This is a hard task, which is in most cases completely out of proportion to the effort of writing the application code.
+1. Use the old (implicitly deprecated) socket API. This implies being subject to its limitations, which means, among other things, only blocking behavior.
+- Use SSLEngine directly. This is a hard task, which is <em>very</em> difficult to accomplish correctly, and in most cases completely out of proportion to the effort of writing the application code.
 - Use some higher-level IO library, like [Netty](https://netty.io/), [Project Grizzly](https://grizzly.java.net/), [Apache Mina](https://mina.apache.org/) or [JBoss XNIO](http://xnio.jboss.org/). These frameworks supply event architectures that intend to easy the task of writing programs that use non-blocking IO. They are big framework-like libraries, sometimes themselves with dependencies. Using one of these is the path chosen by many, but it is not an option if the programmer cannot commit to a particular event architecture, couple the application code to an idiosyncratic library, or include a big dependency.
 
 All three alternatives have been taken by many Java libraries and applications, with no clear preference among leading open-source Java projects. Even though these options can work reasonable well, there was still no clear and standard solution.
@@ -76,7 +76,7 @@ Of course, these options imply using an alternative implementation, which may no
 
 ### Existing open-source SSLEngine users
 
-The feat of using SSLEngine directly is indeed performed by several projects, both general purpose IO libraries and implementation of particular protocols. Below is an inevitably incomplete list of open-source examples. Every one in the list contains essentially the same general-purpose, SSLEngine-calling code, only embedded in custom types and semantics, so hard to reuse.
+The feat of using SSLEngine directly is indeed performed by several projects, both general purpose IO libraries and implementation of particular protocols. Below is an inevitably incomplete list of open-source examples. Every one in the list contains essentially the same general-purpose, SSLEngine-calling code, only embedded in custom types and semantics. That said, these examples, while not really suited for reuse, have been invaluable for both appreciating the difficulty of the task, and also a source of implementation ideas.
 
 Type | Project | Package/class
 --- | --- | ---
@@ -88,6 +88,7 @@ HTTP server | [Tomcat](http://tomcat.apache.org/) | [org.apache.tomcat.util.net.
 HTTP server | [OpenJDK](http://openjdk.java.net/) | [sun.net.httpserver.SSLStreams](http://cr.openjdk.java.net/~ohair/openjdk7/jdk7-build-copyright/webrev/jdk/src/share/classes/sun/net/httpserver/SSLStreams.java.html)
 HTTP client/server | [Apache HttpComponents](https://hc.apache.org/) | [org.apache.http.impl.nio.reactor.SSLIOSession](https://apache.googlesource.com/httpcore/+/trunk/httpcore5/src/main/java/org/apache/hc/core5/reactor/ssl/SSLIOSession.java)
 HTTP server | [Jetty](Jetty) | [org.eclipse.jetty.io.ssl.SslConnection](https://github.com/eclipse/jetty.project/blob/master/jetty-io/src/main/java/org/eclipse/jetty/io/ssl/SslConnection.java)
+Distributed file system | [XtreemFS](http://www.xtreemfs.org/) | [org.xtreemfs.foundation.pbrpc.channels.SSLChannelIO](https://github.com/xtreemfs/xtreemfs/blob/master/java/xtreemfs-foundation/src/main/java/org/xtreemfs/foundation/pbrpc/channels/SSLChannelIO.java)
 Tor client | [Orchid](https://subgraph.com/orchid/index.en.html) | [com.subgraph.orchid.sockets.sslengine.SSLEngineManager](https://github.com/subgraph/Orchid/blob/master/src/com/subgraph/orchid/sockets/sslengine/SSLEngineManager.java)
 
 ## Usage
