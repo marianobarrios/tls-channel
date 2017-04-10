@@ -10,6 +10,9 @@ import scala.util.Random
 import tlschannel.helpers.TestUtil.functionToRunnable
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
+import tlschannel.helpers.SocketPair
+import tlschannel.helpers.SocketPairFactory
+import tlschannel.helpers.Loops
 
 class BlockingTest extends FunSuite with Matchers with StrictLogging {
 
@@ -28,28 +31,28 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
     val (cipher, sslContext) = SslContextFactory.standardCipher
     for ((size1, size2) <- (sizes zip sizes.reverse)) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
-      val SocketPair(SocketGroup(client, clientChannel, _), SocketGroup(server, serverChannel, _)) = factory.nioNio(
+      val SocketPair(client, server) = factory.nioNio(
         cipher,
         internalClientChunkSize = Some(size1),
         externalClientChunkSize = Some(size2),
         internalServerChunkSize = Some(size1),
         externalServerChunkSize = Some(size2))
       val elapsed = TestUtil.time {
-        val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client, clientChannel, renegotiate = true), "client-writer")
-        val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server, serverChannel, renegotiate = true), "server-writer")
-        val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client), "client-reader")
-        val serverReaderThread = new Thread(() => BlockingTest.readerLoop(data, server), "server-reader")
+        val clientWriterThread = new Thread(() => Loops.writerLoop(data, client, renegotiate = true), "client-writer")
+        val serverWriterThread = new Thread(() => Loops.writerLoop(data, server, renegotiate = true), "server-writer")
+        val clientReaderThread = new Thread(() => Loops.readerLoop(data, client), "client-reader")
+        val serverReaderThread = new Thread(() => Loops.readerLoop(data, server), "server-reader")
         Seq(serverReaderThread, clientWriterThread).foreach(_.start())
         Seq(serverReaderThread, clientWriterThread).foreach(_.join())
         clientReaderThread.start()
         // renegotiate three times, to test idempotency
         for (_ <- 1 to 3) {
-          serverChannel.renegotiate()
+          server.tls.renegotiate()
         }
         serverWriterThread.start()
         Seq(clientReaderThread, serverWriterThread).foreach(_.join())
-        server.close()
-        client.close()
+        server.external.close()
+        client.external.close()
       }
       info(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d - ${elapsed / 1000}%5d ms")
     }
@@ -68,10 +71,10 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
         internalServerChunkSize = Some(size1),
         externalServerChunkSize = Some(size2))
       val elapsed = TestUtil.time {
-        val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client.external, client.tls), "client-writer")
-        val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server.external, server.tls), "server-write")
-        val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client.external), "client-reader")
-        val serverReaderThread = new Thread(() => BlockingTest.readerLoop(data, server.external), "server-reader")
+        val clientWriterThread = new Thread(() => Loops.writerLoop(data, client), "client-writer")
+        val serverWriterThread = new Thread(() => Loops.writerLoop(data, server), "server-write")
+        val clientReaderThread = new Thread(() => Loops.readerLoop(data, client), "client-reader")
+        val serverReaderThread = new Thread(() => Loops.readerLoop(data, server), "server-reader")
         Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
         Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
         client.external.close()
@@ -83,34 +86,3 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
 
 }
 
-object BlockingTest extends Matchers with StrictLogging {
-
-  def writerLoop(data: Array[Byte], writer: ByteChannel, rawWriter: TlsChannel, renegotiate: Boolean = false): Unit = TestUtil.cannotFail("Error in writer") {
-    val renegotiatePeriod = 10000
-    logger.debug(s"Starting writer loop, renegotiate:$renegotiate")
-    val originData = ByteBuffer.wrap(data)
-    var bytesWrittenSinceRenegotiation = 0
-    while (originData.hasRemaining) {
-      if (renegotiate && bytesWrittenSinceRenegotiation > renegotiatePeriod) {
-        rawWriter.renegotiate()
-        bytesWrittenSinceRenegotiation = 0
-      }
-      val c = writer.write(originData)
-      bytesWrittenSinceRenegotiation += c
-      assert(c > 0)
-    }
-    logger.debug("Finalizing writer loop")
-  }
-
-  def readerLoop(data: Array[Byte], reader: ByteChannel): Unit = TestUtil.cannotFail("Error in reader") {
-    logger.debug("Starting reader loop")
-    val receivedData = ByteBuffer.allocate(data.length)
-    while (receivedData.hasRemaining) {
-      val c = reader.read(receivedData)
-      assert(c > 0, "blocking read must return a positive number")
-    }
-    assert(receivedData.array.deep === data.deep)
-    logger.debug("Finalizing reader loop")
-  }
-
-}

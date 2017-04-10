@@ -1,4 +1,4 @@
-package tlschannel
+package tlschannel.helpers
 
 import java.net.ServerSocket
 import java.net.Socket
@@ -29,11 +29,13 @@ import tlschannel.util.Util;
 
 import javax.net.ssl.SNIHostName
 import scala.collection.JavaConversions._
-import tlschannel.helpers.TestUtil
-import tlschannel.helpers.ChunkingByteChannel
-import tlschannel.helpers.NullSslEngine
 import com.sun.webkit.network.ByteBufferAllocator
 import tlschannel.impl.TlsChannelImpl
+import tlschannel.TlsChannel
+import tlschannel.ClientTlsChannel
+import tlschannel.ServerTlsChannel
+import tlschannel.HeapBufferAllocator
+import tlschannel.BufferAllocator
 
 case class SocketPair(client: SocketGroup, server: SocketGroup)
 
@@ -187,7 +189,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
   }
 
   def nullNioNio(internalClientChunkSize: Option[Int], internalServerChunkSize: Option[Int],
-    encryptedBufferAllocator: BufferAllocator): (ByteChannel, ByteChannel) = {
+    encryptedBufferAllocator: BufferAllocator): (SocketGroup, SocketGroup) = {
     nullNioNioN(1, internalClientChunkSize, internalServerChunkSize, true, encryptedBufferAllocator).head
   }
 
@@ -196,7 +198,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     internalClientChunkSize: Option[Int],
     internalServerChunkSize: Option[Int],
     runTasks: Boolean = true,
-    encryptedBufferAllocator: BufferAllocator): Seq[(ByteChannel, ByteChannel)] = {
+    encryptedBufferAllocator: BufferAllocator): Seq[(SocketGroup, SocketGroup)] = {
     val serverSocket = ServerSocketChannel.open()
     try {
       serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
@@ -215,26 +217,10 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
           case None => rawServer
         }
 
-        val clientChannel = new TlsChannelImpl(
-          plainClient,
-          plainClient,
-          new NullSslEngine,
-          Optional.empty(),
-          (s: SSLSession) => {},
-          true /* runTasks */ ,
-          new HeapBufferAllocator /* plainBufferAllocator */ ,
-          encryptedBufferAllocator)
-        val serverChannel = new TlsChannelImpl(
-          plainServer,
-          plainServer,
-          new NullSslEngine,
-          Optional.empty(),
-          (s: SSLSession) => {},
-          true /* runTasks */ ,
-          new HeapBufferAllocator /* plainBufferAllocator */ ,
-          encryptedBufferAllocator)
+        val clientChannel = ClientTlsChannel.newBuilder(plainClient, new NullSslEngine).build()
+        val serverChannel = ServerTlsChannel.newBuilder(plainServer, new NullSslContext).build()
 
-        (clientChannel, serverChannel)
+        (SocketGroup(clientChannel, clientChannel, rawClient), SocketGroup(serverChannel, serverChannel, rawServer))
       }
     } finally {
       serverSocket.close()

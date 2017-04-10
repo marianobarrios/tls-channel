@@ -10,6 +10,8 @@ import scala.util.Random
 import tlschannel.helpers.TestUtil.functionToRunnable
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
+import tlschannel.helpers.SocketPairFactory
+import tlschannel.helpers.SocketGroup
 
 /**
  * Test using a null engine (pass-through).	The purpose of the test is to remove
@@ -42,8 +44,8 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging {
           clientReaderThread.start()
           serverWriterThread.start()
           Seq(clientReaderThread, serverWriterThread).foreach(_.join())
-          server.close()
-          client.close()
+          server.external.close()
+          client.external.close()
         }
         info(f"-eng-> $size1%5d -net-> $size1%5d -eng-> - ${elapsed / 1000}%5d ms")
       }
@@ -71,8 +73,8 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging {
           clientReaderThread.start()
           serverWriterThread.start()
           Seq(clientReaderThread, serverWriterThread).foreach(_.join())
-          server.close()
-          client.close()
+          server.external.close()
+          client.external.close()
         }
         info(f"-eng-> $size1%5d -net-> $size1%5d -eng-> - ${elapsed / 1000}%5d ms")
       }
@@ -84,28 +86,28 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging {
 
 object NullEngineTest extends Matchers with StrictLogging {
 
-  def writerLoop(dataSize: Int, writer: ByteChannel): Unit = TestUtil.cannotFail("Error in writer") {
+  def writerLoop(dataSize: Int, socketGroup: SocketGroup): Unit = TestUtil.cannotFail("Error in writer") {
     logger.debug(s"Starting writer loop")
     val originData = ByteBuffer.allocate(SslContextFactory.tlsMaxDataSize)
     var bytesWritten = 0
     while (bytesWritten < dataSize) {
       if (!originData.hasRemaining)
         originData.position(0)
-      val c = writer.write(originData)
+      val c = socketGroup.external.write(originData)
       assert(c > 0)
       bytesWritten += c
     }
     logger.debug("Finalizing writer loop")
   }
 
-  def readerLoop(dataSize: Int, reader: ByteChannel): Unit = TestUtil.cannotFail("Error in reader") {
+  def readerLoop(dataSize: Int, socketGroup: SocketGroup): Unit = TestUtil.cannotFail("Error in reader") {
     logger.debug("Starting reader loop")
     val receivedData = ByteBuffer.allocate(SslContextFactory.tlsMaxDataSize)
     var bytesRead = 0
     while (bytesRead < dataSize) {
       if (!receivedData.hasRemaining)
         receivedData.position(0)
-      val c = reader.read(receivedData)
+      val c = socketGroup.external.read(receivedData)
       assert(c > 0, "blocking read must return a positive number")
       bytesRead += c
     }

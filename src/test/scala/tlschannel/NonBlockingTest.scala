@@ -13,6 +13,8 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
+import tlschannel.helpers.SocketPair
+import tlschannel.helpers.SocketPairFactory
 
 class NonBlockingTest extends FunSuite with Matchers with StrictLogging {
 

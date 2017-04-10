@@ -14,6 +14,7 @@ import java.nio.ByteBuffer
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
+import tlschannel.helpers.SocketPairFactory
 
 class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
 

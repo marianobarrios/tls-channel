@@ -10,6 +10,9 @@ import scala.util.Random
 import tlschannel.helpers.TestUtil.functionToRunnable
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
+import tlschannel.helpers.Loops
+import tlschannel.helpers.SocketPair
+import tlschannel.helpers.SocketPairFactory
 
 class ScatheringTest extends FunSuite with Matchers with StrictLogging {
 
@@ -28,10 +31,10 @@ class ScatheringTest extends FunSuite with Matchers with StrictLogging {
     val (cipher, sslContext) = SslContextFactory.standardCipher
     val SocketPair(client, server) = factory.nioNio(cipher)
     val elapsed = TestUtil.time {
-      val clientWriterThread = new Thread(() => ScatheringTest.writerLoop(data, client.tls), "client-writer")
-      val serverWriterThread = new Thread(() => ScatheringTest.writerLoop(data, server.tls), "server-writer")
-      val clientReaderThread = new Thread(() => ScatheringTest.readerLoop(data, client.tls), "client-reader")
-      val serverReaderThread = new Thread(() => ScatheringTest.readerLoop(data, server.tls), "server-reader")
+      val clientWriterThread = new Thread(() => Loops.writerLoop(data, client, scathering = true), "client-writer")
+      val serverWriterThread = new Thread(() => Loops.writerLoop(data, server, scathering = true), "server-writer")
+      val clientReaderThread = new Thread(() => Loops.readerLoop(data, client, gathering = true), "client-reader")
+      val serverReaderThread = new Thread(() => Loops.readerLoop(data, server, gathering = true), "server-reader")
       Seq(serverReaderThread, clientWriterThread).foreach(_.start())
       Seq(serverReaderThread, clientWriterThread).foreach(_.join())
       clientReaderThread.start()
@@ -45,39 +48,3 @@ class ScatheringTest extends FunSuite with Matchers with StrictLogging {
 
 }
 
-object ScatheringTest extends Matchers with StrictLogging {
-
-  def writerLoop(data: Array[Byte], writer: TlsChannel): Unit = TestUtil.cannotFail("Error in writer") {
-    val renegotiatePeriod = 10000
-    logger.debug(s"Starting writer loop")
-    val originData = multiWrap(data)
-    var bytesWrittenSinceRenegotiation = 0L
-    while (remaining(originData) > 0) {
-      val c = writer.write(originData)
-      bytesWrittenSinceRenegotiation += c
-      assert(c > 0)
-    }
-    logger.debug("Finalizing writer loop")
-  }
-
-  def multiWrap(data: Array[Byte]) = {
-    Array(ByteBuffer.allocate(0), ByteBuffer.wrap(data), ByteBuffer.allocate(0))
-  }
-
-  def remaining(buffers: Array[ByteBuffer]) = {
-    buffers.map(_.remaining.toLong).sum
-  }
-
-  def readerLoop(data: Array[Byte], reader: TlsChannel): Unit = TestUtil.cannotFail("Error in reader") {
-    logger.debug("Starting reader loop")
-    val receivedData = ByteBuffer.allocate(data.length)
-    val receivedDataArray = Array(ByteBuffer.allocate(0), receivedData, ByteBuffer.allocate(0))
-    while (remaining(receivedDataArray) > 0) {
-      val c = reader.read(receivedDataArray)
-      assert(c > 0, "blocking read must return a positive number")
-    }
-    assert(receivedData.array.deep === data.deep)
-    logger.debug("Finalizing reader loop")
-  }
-
-}

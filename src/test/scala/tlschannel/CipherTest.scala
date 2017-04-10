@@ -10,6 +10,9 @@ import scala.util.Random
 import tlschannel.helpers.TestUtil.functionToRunnable
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
+import tlschannel.helpers.SocketPairFactory
+import tlschannel.helpers.SocketPair
+import tlschannel.helpers.Loops
 
 class CipherTest extends FunSuite with Matchers with StrictLogging {
 
@@ -33,10 +36,10 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
         logger.debug(s"Testing cipher: $cipher")
         val SocketPair(client, server) = socketFactories(sslContext).nioNio(cipher)
         val elapsed = TestUtil.time {
-          val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client.external, client.tls, renegotiate = true), "client-writer")
-          val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server.external, server.tls, renegotiate = true), "server-writer")
-          val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client.external), "client-reader")
-          val serverReaderThread = new Thread(() => BlockingTest.readerLoop(data, server.external), "server-reader")
+          val clientWriterThread = new Thread(() => Loops.writerLoop(data, client, renegotiate = true), "client-writer")
+          val serverWriterThread = new Thread(() => Loops.writerLoop(data, server, renegotiate = true), "server-writer")
+          val clientReaderThread = new Thread(() => Loops.readerLoop(data, client), "client-reader")
+          val serverReaderThread = new Thread(() => Loops.readerLoop(data, server), "server-reader")
           Seq(serverReaderThread, clientWriterThread).foreach(_.start())
           Seq(serverReaderThread, clientWriterThread).foreach(_.join())
           clientReaderThread.start()
@@ -63,10 +66,10 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
         logger.debug(s"Testing cipher: $cipher")
         val SocketPair(client, server) = socketFactories(sslContext).nioNio(cipher)
         val elapsed = TestUtil.time {
-          val clientWriterThread = new Thread(() => BlockingTest.writerLoop(data, client.external, client.tls), "client-writer")
-          val serverWriterThread = new Thread(() => BlockingTest.writerLoop(data, server.external, server.tls), "server-write")
-          val clientReaderThread = new Thread(() => BlockingTest.readerLoop(data, client.external), "client-reader")
-          val serverReaderThread = new Thread(() => BlockingTest.readerLoop(data, server.external), "server-reader")
+          val clientWriterThread = new Thread(() => Loops.writerLoop(data, client), "client-writer")
+          val serverWriterThread = new Thread(() => Loops.writerLoop(data, server), "server-write")
+          val clientReaderThread = new Thread(() => Loops.readerLoop(data, client), "client-reader")
+          val serverReaderThread = new Thread(() => Loops.readerLoop(data, server), "server-reader")
           Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
           Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
           client.external.close()

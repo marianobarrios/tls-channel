@@ -21,6 +21,9 @@ import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.atomic.LongAdder
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
+import tlschannel.helpers.SocketPairFactory
+import tlschannel.helpers.SocketGroup
+import tlschannel.helpers.SocketPair
 
 case class Endpoint(socketGroup: SocketGroup, isClient: Boolean, buffer: ByteBuffer, var key: SelectionKey)
 
