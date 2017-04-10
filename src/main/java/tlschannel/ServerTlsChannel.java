@@ -3,7 +3,6 @@ package tlschannel;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
@@ -28,6 +27,52 @@ import tlschannel.util.Util;
  */
 public class ServerTlsChannel implements TlsChannel {
 
+	@FunctionalInterface
+	private interface SniReader {
+		Optional<String> readSni() throws IOException;
+	}
+
+	private interface InternalSslContextFactory {
+		SSLContext getSslContext(SniReader sniReader) throws IOException;
+	}
+
+	private static class SniSslContextFactory implements InternalSslContextFactory {
+
+		private Function<Optional<String>, SSLContext> function;
+
+		public SniSslContextFactory(Function<Optional<String>, SSLContext> function) {
+			this.function = function;
+		}
+
+		@Override
+		public SSLContext getSslContext(SniReader sniReader) throws IOException {
+			// IO block
+			Optional<String> nameOpt = sniReader.readSni();
+			// call client code
+			return function.apply(nameOpt);
+		}
+
+	}
+
+	private static class FixedSslContextFactory implements InternalSslContextFactory {
+
+		private final SSLContext sslContext;
+
+		public FixedSslContextFactory(SSLContext sslContext) {
+			this.sslContext = sslContext;
+		}
+
+		@Override
+		public SSLContext getSslContext(SniReader sniReader) {
+			/*
+			 * Avoid SNI parsing (using the supplied sniReader) when no decision
+			 * would be made based on it.
+			 */
+			return sslContext;
+		}
+
+	}
+
 	private static SSLEngine defaultSSLEngineFactory(SSLContext sslContext) {
 		SSLEngine engine = sslContext.createSSLEngine();
 		engine.setUseClientMode(false);
@@ -39,17 +84,17 @@ public class ServerTlsChannel implements TlsChannel {
 	 */
 	public static class Builder extends TlsChannelBuilder<Builder> {
 
-		private final Function<Optional<String>, SSLContext> sslContextFactory;
+		private final InternalSslContextFactory internalSslContextFactory;
 		private Function<SSLContext, SSLEngine> sslEngineFactory = ServerTlsChannel::defaultSSLEngineFactory;
 
 		private Builder(ByteChannel underlying, SSLContext sslContext) {
 			super(underlying);
-			this.sslContextFactory = name -> sslContext;
+			this.internalSslContextFactory = new FixedSslContextFactory(sslContext);
 		}
 
 		private Builder(ByteChannel wrapped, Function<Optional<String>, SSLContext> sslContextFactory) {
 			super(wrapped);
-			this.sslContextFactory = sslContextFactory;
+			this.internalSslContextFactory = new SniSslContextFactory(sslContextFactory);
 		}
 
 		@Override
@@ -63,8 +108,8 @@ public class ServerTlsChannel implements TlsChannel {
 		}
 
 		public ServerTlsChannel build() {
-			return new ServerTlsChannel(underlying, sslContextFactory, sslEngineFactory, sessionInitCallback, runTasks,
-					plainBufferAllocator, encryptedBufferAllocator);
+			return new ServerTlsChannel(underlying, internalSslContextFactory, sslEngineFactory, sessionInitCallback,
+					runTasks, plainBufferAllocator, encryptedBufferAllocator);
 		}
 
 	}
@@ -86,8 +131,14 @@ public class ServerTlsChannel implements TlsChannel {
 	/**
 	 * Create a new {@link Builder}, configured with a underlying
 	 * {@link Channel} and a custom {@link SSLContext} factory, which will be
-	 * used to create the context (in turn used to create the {@link SSLEngine}
-	 * ), as a function of the SNI received at the TLS connection start.
+	 * used to create the context (in turn used to create the {@link SSLEngine},
+	 * as a function of the SNI received at the TLS connection start.
+	 * <p>
+	 * <b>Implementation note:</b><br>
+	 * Due to limitations of {@link SSLEngine}, configuring a
+	 * {@link ServerTlsChannel} to select the {@link SSLContext} based on the
+	 * SNI value implies parsing the first TLS frame (ClientHello) independently
+	 * of the SSLEngine.
 	 * 
 	 * @param underlying
 	 *            a reference to the underlying {@link ByteChannel}
@@ -105,7 +156,7 @@ public class ServerTlsChannel implements TlsChannel {
 	private final static int maxTlsPacketSize = 16 * 1024;
 
 	private final ByteChannel underlying;
-	private final Function<Optional<String>, SSLContext> sslContextFactory;
+	private final InternalSslContextFactory internalSslContextFactory;
 	private final Function<SSLContext, SSLEngine> engineFactory;
 	private final Consumer<SSLSession> sessionInitCallback;
 	private final boolean runTasks;
@@ -123,14 +174,14 @@ public class ServerTlsChannel implements TlsChannel {
 	// @formatter:off
 	private ServerTlsChannel(
 			ByteChannel underlying, 
-			Function<Optional<String>, SSLContext> sslContextFactory,
+			InternalSslContextFactory internalSslContextFactory,
 			Function<SSLContext, SSLEngine> engineFactory, 
 			Consumer<SSLSession> sessionInitCallback, 
 			boolean runTasks,
 			BufferAllocator plainBufferAllocator,
 			BufferAllocator encryptedBufferAllocator) {
 		this.underlying = underlying;
-		this.sslContextFactory = sslContextFactory;
+		this.internalSslContextFactory = internalSslContextFactory;
 		this.engineFactory = engineFactory;
 		this.sessionInitCallback = sessionInitCallback;
 		this.runTasks = runTasks;
@@ -248,10 +299,7 @@ public class ServerTlsChannel implements TlsChannel {
 		initLock.lock();
 		try {
 			if (!sniRead) {
-				// IO block
-				Optional<String> nameOpt = getServerNameIndication(underlying);
-				// call client code
-				sslContext = sslContextFactory.apply(nameOpt);
+				sslContext = internalSslContextFactory.getSslContext(() -> getServerNameIndication());
 				SSLEngine engine = engineFactory.apply(sslContext);
 				impl = new TlsChannelImpl(underlying, underlying, engine, Optional.of(buffer), sessionInitCallback,
 						runTasks, plainBufferAllocator, encryptedBufferAllocator);
@@ -262,15 +310,15 @@ public class ServerTlsChannel implements TlsChannel {
 		}
 	}
 
-	private Optional<String> getServerNameIndication(ReadableByteChannel channel) throws IOException {
+	private Optional<String> getServerNameIndication() throws IOException {
 		Util.assertTrue(buffer.position() == 0);
-		int recordHeaderSize = readRecordHeaderSize(channel);
+		int recordHeaderSize = readRecordHeaderSize();
 		while (buffer.position() < recordHeaderSize) {
 			if (!buffer.hasRemaining()) {
 				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch", maxTlsPacketSize,
 						false /* zero */);
 			}
-			TlsChannelImpl.readFromNetwork(channel, buffer); // IO block
+			TlsChannelImpl.readFromNetwork(underlying, buffer); // IO block
 		}
 		buffer.flip();
 		Map<Integer, SNIServerName> serverNames = TlsExplorer.explore(buffer);
@@ -284,13 +332,13 @@ public class ServerTlsChannel implements TlsChannel {
 		}
 	}
 
-	private int readRecordHeaderSize(ReadableByteChannel channel) throws IOException {
+	private int readRecordHeaderSize() throws IOException {
 		while (buffer.position() < TlsExplorer.RECORD_HEADER_SIZE) {
 			if (!buffer.hasRemaining()) {
 				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch",
 						TlsExplorer.RECORD_HEADER_SIZE, false /* zero */);
 			}
-			TlsChannelImpl.readFromNetwork(channel, buffer); // IO block
+			TlsChannelImpl.readFromNetwork(underlying, buffer); // IO block
 		}
 		buffer.flip();
 		int recordHeaderSize = TlsExplorer.getRequiredSize(buffer);
