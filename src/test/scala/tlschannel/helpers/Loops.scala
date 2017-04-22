@@ -15,7 +15,15 @@ import tlschannel.helpers.TestUtil.functionToRunnable
 object Loops extends Matchers with StrictLogging {
 
   val seed = 143000953L
-  val bufferSize = 20000
+
+  /*
+   * Note that it is necessary to use a multiple of 4 as buffer size for writing. 
+   * This is because the bytes to write are generated using Random.nextBytes, that
+   * always consumes full (4 byte) integers. A multiple of 4 then prevents "holes" 
+   * in the random sequence.
+   */
+  val bufferSize = 4 * 5000
+
   val renegotiatePeriod = 10000
   val hashAlgorithm = "SHA-256"
 
@@ -106,7 +114,7 @@ object Loops extends Matchers with StrictLogging {
     val digest = MessageDigest.getInstance(hashAlgorithm)
     val random = new Random(seed)
     var generated = 0
-    val bufferSize = 10000
+    val bufferSize = 4 * 1024
     val array = Array.ofDim[Byte](bufferSize)
     while (generated < size) {
       random.nextBytes(array)

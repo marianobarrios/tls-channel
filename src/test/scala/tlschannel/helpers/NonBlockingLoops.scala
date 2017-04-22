@@ -14,10 +14,31 @@ import tlschannel.helpers.TestUtil.IterableWithForany
 import tlschannel.helpers.TestUtil.functionToRunnable
 import scala.collection.JavaConversions._
 import org.scalatest.Matchers
+import java.security.MessageDigest
 
 object NonBlockingLoops extends Matchers {
 
-  case class Endpoint(socketGroup: SocketGroup, isClient: Boolean, buffer: ByteBuffer, var key: SelectionKey)
+  trait Endpoint {
+    def key: SelectionKey
+    def remaining: Int
+  }
+
+  case class WriterEndpoint(
+      socketGroup: SocketGroup,
+      var key: SelectionKey,
+      var remaining: Int) extends Endpoint {
+    val random = new Random(Loops.seed)
+    val buffer = ByteBuffer.allocate(Loops.bufferSize)
+    buffer.flip()
+  }
+
+  case class ReaderEndpoint(
+      socketGroup: SocketGroup,
+      var key: SelectionKey,
+      var remaining: Int) extends Endpoint {
+    val buffer = ByteBuffer.allocate(Loops.bufferSize)
+    val digest = MessageDigest.getInstance(Loops.hashAlgorithm)
+  }
 
   case class Report(
     selectorCycles: Int,
@@ -27,34 +48,29 @@ object NonBlockingLoops extends Matchers {
     asyncTasksRun: Int,
     totalAsyncTaskRunningTimeMs: Long)
 
-  def testNonBlockingLoop(pairs: Seq[SocketPair], dataSize: Int, renegotiate: Boolean): Report = {
+  def loop(socketPairs: Seq[SocketPair], dataSize: Int, renegotiate: Boolean): Report = {
 
-    val masterBuffer = ByteBuffer.allocate(dataSize)
-    Random.nextBytes(masterBuffer.array)
-
-    val totalConnections = pairs.size
-
+    val totalConnections = socketPairs.size
     val selector = Selector.open()
     val executor = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors - 1)
 
     val readyTaskSockets = new ConcurrentLinkedQueue[Endpoint]
 
-    val endpoints = for (SocketPair(client, server) <- pairs) yield {
-      val originBuffer = masterBuffer.duplicate()
-      val targetBuffer = ByteBuffer.allocate(dataSize)
+    val endpoints = for (SocketPair(client, server) <- socketPairs) yield {
       client.plain.configureBlocking(false)
       server.plain.configureBlocking(false)
 
-      val clientEndpoint = Endpoint(client, true, originBuffer, key = null)
-      val serverEndpoint = Endpoint(server, false, targetBuffer, key = null)
+      val clientEndpoint = WriterEndpoint(client, key = null, remaining = dataSize)
+      val serverEndpoint = ReaderEndpoint(server, key = null, remaining = dataSize)
 
       clientEndpoint.key = client.plain.register(selector, SelectionKey.OP_WRITE, clientEndpoint)
       serverEndpoint.key = server.plain.register(selector, SelectionKey.OP_READ, serverEndpoint)
       (clientEndpoint, serverEndpoint)
     }
 
-    val originEndpoints = endpoints.unzip._1
-    val targetEndpoints = endpoints.unzip._2
+    val writers = endpoints.unzip._1
+    val readers = endpoints.unzip._2
+    val allEndpoints = writers ++ readers
 
     var taskCount = 0
     var needReadCount = 0
@@ -67,29 +83,47 @@ object NonBlockingLoops extends Matchers {
 
     val totalTaskTimeMicros = new LongAdder
 
-    while (originEndpoints.forany(_.buffer.hasRemaining) || targetEndpoints.forany(_.buffer.hasRemaining)) {
+    val dataHash = Loops.expectedBytesHash(dataSize)
+
+    while (allEndpoints.forany(_.remaining > 0)) {
       selectorCycles += 1
       selector.select() // block
 
       for (endpoint <- getSelectedEndpoints(selector) ++ TestUtil.removeAndCollect(readyTaskSockets.iterator())) {
         try {
-          if (endpoint.isClient) {
-
-            while (endpoint.buffer.hasRemaining) {
-              if (renegotiationCount < maxRenegotiations) {
-                if (random.nextBoolean()) {
-                  renegotiationCount += 1
-                  endpoint.socketGroup.tls.renegotiate()
+          endpoint match {
+            case writer: WriterEndpoint =>
+              val buffer = writer.buffer
+              while (writer.remaining > 0) {
+                if (renegotiationCount < maxRenegotiations) {
+                  if (random.nextBoolean()) {
+                    renegotiationCount += 1
+                    writer.socketGroup.tls.renegotiate()
+                  }
+                }
+                if (!buffer.hasRemaining()) {
+                  writer.random.nextBytes(buffer.array())
+                  buffer.position(0)
+                  buffer.limit(math.min(buffer.capacity, writer.remaining))
+                }
+                val oldPosition = buffer.position
+                try {
+                  val c = writer.socketGroup.external.write(buffer)
+                  assert(c > 0) // the necessity of blocking is communicated with exceptions
+                } finally {
+                  val bytesWriten = buffer.position - oldPosition
+                  writer.remaining -= bytesWriten
                 }
               }
-              val c = endpoint.socketGroup.external.write(endpoint.buffer)
-              assert(c > 0) // the necessity of blocking is communicated with exceptions
-            }
-          } else {
-            while (endpoint.buffer.hasRemaining) {
-              val c = endpoint.socketGroup.external.read(endpoint.buffer)
-              assert(c > 0) // the necessity of blocking is communicated with exceptions
-            }
+            case reader: ReaderEndpoint =>
+              val buffer = reader.buffer
+              while (reader.remaining > 0) {
+                buffer.clear()
+                val c = reader.socketGroup.external.read(buffer)
+                assert(c > 0) // the necessity of blocking is communicated with exceptions
+                reader.digest.update(buffer.array, 0, c)
+                reader.remaining -= c
+              }
           }
         } catch {
           case e: NeedsWriteException =>
@@ -112,18 +146,14 @@ object NonBlockingLoops extends Matchers {
       }
     }
 
-    for (SocketPair(client, server) <- pairs) {
+    for (SocketPair(client, server) <- socketPairs) {
       client.external.close()
       server.external.close()
     }
 
-    for ((origin, target) <- endpoints) {
-      // flip buffers before comparison, as the equals() operates only in remaining bytes
-      target.buffer.flip()
-      origin.buffer.flip()
-      assert(target.buffer === origin.buffer)
+    for (reader <- readers) {
+      assert(dataHash === reader.digest.digest())
     }
-
     Report(selectorCycles, needReadCount, needWriteCount, renegotiationCount, taskCount, totalTaskTimeMicros.sum() / 1000)
   }
 

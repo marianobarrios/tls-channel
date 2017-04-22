@@ -15,7 +15,7 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging with Non
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
-  val dataSize = SslContextFactory.tlsMaxDataSize * 5
+  val dataSize = 200 * 1024
 
   test("selector loop") {
     val sizes = Stream.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
@@ -28,7 +28,7 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging with Non
         internalServerChunkSize = Some(size1),
         externalServerChunkSize = Some(size2))
       val (report, elapsed) = TestUtil.time {
-        NonBlockingLoops.testNonBlockingLoop(Seq(socketPair), dataSize, renegotiate = true)
+        NonBlockingLoops.loop(Seq(socketPair), dataSize, renegotiate = true)
       }
       info(f"** $size1%d -eng-> $size2%d -net-> $size1%d -eng-> $size2%d **")
       printReport(report, elapsed)
