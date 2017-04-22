@@ -28,28 +28,14 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
     val (cipher, sslContext) = SslContextFactory.standardCipher
     for ((size1, size2) <- (sizes zip sizes.reverse)) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
-      val SocketPair(client, server) = factory.nioNio(
+      val socketPair = factory.nioNio(
         cipher,
         internalClientChunkSize = Some(size1),
         externalClientChunkSize = Some(size2),
         internalServerChunkSize = Some(size1),
         externalServerChunkSize = Some(size2))
       val elapsed = TestUtil.time {
-        val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, client, renegotiate = true), "client-writer")
-        val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, server, renegotiate = true), "server-writer")
-        val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, client), "client-reader")
-        val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, server), "server-reader")
-        Seq(serverReaderThread, clientWriterThread).foreach(_.start())
-        Seq(serverReaderThread, clientWriterThread).foreach(_.join())
-        clientReaderThread.start()
-        // renegotiate three times, to test idempotency
-        for (_ <- 1 to 3) {
-          server.tls.renegotiate()
-        }
-        serverWriterThread.start()
-        Seq(clientReaderThread, serverWriterThread).foreach(_.join())
-        server.external.close()
-        client.external.close()
+        Loops.halfDuplex(socketPair, dataSize, renegotiation = true)
       }
       info(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d - ${elapsed / 1000}%5d ms")
     }
@@ -62,20 +48,13 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
     val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     for ((size1, size2) <- (sizes zip sizes.reverse)) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
-      val SocketPair(client, server) = factory.nioNio(cipher,
+      val socketPair = factory.nioNio(cipher,
         internalClientChunkSize = Some(size1),
         externalClientChunkSize = Some(size2),
         internalServerChunkSize = Some(size1),
         externalServerChunkSize = Some(size2))
       val elapsed = TestUtil.time {
-        val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, client), "client-writer")
-        val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, server), "server-write")
-        val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, client), "client-reader")
-        val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, server), "server-reader")
-        Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
-        Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
-        client.external.close()
-        server.external.close()
+        Loops.fullDuplex(socketPair, dataSize)
       }
       info(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d - ${elapsed / 1000}%5d ms")
     }

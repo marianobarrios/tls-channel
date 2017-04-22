@@ -10,6 +10,7 @@ import org.scalatest.Matchers
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 import tlschannel.helpers.TestUtil.Memo
+import tlschannel.helpers.TestUtil.functionToRunnable
 
 object Loops extends Matchers with StrictLogging {
 
@@ -17,6 +18,30 @@ object Loops extends Matchers with StrictLogging {
   val bufferSize = 20000
   val renegotiatePeriod = 10000
   val hashAlgorithm = "SHA-256"
+
+  def halfDuplex(socketPair: SocketPair, dataSize: Int, renegotiation: Boolean = false) = {
+    val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, socketPair.client, renegotiation), "client-writer")
+    val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, socketPair.server, renegotiation), "server-writer")
+    val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, socketPair.client), "client-reader")
+    val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, socketPair.server), "server-reader")
+    Seq(serverReaderThread, clientWriterThread).foreach(_.start())
+    Seq(serverReaderThread, clientWriterThread).foreach(_.join())
+    Seq(clientReaderThread, serverWriterThread).foreach(_.start())
+    Seq(clientReaderThread, serverWriterThread).foreach(_.join())
+    socketPair.server.external.close()
+    socketPair.client.external.close()
+  }
+
+  def fullDuplex(socketPair: SocketPair, dataSize: Int) = {
+    val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, socketPair.client), "client-writer")
+    val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, socketPair.server), "server-write")
+    val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, socketPair.client), "client-reader")
+    val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, socketPair.server), "server-reader")
+    Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
+    Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
+    socketPair.client.external.close()
+    socketPair.server.external.close()
+  }
 
   def writerLoop(
     size: Int,
@@ -28,8 +53,9 @@ object Loops extends Matchers with StrictLogging {
     val random = new Random(seed)
     var bytesSinceRenegotiation = 0
     var bytesRemaining = size
+    val bufferArray = Array.ofDim[Byte](bufferSize)
     while (bytesRemaining > 0) {
-      val buffer = ByteBuffer.allocate(math.min(bufferSize, bytesRemaining))
+      val buffer = ByteBuffer.wrap(bufferArray, 0, math.min(bufferSize, bytesRemaining))
       random.nextBytes(buffer.array)
       while (buffer.hasRemaining()) {
         if (renegotiate && bytesSinceRenegotiation > renegotiatePeriod) {
@@ -79,9 +105,16 @@ object Loops extends Matchers with StrictLogging {
   val expectedBytesHash = Memo { (size: Int) =>
     val digest = MessageDigest.getInstance(hashAlgorithm)
     val random = new Random(seed)
-    val array = Array.ofDim[Byte](size)
-    random.nextBytes(array)
-    digest.digest(array)
+    var generated = 0
+    val bufferSize = 10000
+    val array = Array.ofDim[Byte](bufferSize)
+    while (generated < size) {
+      random.nextBytes(array)
+      val pending = size - generated
+      digest.update(array, 0, math.min(bufferSize, pending))
+      generated += bufferSize
+    }
+    digest.digest()
   }
 
   private def multiWrap(buffer: ByteBuffer) = {

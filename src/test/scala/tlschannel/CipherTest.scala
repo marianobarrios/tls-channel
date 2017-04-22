@@ -32,23 +32,9 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
     for ((cipher, sslContext) <- SslContextFactory.allCiphers) {
       withClue(cipher + ": ") {
         logger.debug(s"Testing cipher: $cipher")
-        val SocketPair(client, server) = socketFactories(sslContext).nioNio(cipher)
+        val socketPair = socketFactories(sslContext).nioNio(cipher)
         val elapsed = TestUtil.time {
-          val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, client, renegotiate = true), "client-writer")
-          val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, server, renegotiate = true), "server-writer")
-          val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, client), "client-reader")
-          val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, server), "server-reader")
-          Seq(serverReaderThread, clientWriterThread).foreach(_.start())
-          Seq(serverReaderThread, clientWriterThread).foreach(_.join())
-          clientReaderThread.start()
-          // renegotiate three times, to test idempotency
-          for (_ <- 1 to 3) {
-            server.tls.renegotiate()
-          }
-          serverWriterThread.start()
-          Seq(clientReaderThread, serverWriterThread).foreach(_.join())
-          server.external.close()
-          client.external.close()
+          Loops.halfDuplex(socketPair, dataSize, renegotiation = true)
         }
         info(f"$cipher%-45s - ${elapsed / 1000}%5d ms")
       }
@@ -62,16 +48,9 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
     for ((cipher, sslContext) <- SslContextFactory.allCiphers) {
       withClue(cipher + ": ") {
         logger.debug(s"Testing cipher: $cipher")
-        val SocketPair(client, server) = socketFactories(sslContext).nioNio(cipher)
+        val socketPair = socketFactories(sslContext).nioNio(cipher)
         val elapsed = TestUtil.time {
-          val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, client), "client-writer")
-          val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, server), "server-write")
-          val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, client), "client-reader")
-          val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, server), "server-reader")
-          Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
-          Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
-          client.external.close()
-          server.external.close()
+          Loops.fullDuplex(socketPair, dataSize)
         }
         info(f"$cipher%-45s - ${elapsed / 1000}%5d ms")
       }
