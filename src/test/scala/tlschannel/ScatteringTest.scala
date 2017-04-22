@@ -14,14 +14,12 @@ import tlschannel.helpers.Loops
 import tlschannel.helpers.SocketPair
 import tlschannel.helpers.SocketPairFactory
 
-class ScatheringTest extends FunSuite with Matchers with StrictLogging {
+class ScatteringTest extends FunSuite with Matchers with StrictLogging {
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
-  val dataSize = SslContextFactory.tlsMaxDataSize * 3
-
-  val data = Array.ofDim[Byte](dataSize)
-  Random.nextBytes(data)
+ 
+  val dataSize = 150 * 1000
 
   /**
    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
@@ -31,10 +29,10 @@ class ScatheringTest extends FunSuite with Matchers with StrictLogging {
     val (cipher, sslContext) = SslContextFactory.standardCipher
     val SocketPair(client, server) = factory.nioNio(cipher)
     val elapsed = TestUtil.time {
-      val clientWriterThread = new Thread(() => Loops.writerLoop(data, client, scathering = true), "client-writer")
-      val serverWriterThread = new Thread(() => Loops.writerLoop(data, server, scathering = true), "server-writer")
-      val clientReaderThread = new Thread(() => Loops.readerLoop(data, client, gathering = true), "client-reader")
-      val serverReaderThread = new Thread(() => Loops.readerLoop(data, server, gathering = true), "server-reader")
+      val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, client, scattering = true), "client-writer")
+      val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, server, scattering = true), "server-writer")
+      val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, client, gathering = true), "client-reader")
+      val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, server, gathering = true), "server-reader")
       Seq(serverReaderThread, clientWriterThread).foreach(_.start())
       Seq(serverReaderThread, clientWriterThread).foreach(_.join())
       clientReaderThread.start()

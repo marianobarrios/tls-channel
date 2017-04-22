@@ -18,10 +18,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
-  val dataSize = SslContextFactory.tlsMaxDataSize * 3
-
-  val data = Array.ofDim[Byte](dataSize)
-  Random.nextBytes(data)
+  val dataSize = 150 * 1000
 
   /**
    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
@@ -38,10 +35,10 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
         internalServerChunkSize = Some(size1),
         externalServerChunkSize = Some(size2))
       val elapsed = TestUtil.time {
-        val clientWriterThread = new Thread(() => Loops.writerLoop(data, client, renegotiate = true), "client-writer")
-        val serverWriterThread = new Thread(() => Loops.writerLoop(data, server, renegotiate = true), "server-writer")
-        val clientReaderThread = new Thread(() => Loops.readerLoop(data, client), "client-reader")
-        val serverReaderThread = new Thread(() => Loops.readerLoop(data, server), "server-reader")
+        val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, client, renegotiate = true), "client-writer")
+        val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, server, renegotiate = true), "server-writer")
+        val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, client), "client-reader")
+        val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, server), "server-reader")
         Seq(serverReaderThread, clientWriterThread).foreach(_.start())
         Seq(serverReaderThread, clientWriterThread).foreach(_.join())
         clientReaderThread.start()
@@ -71,10 +68,10 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
         internalServerChunkSize = Some(size1),
         externalServerChunkSize = Some(size2))
       val elapsed = TestUtil.time {
-        val clientWriterThread = new Thread(() => Loops.writerLoop(data, client), "client-writer")
-        val serverWriterThread = new Thread(() => Loops.writerLoop(data, server), "server-write")
-        val clientReaderThread = new Thread(() => Loops.readerLoop(data, client), "client-reader")
-        val serverReaderThread = new Thread(() => Loops.readerLoop(data, server), "server-reader")
+        val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, client), "client-writer")
+        val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, server), "server-write")
+        val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, client), "client-reader")
+        val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, server), "server-reader")
         Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
         Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
         client.external.close()
