@@ -27,11 +27,15 @@ object Loops extends Matchers with StrictLogging {
   val renegotiatePeriod = 10000
   val hashAlgorithm = "SHA-256"
 
-  def halfDuplex(socketPair: SocketPair, dataSize: Int, renegotiation: Boolean = false) = {
-    val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, socketPair.client, renegotiation), "client-writer")
-    val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, socketPair.server, renegotiation), "server-writer")
-    val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, socketPair.client), "client-reader")
-    val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, socketPair.server), "server-reader")
+  /**
+   * Test a half-duplex interaction, with (optional) renegotiation 
+   * before reversing the direction of the flow (as in HTTP)
+   */
+  def halfDuplex(socketPair: SocketPair, dataSize: Int, renegotiation: Boolean = false, scattering: Boolean = false) = {
+    val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, socketPair.client, renegotiation, scattering), "client-writer")
+    val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, socketPair.server, renegotiation, scattering), "server-writer")
+    val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, socketPair.client, scattering), "client-reader")
+    val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, socketPair.server, scattering), "server-reader")
     Seq(serverReaderThread, clientWriterThread).foreach(_.start())
     Seq(serverReaderThread, clientWriterThread).foreach(_.join())
     Seq(clientReaderThread, serverWriterThread).foreach(_.start())
