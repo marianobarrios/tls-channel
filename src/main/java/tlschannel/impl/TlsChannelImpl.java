@@ -47,10 +47,12 @@ public class TlsChannelImpl implements ByteChannel {
 	private static class EngineLoopResult {
 		public final int bytes;
 		public final HandshakeStatus lastHandshakeStatus;
+		public final boolean wasClosed;
 
-		public EngineLoopResult(int bytes, HandshakeStatus lastHandshakeStatus) {
+		public EngineLoopResult(int bytes, HandshakeStatus lastHandshakeStatus, boolean wasClosed) {
 			this.bytes = bytes;
 			this.lastHandshakeStatus = lastHandshakeStatus;
+			this.wasClosed = wasClosed;
 		}
 	}
 
@@ -152,7 +154,7 @@ public class TlsChannelImpl implements ByteChannel {
 				case NOT_HANDSHAKING:
 				case FINISHED:
 					try {
-						EngineLoopResult res = readLoop(Optional.of(dest), NOT_HANDSHAKING);
+						EngineLoopResult res = readLoop(Optional.of(dest), NOT_HANDSHAKING /* statusCondition */);
 						bytesToReturn = res.bytes;
 						handshakeStatus = res.lastHandshakeStatus;
 					} catch (EOFException e) {
@@ -186,23 +188,20 @@ public class TlsChannelImpl implements ByteChannel {
 		return bytes;
 	}
 
-	private EngineLoopResult unwrapLoop(Optional<ByteBufferSet> dest, HandshakeStatus statusLoopCondition)
-			throws SSLException, EOFException {
+	private EngineLoopResult unwrapLoop(Optional<ByteBufferSet> dest, HandshakeStatus statusCondition)
+			throws SSLException {
 		ByteBufferSet effDest = dest.orElseGet(() -> new ByteBufferSet(inPlain));
 		while (true) {
 			Util.assertTrue(inPlain.position() == 0);
 			SSLEngineResult result = callEngineUnwrap(effDest);
-			if (result.getStatus() == Status.CLOSED) {
-				tlsClosePending = true;
-				throw new EOFException();
-			}
 			/*
 			 * Note that data can be returned even in case of overflow, in that
 			 * case, just return the data.
 			 */
 			if (result.bytesProduced() > 0 || result.getStatus() == Status.BUFFER_UNDERFLOW
-					|| result.getHandshakeStatus() != statusLoopCondition) {
-				return new EngineLoopResult(result.bytesProduced(), result.getHandshakeStatus());
+					|| result.getHandshakeStatus() != statusCondition) {
+				boolean wasClosed = result.getStatus() == Status.CLOSED;
+				return new EngineLoopResult(result.bytesProduced(), result.getHandshakeStatus(), wasClosed);
 			}
 			if (result.getStatus() == Status.BUFFER_OVERFLOW) {
 				if (dest.isPresent() && effDest == dest.get()) {
@@ -282,6 +281,10 @@ public class TlsChannelImpl implements ByteChannel {
 				if (bytesConsumed == bytesToConsume)
 					return bytesToConsume;
 				EngineLoopResult res = wrapLoop(source);
+				if (res.wasClosed) {
+					invalid = true;
+					throw new ClosedChannelException();
+				}
 				bytesConsumed += res.bytes;
 			}
 		} finally {
@@ -298,19 +301,18 @@ public class TlsChannelImpl implements ByteChannel {
 		}
 	}
 
-	private EngineLoopResult wrapLoop(ByteBufferSet source) throws SSLException, ClosedChannelException {
+	private EngineLoopResult wrapLoop(ByteBufferSet source) throws SSLException {
 		while (true) {
 			SSLEngineResult result = callEngineWrap(source);
 			switch (result.getStatus()) {
 			case OK:
-				return new EngineLoopResult(result.bytesConsumed(), result.getHandshakeStatus());
+				return new EngineLoopResult(result.bytesConsumed(), result.getHandshakeStatus(), false /* wasClosed */);
+			case CLOSED:
+				return new EngineLoopResult(result.bytesConsumed(), result.getHandshakeStatus(), true /* wasClosed */);
 			case BUFFER_OVERFLOW:
 				Util.assertTrue(result.bytesConsumed() == 0);
 				enlargeOutEncrypted();
 				break;
-			case CLOSED:
-				invalid = true;
-				throw new ClosedChannelException();
 			case BUFFER_UNDERFLOW:
 				throw new IllegalStateException();
 			}
@@ -341,7 +343,8 @@ public class TlsChannelImpl implements ByteChannel {
 	}
 
 	private void enlargeInEncrypted() {
-		inEncrypted = Util.enlarge(encryptedBufferAllocator, inEncrypted, "inEncrypted", maxTlsPacketSize, false /* zero */);
+		inEncrypted = Util.enlarge(encryptedBufferAllocator, inEncrypted, "inEncrypted", maxTlsPacketSize,
+				false /* zero */);
 	}
 
 	private void ensureInPlainCapacity(int newCapacity) {
@@ -448,7 +451,7 @@ public class TlsChannelImpl implements ByteChannel {
 				writeToNetworkIfNecessary(); // IO block
 				break;
 			case NEED_UNWRAP:
-				EngineLoopResult res = readLoop(dest, NEED_UNWRAP /* statusLoopCondition */);
+				EngineLoopResult res = readLoop(dest, NEED_UNWRAP /* statusCondition */);
 				status = res.lastHandshakeStatus;
 				if (res.bytes > 0)
 					return res.bytes;
@@ -471,14 +474,18 @@ public class TlsChannelImpl implements ByteChannel {
 		}
 	}
 
-	private EngineLoopResult readLoop(Optional<ByteBufferSet> dest, HandshakeStatus statusLoopCondition)
+	private EngineLoopResult readLoop(Optional<ByteBufferSet> dest, HandshakeStatus statusCondition)
 			throws IOException {
 		while (true) {
 			Util.assertTrue(inPlain.position() == 0);
 			inEncrypted.flip();
 			try {
-				EngineLoopResult res = unwrapLoop(dest, statusLoopCondition);
-				if (res.bytes > 0 || res.lastHandshakeStatus != statusLoopCondition) {
+				EngineLoopResult res = unwrapLoop(dest, statusCondition);
+				if (res.wasClosed) {
+					tlsClosePending = true;
+					throw new EOFException();
+				}
+				if (res.bytes > 0 || res.lastHandshakeStatus != statusCondition) {
 					return res;
 				}
 			} finally {
@@ -501,13 +508,8 @@ public class TlsChannelImpl implements ByteChannel {
 					// response.
 					Util.assertTrue(outEncrypted.position() == 0);
 					try {
-						SSLEngineResult result = engine.wrap(dummyOut.array, dummyOut.offset, dummyOut.length,
-								outEncrypted);
-						if (logger.isTraceEnabled()) {
-							logger.trace("engine.wrap() result: [{}]; engine status: {}; outEncrypted: {}",
-									Util.resultToString(result), result.getHandshakeStatus(), outEncrypted);
-						}
-						Util.assertTrue(result.getStatus() == Status.CLOSED);
+						EngineLoopResult res = wrapLoop(dummyOut);
+						Util.assertTrue(res.wasClosed);
 						flipAndWriteToNetwork(); // IO block
 					} catch (Exception e) {
 						// graceful close of TLS connection failed.
