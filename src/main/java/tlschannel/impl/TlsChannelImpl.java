@@ -252,7 +252,7 @@ public class TlsChannelImpl implements ByteChannel {
 		Util.assertTrue(buffer.hasRemaining());
 		logger.trace("Reading from network");
 		int res = readChannel.read(buffer); // IO block
-		logger.trace("Read from network; buffer: {}", buffer);
+		logger.trace("Read from network; response: {}, buffer: {}", res, buffer);
 		if (res == -1) {
 			throw new EOFException();
 		}
@@ -348,8 +348,10 @@ public class TlsChannelImpl implements ByteChannel {
 	}
 
 	private void ensureInPlainCapacity(int newCapacity) {
-		if (inPlain.capacity() < newCapacity)
+		if (inPlain.capacity() < newCapacity) {
+			logger.trace("inPlain buffer too small, increasing from {} to {}", inPlain.capacity(), newCapacity);
 			inPlain = Util.resize(plainBufferAllocator, inPlain, newCapacity, true /* zero */);
+		}
 	}
 
 	private int flipAndWriteToNetwork() throws IOException {
