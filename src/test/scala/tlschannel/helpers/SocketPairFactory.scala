@@ -94,6 +94,15 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     socket
   }
 
+  def oldOld(cipher: String): (SSLSocket, SSLSocket) = {
+    val serverSocket = createSslServerSocket(cipher)
+    val chosenPort = serverSocket.getLocalPort
+    val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
+    val server = serverSocket.accept().asInstanceOf[SSLSocket]
+    serverSocket.close()
+    (client, server)
+  }
+  
   def oldNio(cipher: String): (SSLSocket, SocketGroup) = {
     val serverSocket = ServerSocketChannel.open()
     serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
