@@ -3,6 +3,7 @@ package tlschannel;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
+import java.nio.channels.ClosedChannelException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
@@ -20,6 +21,7 @@ import javax.net.ssl.StandardConstants;
 import tlschannel.impl.ByteBufferSet;
 import tlschannel.impl.TlsExplorer;
 import tlschannel.impl.TlsChannelImpl;
+import tlschannel.impl.TlsChannelImpl.EofException;
 import tlschannel.util.Util;
 
 /**
@@ -29,11 +31,11 @@ public class ServerTlsChannel implements TlsChannel {
 
 	@FunctionalInterface
 	private interface SniReader {
-		Optional<String> readSni() throws IOException;
+		Optional<String> readSni() throws IOException, EofException;
 	}
 
 	private interface InternalSslContextFactory {
-		SSLContext getSslContext(SniReader sniReader) throws IOException;
+		SSLContext getSslContext(SniReader sniReader) throws IOException, EofException;
 	}
 
 	private static class SniSslContextFactory implements InternalSslContextFactory {
@@ -45,7 +47,7 @@ public class ServerTlsChannel implements TlsChannel {
 		}
 
 		@Override
-		public SSLContext getSslContext(SniReader sniReader) throws IOException {
+		public SSLContext getSslContext(SniReader sniReader) throws IOException, EofException {
 			// IO block
 			Optional<String> nameOpt = sniReader.readSni();
 			// call client code
@@ -109,7 +111,7 @@ public class ServerTlsChannel implements TlsChannel {
 
 		public ServerTlsChannel build() {
 			return new ServerTlsChannel(underlying, internalSslContextFactory, sslEngineFactory, sessionInitCallback,
-					runTasks, plainBufferAllocator, encryptedBufferAllocator);
+					runTasks, plainBufferAllocator, encryptedBufferAllocator, waitForCloseConfirmation);
 		}
 
 	}
@@ -162,6 +164,7 @@ public class ServerTlsChannel implements TlsChannel {
 	private final boolean runTasks;
 	private final BufferAllocator plainBufferAllocator;
 	private final BufferAllocator encryptedBufferAllocator;
+	private final boolean waitForCloseConfirmation;
 
 	private final Lock initLock = new ReentrantLock();
 
@@ -179,7 +182,8 @@ public class ServerTlsChannel implements TlsChannel {
 			Consumer<SSLSession> sessionInitCallback, 
 			boolean runTasks,
 			BufferAllocator plainBufferAllocator,
-			BufferAllocator encryptedBufferAllocator) {
+			BufferAllocator encryptedBufferAllocator,
+			boolean waitForCloseConfirmation) {
 		this.underlying = underlying;
 		this.internalSslContextFactory = internalSslContextFactory;
 		this.engineFactory = engineFactory;
@@ -187,6 +191,7 @@ public class ServerTlsChannel implements TlsChannel {
 		this.runTasks = runTasks;
 		this.plainBufferAllocator = plainBufferAllocator;
 		this.encryptedBufferAllocator = encryptedBufferAllocator;
+		this.waitForCloseConfirmation = waitForCloseConfirmation;
 		buffer = encryptedBufferAllocator.allocate(TlsChannelImpl.buffersInitialSize);
 	}
 	
@@ -236,8 +241,13 @@ public class ServerTlsChannel implements TlsChannel {
 	public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
 		ByteBufferSet dest = new ByteBufferSet(dstBuffers, offset, length);
 		TlsChannelImpl.checkReadBuffer(dest);
-		if (!sniRead)
-			initEngine();
+		if (!sniRead) {
+			try {
+				initEngine();
+			} catch (EofException e) {
+				return -1;
+			}
+		}
 		return impl.read(dest);
 	}
 
@@ -254,8 +264,13 @@ public class ServerTlsChannel implements TlsChannel {
 	@Override
 	public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
 		ByteBufferSet source = new ByteBufferSet(srcs, offset, length);
-		if (!sniRead)
-			initEngine();
+		if (!sniRead) {
+			try {
+				initEngine();
+			} catch (EofException e) {
+				throw new ClosedChannelException();
+			}
+		}
 		return impl.write(source);
 	}
 
@@ -271,23 +286,33 @@ public class ServerTlsChannel implements TlsChannel {
 
 	@Override
 	public void renegotiate() throws IOException {
-		if (!sniRead)
-			initEngine();
+		if (!sniRead) {
+			try {
+				initEngine();
+			} catch (EofException e) {
+				throw new ClosedChannelException();
+			}
+		}
 		impl.renegotiate();
 	}
 
 	@Override
 	public void handshake() throws IOException {
-		if (!sniRead)
-			initEngine();
+		if (!sniRead) {
+			try {
+				initEngine();
+			} catch (EofException e) {
+				throw new ClosedChannelException();
+			}
+		}
 		impl.handshake();
 	}
 
 	@Override
-	public void close() {
+	public void close() throws IOException {
 		if (impl != null)
 			impl.close();
-		Util.closeChannel(underlying);
+		underlying.close();
 	}
 
 	@Override
@@ -295,14 +320,14 @@ public class ServerTlsChannel implements TlsChannel {
 		return underlying.isOpen();
 	}
 
-	private void initEngine() throws IOException {
+	private void initEngine() throws IOException, EofException {
 		initLock.lock();
 		try {
 			if (!sniRead) {
 				sslContext = internalSslContextFactory.getSslContext(() -> getServerNameIndication());
 				SSLEngine engine = engineFactory.apply(sslContext);
 				impl = new TlsChannelImpl(underlying, underlying, engine, Optional.of(buffer), sessionInitCallback,
-						runTasks, plainBufferAllocator, encryptedBufferAllocator);
+						runTasks, plainBufferAllocator, encryptedBufferAllocator, waitForCloseConfirmation);
 				sniRead = true;
 			}
 		} finally {
@@ -310,7 +335,7 @@ public class ServerTlsChannel implements TlsChannel {
 		}
 	}
 
-	private Optional<String> getServerNameIndication() throws IOException {
+	private Optional<String> getServerNameIndication() throws IOException, EofException {
 		Util.assertTrue(buffer.position() == 0);
 		int recordHeaderSize = readRecordHeaderSize();
 		while (buffer.position() < recordHeaderSize) {
@@ -332,7 +357,7 @@ public class ServerTlsChannel implements TlsChannel {
 		}
 	}
 
-	private int readRecordHeaderSize() throws IOException {
+	private int readRecordHeaderSize() throws IOException, EofException {
 		while (buffer.position() < TlsExplorer.RECORD_HEADER_SIZE) {
 			if (!buffer.hasRemaining()) {
 				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch",
@@ -344,6 +369,21 @@ public class ServerTlsChannel implements TlsChannel {
 		int recordHeaderSize = TlsExplorer.getRequiredSize(buffer);
 		buffer.compact();
 		return recordHeaderSize;
+	}
+
+	@Override
+	public boolean shutdown() throws IOException {
+		return impl != null && impl.shutdown();
+	}
+
+	@Override
+	public boolean shutdownReceived() {
+		return impl != null && impl.shutdownReceived();
+	}
+
+	@Override
+	public boolean shutdownSent() {
+		return impl != null && impl.shutdownSent();
 	}
 
 }

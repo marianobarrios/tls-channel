@@ -28,20 +28,22 @@ object Loops extends Matchers with StrictLogging {
   val hashAlgorithm = "SHA-256"
 
   /**
-   * Test a half-duplex interaction, with (optional) renegotiation 
+   * Test a half-duplex interaction, with (optional) renegotiation
    * before reversing the direction of the flow (as in HTTP)
    */
   def halfDuplex(socketPair: SocketPair, dataSize: Int, renegotiation: Boolean = false, scattering: Boolean = false) = {
-    val clientWriterThread = new Thread(() => Loops.writerLoop(dataSize, socketPair.client, renegotiation, scattering), "client-writer")
-    val serverWriterThread = new Thread(() => Loops.writerLoop(dataSize, socketPair.server, renegotiation, scattering), "server-writer")
-    val clientReaderThread = new Thread(() => Loops.readerLoop(dataSize, socketPair.client, scattering), "client-reader")
-    val serverReaderThread = new Thread(() => Loops.readerLoop(dataSize, socketPair.server, scattering), "server-reader")
+    val clientWriterThread = new Thread(
+        () => Loops.writerLoop(dataSize, socketPair.client, renegotiation, scattering), "client-writer")
+    val serverReaderThread = new Thread(
+        () => Loops.readerLoop(dataSize, socketPair.server, scattering), "server-reader")
+    val serverWriterThread = new Thread(
+        () => Loops.writerLoop(dataSize, socketPair.server, renegotiation, scattering, shutdown = true, close = true), "server-writer")
+    val clientReaderThread = new Thread(
+        () => Loops.readerLoop(dataSize, socketPair.client, scattering, close = true, readEof = true), "client-reader")
     Seq(serverReaderThread, clientWriterThread).foreach(_.start())
     Seq(serverReaderThread, clientWriterThread).foreach(_.join())
     Seq(clientReaderThread, serverWriterThread).foreach(_.start())
     Seq(clientReaderThread, serverWriterThread).foreach(_.join())
-    socketPair.server.external.close()
-    socketPair.client.external.close()
   }
 
   def fullDuplex(socketPair: SocketPair, dataSize: Int) = {
@@ -59,7 +61,9 @@ object Loops extends Matchers with StrictLogging {
     size: Int,
     socketGroup: SocketGroup,
     renegotiate: Boolean = false,
-    scattering: Boolean = false): Unit = TestUtil.cannotFail("Error in writer") {
+    scattering: Boolean = false,
+    shutdown: Boolean = false,
+    close: Boolean = false): Unit = TestUtil.cannotFail {
 
     logger.debug(s"Starting writer loop, size: $size, scathering: $scattering, renegotiate:$renegotiate")
     val random = new Random(seed)
@@ -85,13 +89,19 @@ object Loops extends Matchers with StrictLogging {
         assert(bytesRemaining >= 0)
       }
     }
+    if (shutdown)
+      socketGroup.tls.shutdown()
+    if (close)
+      socketGroup.external.close()
     logger.debug("Finalizing writer loop")
   }
 
   def readerLoop(
     size: Int,
     socketGroup: SocketGroup,
-    gathering: Boolean = false): Unit = TestUtil.cannotFail("Error in reader") {
+    gathering: Boolean = false,
+    readEof: Boolean = false,
+    close: Boolean = false): Unit = TestUtil.cannotFail {
 
     logger.debug(s"Starting reader loop. Size: $size, gathering: $gathering")
     val random = new Random(seed)
@@ -109,8 +119,12 @@ object Loops extends Matchers with StrictLogging {
       bytesRemaining -= c
       assert(bytesRemaining >= 0)
     }
+    if (readEof)
+      assert(socketGroup.external.read(ByteBuffer.wrap(readArray)) === -1)
     val actual = digest.digest()
     assert(actual === expectedBytesHash(size))
+    if (close)
+      socketGroup.external.close()
     logger.debug("Finalizing reader loop")
   }
 

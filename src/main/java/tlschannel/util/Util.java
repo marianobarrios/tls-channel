@@ -1,7 +1,6 @@
 package tlschannel.util;
 
 import java.nio.ByteBuffer;
-import java.nio.channels.Channel;
 
 import javax.net.ssl.SSLEngineResult;
 
@@ -14,14 +13,6 @@ import tlschannel.impl.TlsChannelImpl;
 public class Util {
 
 	private static final Logger logger = LoggerFactory.getLogger(Util.class);
-
-	public static void closeChannel(Channel channel) {
-		try {
-			channel.close();
-		} catch (Exception e) {
-			// pass
-		}
-	}
 
 	public static void assertTrue(boolean condition) {
 		if (!condition)

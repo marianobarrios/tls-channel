@@ -36,7 +36,8 @@ class ApiTest extends FunSuite with Matchers {
       (_: SSLSession) => (),
       true,
       new HeapBufferAllocator,
-      new HeapBufferAllocator)
+      new HeapBufferAllocator,
+      false /* waitForCloseConfirmation */)
   }
 
   test("reading into a read-only buffer") {
@@ -54,15 +55,6 @@ class ApiTest extends FunSuite with Matchers {
   test("writing from an empty buffer should work") {
     val socket = newSocket()
     socket.write(new ByteBufferSet(ByteBuffer.allocate(0))) // empty write
-  }
-
-  test("using socket after close") {
-    val socket = newSocket()
-    socket.close()
-    intercept[IOException] {
-      socket.write(new ByteBufferSet(ByteBuffer.allocate(arraySize)))
-    }
-    assert(-1 === socket.read(new ByteBufferSet(ByteBuffer.allocate(arraySize))))
   }
 
 }

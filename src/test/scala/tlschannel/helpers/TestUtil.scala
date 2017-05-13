@@ -7,11 +7,11 @@ import scala.collection.JavaConversions._
 
 object TestUtil extends StrictLogging {
 
-  def cannotFail(msg: String)(thunk: => Unit) {
+  def cannotFail(thunk: => Unit) {
     try thunk
     catch {
       case e: Throwable =>
-        val lastMessage = "An essential thread failed unexpectedly, terminating process: " + msg
+        val lastMessage = s"An essential thread (${Thread.currentThread().getName}) failed unexpectedly, terminating process"
         logger.error(lastMessage, e)
         System.err.println(lastMessage)
         e.printStackTrace() // we are committing suicide, assure the reason gets through  

@@ -37,7 +37,7 @@ public class ClientTlsChannel implements TlsChannel {
 
 		public ClientTlsChannel build() {
 			return new ClientTlsChannel(underlying, sslEngine, sessionInitCallback, runTasks, plainBufferAllocator,
-					encryptedBufferAllocator);
+					encryptedBufferAllocator, waitForCloseConfirmation);
 		}
 
 	}
@@ -59,12 +59,12 @@ public class ClientTlsChannel implements TlsChannel {
 	private final TlsChannelImpl impl;
 
 	private ClientTlsChannel(ByteChannel underlying, SSLEngine engine, Consumer<SSLSession> sessionInitCallback,
-			boolean runTasks, BufferAllocator plainBufferAllocator, BufferAllocator encryptedBufferAllocator) {
+			boolean runTasks, BufferAllocator plainBufferAllocator, BufferAllocator encryptedBufferAllocator, boolean waitForCloseNotifyOnClose) {
 		if (!engine.getUseClientMode())
 			throw new IllegalArgumentException("SSLEngine must be in client mode");
 		this.underlying = underlying;
 		impl = new TlsChannelImpl(underlying, underlying, engine, Optional.empty(), sessionInitCallback, runTasks,
-				plainBufferAllocator, encryptedBufferAllocator);
+				plainBufferAllocator, encryptedBufferAllocator, waitForCloseNotifyOnClose);
 	}
 
 	@Override
@@ -141,7 +141,7 @@ public class ClientTlsChannel implements TlsChannel {
 	}
 
 	@Override
-	public void close() {
+	public void close() throws IOException {
 		impl.close();
 	}
 
@@ -150,4 +150,19 @@ public class ClientTlsChannel implements TlsChannel {
 		return impl.isOpen();
 	}
 
+	@Override
+	public boolean shutdown() throws IOException {
+		return impl.shutdown();
+	}
+
+	@Override
+	public boolean shutdownReceived() {
+		return impl.shutdownReceived();
+	}
+
+	@Override
+	public boolean shutdownSent() {
+		return impl.shutdownSent();
+	}
+	
 }

@@ -15,11 +15,14 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
+import java.net.SocketException
+import tlschannel.helpers.SocketPair
+import java.nio.channels.ClosedChannelException
 
 class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
 
   import InteroperabilityTest._
-  
+
   val (cipher, sslContext) = SslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
 
@@ -50,7 +53,7 @@ class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
 
   val margin = Random.nextInt(100)
 
-  def writerLoop(writer: Writer, renegotiate: Boolean = false) = TestUtil.cannotFail("Error in writer") {
+  def writerLoop(writer: Writer, renegotiate: Boolean = false) = TestUtil.cannotFail {
     var remaining = dataSize
     while (remaining > 0) {
       if (renegotiate)
@@ -61,7 +64,7 @@ class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
     }
   }
 
-  def readerLoop(reader: Reader, idx: Int = 0) = TestUtil.cannotFail("Error in reader") {
+  def readerLoop(reader: Reader, idx: Int = 0) = TestUtil.cannotFail {
     val receivedData = Array.ofDim[Byte](dataSize + margin)
     var remaining = dataSize
     while (remaining > 0) {

@@ -18,7 +18,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
-  val dataSize = 150 * 1000
+  val dataSize = 80 * 1000
 
   /**
    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
