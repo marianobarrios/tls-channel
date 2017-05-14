@@ -62,7 +62,7 @@ public class Util {
 	 * because the supplied method includes a log-breaking newline.
 	 */
 	public static String resultToString(SSLEngineResult result) {
-		return String.format("status=%s,handshakeStatus=%s,bytesProduced=%d,bytesConsumed=%d", result.getStatus(),
+		return String.format("status=%s,handshakeStatus=%s,bytesConsumed=%d,bytesConsumed=%d", result.getStatus(),
 				result.getHandshakeStatus(), result.bytesProduced(), result.bytesConsumed());
 	}
 

@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 import tlschannel.impl.ByteBufferSet
 
 /*
- * "Null" {@link SSLEngine} that does nothing to the bytes.
+ * "Null" {@link SSLEngine} that does nothing to the bytesProduced.
  */
 class NullSslEngine extends SSLEngine with StrictLogging {
 

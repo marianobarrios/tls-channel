@@ -70,7 +70,7 @@ class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
     while (remaining > 0) {
       val chunkSize = Random.nextInt(remaining + margin) + 1 // 1 <= chunkSize <= remaining + margin
       val c = reader.read(receivedData, dataSize - remaining, chunkSize)
-      assert(c != -1, "read must not return -1 when there were bytes remaining")
+      assert(c != -1, "read must not return -1 when there were bytesProduced remaining")
       assert(c <= remaining)
       assert(c > 0, "blocking read must return a positive number")
       remaining -= c

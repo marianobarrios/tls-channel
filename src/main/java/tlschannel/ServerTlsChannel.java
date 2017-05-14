@@ -343,7 +343,7 @@ public class ServerTlsChannel implements TlsChannel {
 				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch", maxTlsPacketSize,
 						false /* zero */);
 			}
-			TlsChannelImpl.readFromNetwork(underlying, buffer); // IO block
+			TlsChannelImpl.readFromChannel(underlying, buffer); // IO block
 		}
 		buffer.flip();
 		Map<Integer, SNIServerName> serverNames = TlsExplorer.explore(buffer);
@@ -363,7 +363,7 @@ public class ServerTlsChannel implements TlsChannel {
 				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch",
 						TlsExplorer.RECORD_HEADER_SIZE, false /* zero */);
 			}
-			TlsChannelImpl.readFromNetwork(underlying, buffer); // IO block
+			TlsChannelImpl.readFromChannel(underlying, buffer); // IO block
 		}
 		buffer.flip();
 		int recordHeaderSize = TlsExplorer.getRequiredSize(buffer);

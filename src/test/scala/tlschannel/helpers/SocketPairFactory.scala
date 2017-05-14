@@ -44,7 +44,7 @@ case class SocketGroup(external: ByteChannel, tls: TlsChannel, plain: SocketChan
 /**
  * Create pairs of connected sockets (using the loopback interface).
  * Additionally, all the raw (non-encrypted) socket channel are wrapped with a chunking decorator that partitions
- * the bytes of any read or write operation.
+ * the bytesProduced of any read or write operation.
  */
 class SocketPairFactory(val sslContext: SSLContext, val serverName: String) extends StrictLogging {
 

@@ -28,7 +28,7 @@ import javax.net.ssl.SSLSession;
  * 
  * <p>
  * Note that this is an API adapter, not a cryptographic implementation: with
- * the exception of a few bytes of parsing at the beginning of the connection,
+ * the exception of a few bytesProduced of parsing at the beginning of the connection,
  * to look for the SNI, the whole protocol implementation is done by the
  * SSLEngine. Both the SSLContext and SSLEngine are supplied by the client;
  * these classes are the ones responsible for protocol configuration, including
@@ -46,7 +46,7 @@ import javax.net.ssl.SSLSession;
  * possible to complete an operation, no zero is returned, but an
  * {@link WouldBlockException}. This divergence from the base interface is
  * needed because both a <code>read</code> and a <code>write</code> operation
- * can run out of both bytes for reading and buffer space for writing, as a
+ * can run out of both bytesProduced for reading and buffer space for writing, as a
  * handshake (a bidirectional operation) can happen at any moment. The user
  * would use a {@link Selector} to wait for the expected condition
  * <em>of the underlying channel</em>, and should know which operation to
@@ -104,11 +104,11 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	boolean getRunTasks();
 
 	/**
-	 * Reads a sequence of bytes from this channel into the given buffer.
+	 * Reads a sequence of bytesProduced from this channel into the given buffer.
 	 *
 	 * <p>
-	 * An attempt is made to read up to <i>r</i> bytes from the channel, where
-	 * <i>r</i> is the number of bytes remaining in the buffer, that is,
+	 * An attempt is made to read up to <i>r</i> bytesProduced from the channel, where
+	 * <i>r</i> is the number of bytesProduced remaining in the buffer, that is,
 	 * <tt>dst.remaining()</tt>, at the moment this method is invoked.
 	 *
 	 * <p>
@@ -123,14 +123,14 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 *
 	 * <p>
 	 * A read operation might not fill the buffer, and in fact it might not read
-	 * any bytes at all. Whether or not it does so depends upon the nature and
+	 * any bytesProduced at all. Whether or not it does so depends upon the nature and
 	 * state of the underlying channel. It is guaranteed, however, that if a
 	 * channel is in blocking mode and there is at least one byte remaining in
 	 * the buffer then this method will block until at least one byte is read.
 	 * On the other hand, if the underlying channel is in non-blocking mode then
 	 * a {@link WouldBlockException} may be thrown. Note that this also includes
 	 * the possibility of a {@link NeedsWriteException}, due to the fact that,
-	 * during a TLS handshake, bytes need to be written to the underlying
+	 * during a TLS handshake, bytesProduced need to be written to the underlying
 	 * socket. In any case, after a {@link WouldBlockException}, the operation
 	 * should be retried when the underlying channel is ready (for reading or
 	 * writing, depending on the subclass).
@@ -147,9 +147,9 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * complete.
 	 *
 	 * @param dst
-	 *            The buffer into which bytes are to be transferred
+	 *            The buffer into which bytesProduced are to be transferred
 	 *
-	 * @return The number of bytes read, or <tt>-1</tt> if the channel has
+	 * @return The number of bytesProduced read, or <tt>-1</tt> if the channel has
 	 *         reached end-of-stream; contrary to the behavior specified in
 	 *         {@link ByteChannel}, this method never returns 0, but throws
 	 *         {@link WouldBlockException}
@@ -171,11 +171,11 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	public int read(ByteBuffer dst) throws IOException;
 
 	/**
-	 * Writes a sequence of bytes to this channel from the given buffer.
+	 * Writes a sequence of bytesProduced to this channel from the given buffer.
 	 *
 	 * <p>
-	 * An attempt is made to write up to <i>r</i> bytes to the channel, where
-	 * <i>r</i> is the number of bytes remaining in the buffer, that is,
+	 * An attempt is made to write up to <i>r</i> bytesProduced to the channel, where
+	 * <i>r</i> is the number of bytesProduced remaining in the buffer, that is,
 	 * <tt>src.remaining()</tt>, at the moment this method is invoked.
 	 *
 	 * <p>
@@ -190,12 +190,12 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 *
 	 * <p>
 	 * If the underlying channel is in blocking mode, a write operation will
-	 * return only after writing all of the <i>r</i> requested bytes. On the
+	 * return only after writing all of the <i>r</i> requested bytesProduced. On the
 	 * other hand, if it is in non-blocking mode, this operation may write only
-	 * some of the bytes or possibly none at all, in this case a
+	 * some of the bytesProduced or possibly none at all, in this case a
 	 * {@link WouldBlockException} will be thrown. Note that this also includes
 	 * the possibility of a {@link NeedsReadException}, due to the fact that,
-	 * during a TLS handshake, bytes need to be read from the underlying socket.
+	 * during a TLS handshake, bytesProduced need to be read from the underlying socket.
 	 * In any case, after a {@link WouldBlockException}, the operation should be
 	 * retried when the underlying channel is ready (for reading or writing,
 	 * depending on the subclass).
@@ -212,9 +212,9 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * complete.
 	 * 
 	 * @param src
-	 *            The buffer from which bytes are to be retrieved
+	 *            The buffer from which bytesProduced are to be retrieved
 	 *
-	 * @return The number of bytes written, contrary to the behavior specified
+	 * @return The number of bytesProduced written, contrary to the behavior specified
 	 *         in {@link ByteChannel}, this method never returns 0, but throws
 	 *         {@link WouldBlockException}
 	 *
@@ -320,7 +320,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	void handshake() throws IOException;
 
 	/**
-	 * Writes a sequence of bytes to this channel from a subsequence of the
+	 * Writes a sequence of bytesProduced to this channel from a subsequence of the
 	 * given buffers.
 	 * 
 	 * <p>
@@ -333,11 +333,11 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * for more details.
 	 * 
 	 * @param srcs
-	 *            The buffers from which bytes are to be retrieved
+	 *            The buffers from which bytesProduced are to be retrieved
 	 *
 	 * @param offset
 	 *            The offset within the buffer array of the first buffer from
-	 *            which bytes are to be retrieved; must be non-negative and no
+	 *            which bytesProduced are to be retrieved; must be non-negative and no
 	 *            larger than <tt>srcs.length</tt>
 	 *
 	 * @param length
@@ -345,7 +345,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 *            non-negative and no larger than <tt>srcs.length</tt>
 	 *            &nbsp;-&nbsp;<tt>offset</tt>
 	 *
-	 * @return The number of bytes written, contrary to the behavior specified
+	 * @return The number of bytesProduced written, contrary to the behavior specified
 	 *         in {@link ByteChannel}, this method never returns 0, but throws
 	 *         {@link WouldBlockException}
 	 *
@@ -370,7 +370,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	public long write(ByteBuffer[] srcs, int offset, int length) throws IOException;
 
 	/**
-	 * Writes a sequence of bytes to this channel from the given buffers.
+	 * Writes a sequence of bytesProduced to this channel from the given buffers.
 	 *
 	 * <p>
 	 * An invocation of this method of the form <tt>c.write(srcs)</tt> behaves
@@ -389,9 +389,9 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * for more details.
 	 * 
 	 * @param src
-	 *            The buffer from which bytes are to be retrieved
+	 *            The buffer from which bytesProduced are to be retrieved
 	 *
-	 * @return The number of bytes written, contrary to the behavior specified
+	 * @return The number of bytesProduced written, contrary to the behavior specified
 	 *         in {@link ByteChannel}, this method never returns 0, but throws
 	 *         {@link WouldBlockException}
 	 *
@@ -416,7 +416,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	public long write(ByteBuffer[] srcs) throws IOException;
 
 	/**
-	 * Reads a sequence of bytes from this channel into a subsequence of the
+	 * Reads a sequence of bytesProduced from this channel into a subsequence of the
 	 * given buffers.
 	 *
 	 * <p>
@@ -429,11 +429,11 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * more details.
 	 *
 	 * @param dsts
-	 *            The buffers into which bytes are to be transferred
+	 *            The buffers into which bytesProduced are to be transferred
 	 *
 	 * @param offset
 	 *            The offset within the buffer array of the first buffer into
-	 *            which bytes are to be transferred; must be non-negative and no
+	 *            which bytesProduced are to be transferred; must be non-negative and no
 	 *            larger than <tt>dsts.length</tt>
 	 *
 	 * @param length
@@ -441,7 +441,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 *            non-negative and no larger than <tt>dsts.length</tt>
 	 *            &nbsp;-&nbsp;<tt>offset</tt>
 	 *
-	 * @return The number of bytes read, or <tt>-1</tt> if the channel has
+	 * @return The number of bytesProduced read, or <tt>-1</tt> if the channel has
 	 *         reached end-of-stream; contrary to the behavior specified in
 	 *         {@link ByteChannel}, this method never returns 0, but throws
 	 *         {@link WouldBlockException}
@@ -467,7 +467,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	public long read(ByteBuffer[] dsts, int offset, int length) throws IOException;
 
 	/**
-	 * Reads a sequence of bytes from this channel into the given buffers.
+	 * Reads a sequence of bytesProduced from this channel into the given buffers.
 	 *
 	 * <p>
 	 * An invocation of this method of the form <tt>c.read(dsts)</tt> behaves in
@@ -487,9 +487,9 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * more details.
 	 *
 	 * @param dsts
-	 *            The buffers into which bytes are to be transferred
+	 *            The buffers into which bytesProduced are to be transferred
 	 *
-	 * @return The number of bytes read, or <tt>-1</tt> if the channel has
+	 * @return The number of bytesProduced read, or <tt>-1</tt> if the channel has
 	 *         reached end-of-stream; contrary to the behavior specified in
 	 *         {@link ByteChannel}, this method never returns 0, but throws
 	 *         {@link WouldBlockException}

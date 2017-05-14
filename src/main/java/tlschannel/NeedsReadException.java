@@ -5,10 +5,10 @@ import java.nio.channels.SocketChannel;
 
 /**
  * This exception signals the caller that the operation cannot continue because
- * bytes need to be read from the underlying {@link ByteChannel}, the channel is
- * non-blocking and there are no bytes available. The caller should try the
+ * bytesProduced need to be read from the underlying {@link ByteChannel}, the channel is
+ * non-blocking and there are no bytesProduced available. The caller should try the
  * operation again, either with the channel in blocking mode of after ensuring
- * that bytes are ready.
+ * that bytesProduced are ready.
  * <p>
  * For {@link SocketChannel}s, a {@link Selector} can be used to find out when
  * the method should be retried.

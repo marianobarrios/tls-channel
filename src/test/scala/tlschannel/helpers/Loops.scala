@@ -18,7 +18,7 @@ object Loops extends Matchers with StrictLogging {
 
   /*
    * Note that it is necessary to use a multiple of 4 as buffer size for writing. 
-   * This is because the bytes to write are generated using Random.nextBytes, that
+   * This is because the bytesProduced to write are generated using Random.nextBytes, that
    * always consumes full (4 byte) integers. A multiple of 4 then prevents "holes" 
    * in the random sequence.
    */

@@ -25,10 +25,10 @@ public final class TlsExplorer {
 	public final static int RECORD_HEADER_SIZE = 5;
 
 	/**
-	 * Returns the required number of bytes in the {@code source}
+	 * Returns the required number of bytesProduced in the {@code source}
 	 * {@link ByteBuffer} necessary to explore SSL/TLS connection.
 	 * <P>
-	 * This method tries to parse as few bytes as possible from {@code source}
+	 * This method tries to parse as few bytesProduced as possible from {@code source}
 	 * byte buffer to get the length of an SSL/TLS record.
 	 * <P>
 	 */
@@ -221,7 +221,7 @@ public final class TlsExplorer {
 				if (sniMap.put(serverName.getType(), serverName) != null)
 					throw new SSLProtocolException("Duplicated server name of type " + serverName.getType());
 				remains -= encoded.length + 3; // NameType: 1 byte; HostName;
-												// length: 2 bytes
+												// length: 2 bytesProduced
 			}
 		} else if (extLen == 0) { // "server_name" extension in ServerHello
 			throw new SSLProtocolException("Not server name indication extension in client");

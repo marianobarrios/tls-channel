@@ -277,7 +277,7 @@ public class DeallocationHelper {
         /**
          * builds the map used to determine the names of the fields containing
          * the direct byte buffers. The direct read only buffers and the sliced
-         * buffers and the direct buffers for other primitive types than bytes
+         * buffers and the direct buffers for other primitive types than bytesProduced
          * store their data into some direct byte buffers. Those direct byte
          * buffers often are the only one accessing directly to the native
          * memory. That's why it's necessary to find them when a developer
