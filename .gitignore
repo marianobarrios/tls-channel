@@ -3,6 +3,7 @@
 .project
 .settings/
 project/target/
+project/project/
 .cache-main
 .cache-tests
 /bin/

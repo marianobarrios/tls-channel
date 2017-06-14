@@ -3,7 +3,7 @@
 
 TLS Channel is a library that implements a [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html) interface to a [TLS](https://tools.ietf.org/html/rfc5246) (Transport Layer Security) connection. The library delegates all cryptographic operations to the standard Java TLS implementation: [SSLEngine](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLEngine.html); effectively hiding it behind an easy-to-use streamming API, that allows to securitize JVM applications with minimal added complexity.
 
-In other words, a simple library that allows the programmer to have TLS using the same standard socket API used for plaintext, just like OpenSSL does for C, only for Java.
+In other words, a simple library that allows the programmer to have TLS using the same standard socket API used for plaintext, just like OpenSSL does for C, only for Java, filling a specially painful missing feature of the standard Java library.
 
 ### Main features
 
@@ -18,12 +18,12 @@ In other words, a simple library that allows the programmer to have TLS using th
 
 Being a API layer, TLS Channel delegates all cryptographic operations to SSLEngine, leveraging it 100%. This implies that:
 
-- With the exception of a few bytes of parsing at the beginning of the connection, to look for the SNI, the whole protocol implementation is done by the SSLEngine (this parsing is not done at all is SNI support is not required).
+- With the exception of a few bytes of parsing at the beginning of the connection, to look for the SNI, the whole protocol implementation is done by the SSLEngine (this parsing is not done at all if SNI support is not required).
 - Both the SSLContext and SSLEngine are supplied by the client; these classes are the ones responsible for protocol configuration, including hostname validation, client-side authentication, etc.
 
 ## Rationale
 
-By far, the most used criptography solution is TLS (a.k.a. SSL). TLS, of course, works on top of the Transport Control Protocol (TCP), maintaining its core abstractions: essentially, two independent byte streams, one in each direction, with ordered at-most-once delivery.
+By far, the most used cryptography solution is TLS (a.k.a. SSL). TLS works on top of the Transport Control Protocol (TCP), maintaining its core abstractions: two independent byte streams, one in each direction, with ordered at-most-once delivery.
 
 [Recent](https://www.schneier.com/blog/archives/2014/06/gchq_intercept_.html) [trends](https://www.schneier.com/blog/archives/2013/10/nsa_eavesdroppi_2.html) have increased the pressure to add encryption in even more use cases. From a usability perspective, the industry response should come in the form of less friction to add security. One example of this is the "[Let's Encrypt](https://www.schneier.com/blog/archives/2013/10/nsa_eavesdroppi_2.html)" project. From the programming perspective, it then only makes sense to replicate the existing interface (that is, something similar to the highly successful and familiar Berkeley Sockets) for the cryptographic streams. And indeed this is what the majority of the industry has done:
 
@@ -31,7 +31,7 @@ By far, the most used criptography solution is TLS (a.k.a. SSL). TLS, of course,
 - The Go language has its own implementation, package [crypto/tls](https://golang.org/pkg/crypto/tls/).
 - There is another C library by Mozilla, part of the "[Network Security Services](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS)" (NSS) group of libraries. It's notoriously used by the Firefox browser.
 
-And many more. All this libraries implement a streaming interface, and most let the user switch freely between blocking and non-blocking behavior. But in Java the history, unfortunately, not so simple.
+And many more. All this libraries implement a streaming interface, and most let the user switch freely between blocking and non-blocking behavior. But in Java the history, unfortunately, is not so simple.
 
 ### The Java TLS problem
 
@@ -43,7 +43,7 @@ In version 1.4, a [new IO API](https://docs.oracle.com/javase/8/docs/api/java/ni
 
 - Non-blocking operations.
 - A higher lever API, based on wrapped buffers ([ByteBuffers](https://docs.oracle.com/javase/8/docs/api/java/nio/ByteBuffer.html)).
-- Direct IO, that can use "direct" ByteBuffers, that can live out of the heap. This is specially advantageous, as doing the OS level IO call implies an extra copy is the buffer lived in the heap, to facilitate synchronization with the garbage collector.
+- Direct IO, that can use "direct" ByteBuffers, that can live out of the heap. This is specially advantageous, as the JVM forces an extra copy for any heap array sent in a native call (to facilitate synchronization with the garbage collector).
 - "[Scathering](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ScatteringByteChannel.html)" and "[gathering](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/GatheringByteChannel.html)" API, that is, the ability to use more than one sequential buffer in the same IO operation.
  
 But no TLS support, which was only available in old-style sockets.
@@ -52,7 +52,7 @@ But no TLS support, which was only available in old-style sockets.
 
 Version 1.5 saw the advent of [SSLEngine](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLEngine.html) as the official way of doing TLS over NIO sockets. This API as been the official option for more than a decade. However, it has severe shortcomings:
 
-- No streaming support. SSLEngine does not do any IO, or keep any buffers. It does all cryptographic operations on user-managed buffers (but, confusingly, at the same time keeps internal state associated with the TLS connection). This no-data—but stateful—API is just not what users expect or are used to, and indeed not what the rest of the industry as standarized on.
+- No streaming support. SSLEngine does not do any IO, or keep any buffers. It does all cryptographic operations on user-managed buffers (but, confusingly, at the same time keeps internal state associated with the TLS connection). This no-data—but stateful—API is just not what users expect or are used to, and indeed not what the rest of the industry has standarized on.
 - Even considering the constrains, the API is unnecessarily convoluted, with too big a surface, and many incorrect interactions not constrained by the types.
 - No support for server-side SNI handling.
 
@@ -77,7 +77,7 @@ Of course, these options imply using an alternative implementation, which may no
 
 ### Existing open-source SSLEngine users
 
-The feat of using SSLEngine directly is indeed performed by several projects, both general purpose IO libraries and implementation of particular protocols. Below is an inevitably incomplete list of open-source examples. Every one in the list contains essentially the same general-purpose, SSLEngine-calling code, only embedded in custom types and semantics. That said, these examples, while not really suited for reuse, have been invaluable for both appreciating the difficulty of the task, and also a source of implementation ideas.
+The feat of using SSLEngine directly is indeed performed by several projects, both general purpose IO libraries and implementation of particular protocols. Below is an inevitably incomplete list of open-source examples. Every one in the list contains essentially the same general-purpose, SSLEngine-calling code, only embedded in custom types and semantics. That said, these examples, while not really suited for reuse, have been invaluable for both appreciating the difficulty of the task, and also as a source of ideas.
 
 Type | Project | Package/class
 --- | --- | ---
