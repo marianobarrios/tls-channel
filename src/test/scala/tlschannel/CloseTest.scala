@@ -230,7 +230,7 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     val serverThread = new Thread(() => serverFn(), "server-thread")
     clientThread.start()
     serverThread.start()
-    clientThread.join(3000)
+    clientThread.join(5000)
     serverThread.join()
     assert(clientThread.isAlive)
   }
