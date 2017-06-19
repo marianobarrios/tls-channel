@@ -23,4 +23,8 @@ public interface BufferAllocator {
 	 */
 	void free(ByteBuffer buffer);
 
+	long bytesAllocated();
+
+	long bytesDeallocated();
+
 }
