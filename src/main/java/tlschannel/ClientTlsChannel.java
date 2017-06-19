@@ -10,6 +10,7 @@ import javax.net.ssl.SSLSession;
 import tlschannel.impl.ByteBufferSet;
 import tlschannel.impl.TlsChannelImpl;
 
+import java.nio.channels.Channel;
 import java.util.Optional;
 import java.util.function.Consumer;
 

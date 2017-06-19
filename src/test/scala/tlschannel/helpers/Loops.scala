@@ -65,7 +65,8 @@ object Loops extends Matchers with StrictLogging {
     shutdown: Boolean = false,
     close: Boolean = false): Unit = TestUtil.cannotFail {
 
-    logger.debug(s"Starting writer loop, size: $size, scathering: $scattering, renegotiate:$renegotiate")
+
+    logger.debug(s"Starting writer loop, size: $size, scattering: $scattering, renegotiate:$renegotiate")
     val random = new Random(seed)
     var bytesSinceRenegotiation = 0
     var bytesRemaining = size

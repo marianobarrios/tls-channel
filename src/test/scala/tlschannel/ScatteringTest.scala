@@ -19,8 +19,7 @@ class ScatteringTest extends FunSuite with Matchers with StrictLogging {
   val dataSize = 150 * 1000
 
   test("half duplex") {
-    val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
-    val (cipher, sslContext) = SslContextFactory.standardCipher
+    val (cipher, _) = SslContextFactory.standardCipher
     val socketPair = factory.nioNio(cipher)
     val elapsed = TestUtil.time {
       Loops.halfDuplex(socketPair, dataSize, scattering = true)
