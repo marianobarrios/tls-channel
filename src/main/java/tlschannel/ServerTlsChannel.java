@@ -3,6 +3,7 @@ package tlschannel;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
+import java.nio.channels.Channel;
 import java.nio.channels.ClosedChannelException;
 import java.util.Map;
 import java.util.Optional;
@@ -18,6 +19,7 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.StandardConstants;
 
+import tlschannel.impl.BufferHolder;
 import tlschannel.impl.ByteBufferSet;
 import tlschannel.impl.TlsExplorer;
 import tlschannel.impl.TlsChannelImpl;
@@ -155,20 +157,18 @@ public class ServerTlsChannel implements TlsChannel {
 		return new Builder(underlying, sslContextFactory);
 	}
 
-	private final static int maxTlsPacketSize = 16 * 1024;
-
 	private final ByteChannel underlying;
 	private final InternalSslContextFactory internalSslContextFactory;
 	private final Function<SSLContext, SSLEngine> engineFactory;
 	private final Consumer<SSLSession> sessionInitCallback;
 	private final boolean runTasks;
-	private final BufferAllocator plainBufferAllocator;
-	private final BufferAllocator encryptedBufferAllocator;
+	private final BufferAllocator plainBufAllocator;
+	private final BufferAllocator encryptedBufAllocator;
 	private final boolean waitForCloseConfirmation;
 
 	private final Lock initLock = new ReentrantLock();
 
-	private ByteBuffer buffer;
+	private BufferHolder inEncrypted;
 
 	private volatile boolean sniRead = false;
 	private SSLContext sslContext = null;
@@ -181,20 +181,20 @@ public class ServerTlsChannel implements TlsChannel {
 			Function<SSLContext, SSLEngine> engineFactory, 
 			Consumer<SSLSession> sessionInitCallback, 
 			boolean runTasks,
-			BufferAllocator plainBufferAllocator,
-			BufferAllocator encryptedBufferAllocator,
+			BufferAllocator plainBufAllocator,
+			BufferAllocator encryptedBufAllocator,
 			boolean waitForCloseConfirmation) {
 		this.underlying = underlying;
 		this.internalSslContextFactory = internalSslContextFactory;
 		this.engineFactory = engineFactory;
 		this.sessionInitCallback = sessionInitCallback;
 		this.runTasks = runTasks;
-		this.plainBufferAllocator = plainBufferAllocator;
-		this.encryptedBufferAllocator = encryptedBufferAllocator;
+		this.plainBufAllocator = plainBufAllocator;
+		this.encryptedBufAllocator = encryptedBufAllocator;
 		this.waitForCloseConfirmation = waitForCloseConfirmation;
-		buffer = encryptedBufferAllocator.allocate(TlsChannelImpl.buffersInitialSize);
-	}
-	
+        inEncrypted = new BufferHolder("inEncrypted", Optional.empty(), encryptedBufAllocator, TlsChannelImpl.buffersInitialSize, TlsChannelImpl.maxTlsPacketSize, false /* plainData */);
+    }
+
 	// @formatter:on
 
 	@Override
@@ -229,12 +229,12 @@ public class ServerTlsChannel implements TlsChannel {
 
 	@Override
 	public BufferAllocator getPlainBufferAllocator() {
-		return plainBufferAllocator;
+		return plainBufAllocator;
 	}
 
 	@Override
 	public BufferAllocator getEncryptedBufferAllocator() {
-		return encryptedBufferAllocator;
+		return encryptedBufAllocator;
 	}
 
 	@Override
@@ -312,8 +312,8 @@ public class ServerTlsChannel implements TlsChannel {
 	public void close() throws IOException {
 		if (impl != null)
 			impl.close();
-		if (buffer != null)
-			encryptedBufferAllocator.free(buffer);
+		if (inEncrypted != null)
+            inEncrypted.dispose();
 		underlying.close();
 	}
 
@@ -328,9 +328,9 @@ public class ServerTlsChannel implements TlsChannel {
 			if (!sniRead) {
 				sslContext = internalSslContextFactory.getSslContext(() -> getServerNameIndication());
 				SSLEngine engine = engineFactory.apply(sslContext);
-				impl = new TlsChannelImpl(underlying, underlying, engine, Optional.of(buffer), sessionInitCallback,
-						runTasks, plainBufferAllocator, encryptedBufferAllocator, waitForCloseConfirmation);
-				buffer = null;
+				impl = new TlsChannelImpl(underlying, underlying, engine, Optional.of(inEncrypted), sessionInitCallback,
+						runTasks, plainBufAllocator, encryptedBufAllocator, waitForCloseConfirmation);
+				inEncrypted = null;
 				sniRead = true;
 			}
 		} finally {
@@ -339,18 +339,17 @@ public class ServerTlsChannel implements TlsChannel {
 	}
 
 	private Optional<String> getServerNameIndication() throws IOException, EofException {
-		Util.assertTrue(buffer.position() == 0);
+		Util.assertTrue(inEncrypted.buffer.position() == 0);
 		int recordHeaderSize = readRecordHeaderSize();
-		while (buffer.position() < recordHeaderSize) {
-			if (!buffer.hasRemaining()) {
-				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch", maxTlsPacketSize,
-						false /* zero */);
+		while (inEncrypted.buffer.position() < recordHeaderSize) {
+			if (!inEncrypted.buffer.hasRemaining()) {
+			    inEncrypted.enlarge();
 			}
-			TlsChannelImpl.readFromChannel(underlying, buffer); // IO block
+			TlsChannelImpl.readFromChannel(underlying, inEncrypted.buffer); // IO block
 		}
-		buffer.flip();
-		Map<Integer, SNIServerName> serverNames = TlsExplorer.explore(buffer);
-		buffer.compact();
+        inEncrypted.buffer.flip();
+		Map<Integer, SNIServerName> serverNames = TlsExplorer.explore(inEncrypted.buffer);
+        inEncrypted.buffer.compact();
 		SNIServerName hostName = serverNames.get(StandardConstants.SNI_HOST_NAME);
 		if (hostName != null && hostName instanceof SNIHostName) {
 			SNIHostName sniHostName = (SNIHostName) hostName;
@@ -361,16 +360,15 @@ public class ServerTlsChannel implements TlsChannel {
 	}
 
 	private int readRecordHeaderSize() throws IOException, EofException {
-		while (buffer.position() < TlsExplorer.RECORD_HEADER_SIZE) {
-			if (!buffer.hasRemaining()) {
-				buffer = Util.enlarge(encryptedBufferAllocator, buffer, "inEncryptedPreFetch",
-						TlsExplorer.RECORD_HEADER_SIZE, false /* zero */);
+		while (inEncrypted.buffer.position() < TlsExplorer.RECORD_HEADER_SIZE) {
+			if (!inEncrypted.buffer.hasRemaining()) {
+                throw new IllegalStateException("inEncrypted too small");
 			}
-			TlsChannelImpl.readFromChannel(underlying, buffer); // IO block
+			TlsChannelImpl.readFromChannel(underlying, inEncrypted.buffer); // IO block
 		}
-		buffer.flip();
-		int recordHeaderSize = TlsExplorer.getRequiredSize(buffer);
-		buffer.compact();
+        inEncrypted.buffer.flip();
+		int recordHeaderSize = TlsExplorer.getRequiredSize(inEncrypted.buffer);
+        inEncrypted.buffer.compact();
 		return recordHeaderSize;
 	}
 

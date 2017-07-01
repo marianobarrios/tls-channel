@@ -13,10 +13,9 @@ import javax.net.ssl.SSLEngine
 import javax.net.ssl.SSLSession
 
 import tlschannel.helpers.TestUtil.fnToConsumer
-import tlschannel.impl.ByteBufferSet
-import tlschannel.impl.TlsChannelImpl
-
+import tlschannel.impl.{BufferHolder, ByteBufferSet, TlsChannelImpl}
 import java.util.Optional
+
 import tlschannel.helpers.TestUtil
 
 class ApiTest extends FunSuite with Matchers {
@@ -32,7 +31,7 @@ class ApiTest extends FunSuite with Matchers {
       readChannel,
       writeChannel,
       sslEngine,
-      Optional.empty[ByteBuffer],
+      Optional.empty[BufferHolder],
       (_: SSLSession) => (),
       true,
       new HeapBufferAllocator,
