@@ -312,6 +312,8 @@ public class ServerTlsChannel implements TlsChannel {
 	public void close() throws IOException {
 		if (impl != null)
 			impl.close();
+		if (buffer != null)
+			encryptedBufferAllocator.free(buffer);
 		underlying.close();
 	}
 
@@ -328,6 +330,7 @@ public class ServerTlsChannel implements TlsChannel {
 				SSLEngine engine = engineFactory.apply(sslContext);
 				impl = new TlsChannelImpl(underlying, underlying, engine, Optional.of(buffer), sessionInitCallback,
 						runTasks, plainBufferAllocator, encryptedBufferAllocator, waitForCloseConfirmation);
+				buffer = null;
 				sniRead = true;
 			}
 		} finally {

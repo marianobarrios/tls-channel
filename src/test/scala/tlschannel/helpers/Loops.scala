@@ -4,11 +4,9 @@ import java.nio.ByteBuffer
 import java.security.MessageDigest
 
 import scala.util.Random
-
 import org.scalatest.Matchers
-
 import com.typesafe.scalalogging.slf4j.StrictLogging
-
+import tlschannel.BufferAllocator
 import tlschannel.helpers.TestUtil.Memo
 import tlschannel.helpers.TestUtil.functionToRunnable
 
@@ -44,6 +42,7 @@ object Loops extends Matchers with StrictLogging {
     Seq(serverReaderThread, clientWriterThread).foreach(_.join())
     Seq(clientReaderThread, serverWriterThread).foreach(_.start())
     Seq(clientReaderThread, serverWriterThread).foreach(_.join())
+    SocketPairFactory.checkDeallocation(socketPair)
   }
 
   def fullDuplex(socketPair: SocketPair, dataSize: Int) = {
@@ -55,6 +54,7 @@ object Loops extends Matchers with StrictLogging {
     Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
     socketPair.client.external.close()
     socketPair.server.external.close()
+    SocketPairFactory.checkDeallocation(socketPair)
   }
 
   def writerLoop(

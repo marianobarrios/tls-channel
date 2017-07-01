@@ -549,6 +549,20 @@ public class TlsChannelImpl implements ByteChannel {
 		tryShutdown();
 		writeChannel.close();
 		readChannel.close();
+		/*
+		 * After closing the underlying channels, locks should be taken fast.
+		 */
+        readLock.lock();
+		try {
+		   writeLock.lock();
+		   try {
+		       freeBuffers();
+           } finally {
+               writeLock.unlock();
+           }
+        } finally {
+		    readLock.unlock();
+        }
 	}
 
 	private void tryShutdown() {
@@ -597,6 +611,9 @@ public class TlsChannelImpl implements ByteChannel {
 					 * second, then inbound was already done, and we can return
 					 * true.
 					 */
+					if (shutdownReceived) {
+						freeBuffers();
+					}
 					return shutdownReceived;
 				}
 				/*
@@ -613,6 +630,7 @@ public class TlsChannelImpl implements ByteChannel {
 						throw new ClosedChannelException();
 					}
 				}
+				freeBuffers();
 				return true;
 			} finally {
 				writeLock.unlock();
@@ -620,6 +638,21 @@ public class TlsChannelImpl implements ByteChannel {
 		} finally {
 			readLock.unlock();
 		}
+	}
+
+	private void freeBuffers() {
+		if (inEncrypted != null) {
+            encryptedBufferAllocator.free(inEncrypted);
+            inEncrypted = null;
+        }
+		if (inPlain != null) {
+            plainBufferAllocator.free(inPlain);
+            inPlain = null;
+        }
+		if (outEncrypted != null) {
+            encryptedBufferAllocator.free(outEncrypted);
+            outEncrypted = null;
+        }
 	}
 
 	public boolean isOpen() {

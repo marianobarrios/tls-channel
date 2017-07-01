@@ -6,15 +6,9 @@ import java.nio.channels.ClosedChannelException
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
-
 import com.typesafe.scalalogging.slf4j.StrictLogging
-
-import tlschannel.helpers.SocketPair
-import tlschannel.helpers.SocketPairFactory
-import tlschannel.helpers.SslContextFactory
+import tlschannel.helpers._
 import tlschannel.helpers.TestUtil.functionToRunnable
-import tlschannel.helpers.TestUtil
-import java.util.concurrent.TimeUnit
 import java.nio.channels.AsynchronousCloseException
 
 class CloseTest extends FunSuite with Matchers with StrictLogging {
@@ -52,15 +46,17 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     clientThread.join()
     serverThread.join()
   }
-  
+
   /**
    * Less than a TLS message, to force read/write loops
    */
   val internalBufferSize = Some(10)
- 
+
   test("TlsChannel - TCP immediate close") {
-    val SocketPair(clientGroup, serverGroup) = 
+    val socketPair =
       factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val clientGroup = socketPair.client
+    val serverGroup = socketPair.server
     val client = clientGroup.external
     val server = serverGroup.external
     def clientFn(): Unit = TestUtil.cannotFail {
@@ -85,11 +81,16 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     serverThread.start()
     clientThread.join()
     serverThread.join()
+    clientGroup.tls.close()
+    serverGroup.tls.close()
+    SocketPairFactory.checkDeallocation(socketPair)
   }
-  
+
   test("TlsChannel - TCP close") {
-    val SocketPair(clientGroup, serverGroup) = 
+    val socketPair =
       factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val clientGroup = socketPair.client
+    val serverGroup = socketPair.server
     val client = clientGroup.external
     val server = serverGroup.external
     def clientFn(): Unit = TestUtil.cannotFail {
@@ -119,11 +120,16 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     serverThread.start()
     clientThread.join()
     serverThread.join()
+    clientGroup.tls.close()
+    serverGroup.tls.close()
+    SocketPairFactory.checkDeallocation(socketPair)
   }
-  
+
   test("TlsChannel - close") {
-    val SocketPair(clientGroup, serverGroup) = 
+    val socketPair =
       factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val clientGroup = socketPair.client
+    val serverGroup = socketPair.server
     val client = clientGroup.external
     val server = serverGroup.external
     def clientFn(): Unit = TestUtil.cannotFail {
@@ -157,15 +163,17 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     serverThread.start()
     clientThread.join()
     serverThread.join()
+    SocketPairFactory.checkDeallocation(socketPair)
   }
 
   test("TlsChannel - close and wait") {
-    val SocketPair(clientGroup, serverGroup) = 
-      factory.nioNio(
-          cipher, 
-          internalClientChunkSize = internalBufferSize, 
-          internalServerChunkSize = internalBufferSize, 
-          waitForCloseConfirmation = true)
+    val socketPair = factory.nioNio(
+      cipher,
+      internalClientChunkSize = internalBufferSize,
+      internalServerChunkSize = internalBufferSize,
+      waitForCloseConfirmation = true)
+    val clientGroup = socketPair.client
+    val serverGroup = socketPair.server
     val client = clientGroup.external
     val server = serverGroup.external
     def clientFn(): Unit = TestUtil.cannotFail {
@@ -199,15 +207,17 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     serverThread.start()
     clientThread.join()
     serverThread.join()
+    SocketPairFactory.checkDeallocation(socketPair)
   }
 
   test("TlsChannel - close and wait (forever)") {
-    val SocketPair(clientGroup, serverGroup) = 
-      factory.nioNio(
-          cipher, 
-          internalClientChunkSize = internalBufferSize, 
-          internalServerChunkSize = internalBufferSize, 
-          waitForCloseConfirmation = true)
+    val socketPair = factory.nioNio(
+      cipher,
+      internalClientChunkSize = internalBufferSize,
+      internalServerChunkSize = internalBufferSize,
+      waitForCloseConfirmation = true)
+    val clientGroup = socketPair.client
+    val serverGroup = socketPair.server
     val client = clientGroup.external
     val server = serverGroup.external
     def clientFn(): Unit = TestUtil.cannotFail {
@@ -233,11 +243,16 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     clientThread.join(5000)
     serverThread.join()
     assert(clientThread.isAlive)
+    serverGroup.tls.close()
+    clientThread.join()
+    SocketPairFactory.checkDeallocation(socketPair)
   }
 
   test("TlsChannel - shutdown and forget") {
-    val SocketPair(clientGroup, serverGroup) = 
+    val socketPair =
       factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val clientGroup = socketPair.client
+    val serverGroup = socketPair.server
     val client = clientGroup.external
     val server = serverGroup.external
     def clientFn(): Unit = TestUtil.cannotFail {
@@ -267,11 +282,14 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     serverThread.join()
     client.close()
     server.close()
+    SocketPairFactory.checkDeallocation(socketPair)
   }
 
   test("TlsChannel - shutdown and wait") {
-    val SocketPair(clientGroup, serverGroup) = 
+    val socketPair =
       factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val clientGroup = socketPair.client
+    val serverGroup = socketPair.server
     val client = clientGroup.external
     val server = serverGroup.external
     def clientFn(): Unit = TestUtil.cannotFail {
@@ -311,11 +329,14 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     serverThread.join()
     client.close()
     server.close()
+    SocketPairFactory.checkDeallocation(socketPair)
   }
 
   test("TlsChannel - shutdown and wait (forever)") {
-    val SocketPair(clientGroup, serverGroup) = 
+    val socketPair =
       factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val clientGroup = socketPair.client
+    val serverGroup = socketPair.server
     val client = clientGroup.external
     val server = serverGroup.external
     def clientFn(): Unit = TestUtil.cannotFail {
@@ -353,6 +374,7 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     assert(clientThread.isAlive)
     client.close()
     server.close()
+    SocketPairFactory.checkDeallocation(socketPair)
   }
 
 }

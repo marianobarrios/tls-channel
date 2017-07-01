@@ -245,3 +245,18 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     }
   }
 }
+
+object SocketPairFactory extends StrictLogging {
+
+  def checkDeallocation(socketPair: SocketPair) = {
+    checkBufferDeallocation(socketPair.client.tls.getPlainBufferAllocator)
+    checkBufferDeallocation(socketPair.client.tls.getEncryptedBufferAllocator)
+  }
+
+  private def checkBufferDeallocation(allocator: BufferAllocator) = {
+    logger.debug(s"allocator: ${allocator}; allocated: ${allocator.bytesAllocated()}")
+    logger.debug(s"allocator: ${allocator}; deallocated: ${allocator.bytesDeallocated()}")
+    assert(allocator.bytesAllocated() == allocator.bytesDeallocated(), " - some buffers were not deallocated")
+  }
+
+}

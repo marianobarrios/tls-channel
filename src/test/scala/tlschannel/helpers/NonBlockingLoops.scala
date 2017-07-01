@@ -4,15 +4,17 @@ import tlschannel.NeedsWriteException
 import tlschannel.NeedsReadException
 import tlschannel.NeedsTaskException
 import java.util.concurrent.atomic.LongAdder
+
 import scala.util.Random
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.nio.channels.Selector
 import java.util.concurrent.Executors
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
+
 import tlschannel.helpers.TestUtil.IterableWithForany
 import tlschannel.helpers.TestUtil.functionToRunnable
-import scala.collection.JavaConversions._
+
 import org.scalatest.Matchers
 import java.security.MessageDigest
 
@@ -146,14 +148,16 @@ object NonBlockingLoops extends Matchers {
       }
     }
 
-    for (SocketPair(client, server) <- socketPairs) {
-      client.external.close()
-      server.external.close()
+    for (socketPair <- socketPairs) {
+      socketPair.client.external.close()
+      socketPair.server.external.close()
+      SocketPairFactory.checkDeallocation(socketPair)
     }
 
     for (reader <- readers) {
       assert(dataHash === reader.digest.digest())
     }
+
     Report(selectorCycles, needReadCount, needWriteCount, renegotiationCount, taskCount, totalTaskTimeMicros.sum() / 1000)
   }
 
