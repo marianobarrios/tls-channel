@@ -12,8 +12,8 @@ import tlschannel.helpers.Loops
 
 /**
  * Test using a null engine (pass-through).	The purpose of the test is to remove
- * the overhead of the real {@link SSLEngine} to be able to test the overhead of the
- * {@link TlsSocketChannel}.
+ * the overhead of the real [[javax.net.ssl.SSLEngine]] to be able to test the overhead of the
+ * [[TlsChannel]].
  */
 class NullEngineTest extends FunSuite with Matchers with StrictLogging with BeforeAndAfterAll {
 
@@ -26,7 +26,6 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging with Befo
 
   test("null engine - half duplex - heap buffers") {
     val sizes = Stream.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
-    val (cipher, sslContext) = SslContextFactory.standardCipher
     val elapsedTotal = TestUtil.time {
       for (size1 <- sizes) {
         logger.debug(s"Testing sizes: size1=$size1")
@@ -45,7 +44,6 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging with Befo
 
   test("null engine - half duplex - direct buffers") {
     val sizes = Stream.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
-    val (cipher, sslContext) = SslContextFactory.standardCipher
     val elapsedTotal = TestUtil.time {
       for (size1 <- sizes) {
         logger.debug(s"Testing sizes: size1=$size1")

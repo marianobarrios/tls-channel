@@ -32,7 +32,7 @@ import javax.net.ssl.SSLSession;
  * hostname validation, client-side authentication, etc.
  * 
  * <p>
- * A TLS socket channel is created by using one of its subclasses. They will
+ * A TLS channel is created by using one of its subclasses. They will
  * take an existing {@link ByteChannel} (typically, but not necessarily, a
  * {@link SocketChannel}) and a {@link SSLEngine}.
  * 
@@ -135,7 +135,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * a {@link WouldBlockException} may be thrown. Note that this also includes
 	 * the possibility of a {@link NeedsWriteException}, due to the fact that,
 	 * during a TLS handshake, bytesProduced need to be written to the underlying
-	 * socket. In any case, after a {@link WouldBlockException}, the operation
+	 * channel. In any case, after a {@link WouldBlockException}, the operation
 	 * should be retried when the underlying channel is ready (for reading or
 	 * writing, depending on the subclass).
 	 * 
@@ -199,7 +199,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * some of the bytesProduced or possibly none at all, in this case a
 	 * {@link WouldBlockException} will be thrown. Note that this also includes
 	 * the possibility of a {@link NeedsReadException}, due to the fact that,
-	 * during a TLS handshake, bytesProduced need to be read from the underlying socket.
+	 * during a TLS handshake, bytesProduced need to be read from the underlying channel.
 	 * In any case, after a {@link WouldBlockException}, the operation should be
 	 * retried when the underlying channel is ready (for reading or writing,
 	 * depending on the subclass).

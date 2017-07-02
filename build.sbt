@@ -3,7 +3,7 @@ scalaVersion := "2.11.8"
 organization := "com.github.marianobarrios"
 version := "0.1-SNAPSHOT"
 description := "TLS Socket Channel"
-homepage := Some(url("https://github.com/marianobarrios/tls-socket-channel"))
+homepage := Some(url("https://github.com/marianobarrios/tls-channel"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
 
 publishTo := {
@@ -22,7 +22,7 @@ scalacOptions := Seq(
 	"-Ywarn-nullary-override",
 	"-Ywarn-infer-any")
 
-name := "tls-socket-channel"
+name := "tls-channel"
 
 fork in run := true
 fork in Test := true

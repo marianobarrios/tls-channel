@@ -1,5 +1,6 @@
 package tlschannel;
 
+import java.nio.channels.ByteChannel;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
