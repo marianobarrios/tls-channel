@@ -57,9 +57,9 @@ publishMavenStyle := true
 
 pomExtra := (
   <scm>
-    <url>git@github.com:marianobarrios/tls-socket-channel.git</url>
-    <connection>scm:git:git@github.com:marianobarrios/tls-socket-channel.git</connection>
-    <developerConnection>scm:git:git@github.com:marianobarrios/tls-socket-channel.git</developerConnection>
+    <url>git@github.com:marianobarrios/tls-channel.git</url>
+    <connection>scm:git:git@github.com:marianobarrios/tls-channel.git</connection>
+    <developerConnection>scm:git:git@github.com:marianobarrios/tls-channel.git</developerConnection>
   </scm>
   <developers>
     <developer>
