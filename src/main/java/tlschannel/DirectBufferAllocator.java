@@ -1,7 +1,6 @@
 package tlschannel;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.atomic.LongAdder;
 
 import engine.misc.DeallocationHelper;
 
@@ -18,32 +17,15 @@ public class DirectBufferAllocator implements BufferAllocator {
 
     private DeallocationHelper deallocationHelper = new DeallocationHelper();
 
-    private LongAdder bytesAllocated = new LongAdder();
-    private LongAdder bytesDeallocated = new LongAdder();
-
     @Override
     public ByteBuffer allocate(int size) {
-        ByteBuffer buf = ByteBuffer.allocateDirect(size);
-        bytesAllocated.add(size);
-        return buf;
+        return ByteBuffer.allocateDirect(size);
     }
 
     @Override
     public void free(ByteBuffer buffer) {
         // do not wait for GC (and finalizer) to run
-        int size = buffer.capacity();
         deallocationHelper.deallocate(buffer);
-        bytesDeallocated.add(size);
-    }
-
-    @Override
-    public long bytesAllocated() {
-        return bytesAllocated.longValue();
-    }
-
-    @Override
-    public long bytesDeallocated() {
-        return bytesDeallocated.longValue();
     }
 
 }

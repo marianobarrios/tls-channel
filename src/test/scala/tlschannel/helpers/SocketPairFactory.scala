@@ -1,41 +1,28 @@
 package tlschannel.helpers
 
-import java.net.ServerSocket
-import java.net.Socket
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
-import javax.net.ssl.SSLServerSocketFactory
 import javax.net.ssl.SSLServerSocket
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLEngine
-import java.security.KeyStore
-import java.io.FileInputStream
-import javax.net.ssl.TrustManagerFactory
-import javax.net.ssl.KeyManagerFactory
+
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import javax.crypto.Cipher
-import javax.net.ssl.SSLParameters
+
 import tlschannel.helpers.TestUtil.fnToFunction
 import tlschannel.helpers.TestUtil.fnToConsumer
-import javax.net.ssl.SSLSession
 import java.nio.channels.ByteChannel
 import java.util.Optional
-import sun.security.ssl.SSLSocketImpl
-import tlschannel.util.Util;
 
+import sun.security.ssl.SSLSocketImpl
+import tlschannel.util.Util
 import javax.net.ssl.SNIHostName
+
 import scala.collection.JavaConversions._
-import com.sun.webkit.network.ByteBufferAllocator
-import tlschannel.impl.TlsChannelImpl
-import tlschannel.TlsChannel
-import tlschannel.ClientTlsChannel
-import tlschannel.ServerTlsChannel
-import tlschannel.HeapBufferAllocator
-import tlschannel.BufferAllocator
+import tlschannel._
 
 case class SocketPair(client: SocketGroup, server: SocketGroup)
 
@@ -47,6 +34,8 @@ case class SocketGroup(external: ByteChannel, tls: TlsChannel, plain: SocketChan
  * the bytesProduced of any read or write operation.
  */
 class SocketPairFactory(val sslContext: SSLContext, val serverName: String) extends StrictLogging {
+
+  private val releaseBuffers = true
 
   def fixedCipherServerSslEngineFactory(cipher: String)(sslContext: SSLContext): SSLEngine = {
     val engine = sslContext.createSSLEngine()
@@ -69,6 +58,9 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
 
   val sslSocketFactory = sslContext.getSocketFactory
   val sslServerSocketFactory = sslContext.getServerSocketFactory
+
+  val globalPlainTrackingAllocator = new TrackingAllocator(TlsChannel.defaultPlainBufferAllocator)
+  val globalEncryptedTrackingAllocator = new TrackingAllocator(TlsChannel.defaultEncryptedBufferAllocator)
 
   private def createClientSslEngine(cipher: String, peerHost: String, peerPort: Integer): SSLEngine = {
     val engine = sslContext.createSSLEngine(peerHost, peerPort)
@@ -180,12 +172,18 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
           .newBuilder(plainClient, createClientSslEngine(cipher, serverName, chosenPort))
           .withRunTasks(runTasks)
           .withWaitForCloseConfirmation(waitForCloseConfirmation)
+          .withPlainBufferAllocator(globalPlainTrackingAllocator)
+          .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
+          .withReleaseBuffers(releaseBuffers)
           .build()
         val serverChannel = ServerTlsChannel
           .newBuilder(plainServer, sslContextFactory(serverName, sslContext) _)
           .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
           .withRunTasks(runTasks)
           .withWaitForCloseConfirmation(waitForCloseConfirmation)
+          .withPlainBufferAllocator(globalPlainTrackingAllocator)
+          .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
+          .withReleaseBuffers(releaseBuffers)
           .build()
 
         val externalClient = externalClientChunkSize match {
@@ -235,8 +233,16 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
           case None => rawServer
         }
 
-        val clientChannel = ClientTlsChannel.newBuilder(plainClient, new NullSslEngine).build()
-        val serverChannel = ServerTlsChannel.newBuilder(plainServer, new NullSslContext).build()
+        val clientChannel = ClientTlsChannel.newBuilder(plainClient, new NullSslEngine)
+          .withPlainBufferAllocator(globalPlainTrackingAllocator)
+          .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
+          .withReleaseBuffers(releaseBuffers)
+          .build()
+        val serverChannel = ServerTlsChannel.newBuilder(plainServer, new NullSslContext)
+          .withPlainBufferAllocator(globalPlainTrackingAllocator)
+          .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
+          .withReleaseBuffers(releaseBuffers)
+          .build()
 
         SocketPair(SocketGroup(clientChannel, clientChannel, rawClient), SocketGroup(serverChannel, serverChannel, rawServer))
       }
@@ -244,6 +250,25 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
       serverSocket.close()
     }
   }
+
+  def printGlobalAllocationReport() = {
+    val plainAlloc = globalPlainTrackingAllocator
+    val encryptedAlloc = globalEncryptedTrackingAllocator
+    val maxPlain = plainAlloc.maxAllocation()
+    val maxEncrypted = encryptedAlloc.maxAllocation()
+    val totalPlain = plainAlloc.bytesAllocated()
+    val totalEncrypted = encryptedAlloc.bytesAllocated()
+    val buffersAllocatedPlain = plainAlloc.buffersAllocated()
+    val buffersAllocatedEncrypted = encryptedAlloc.buffersAllocated()
+    val buffersDeallocatedPlain = plainAlloc.buffersDeallocated()
+    val buffersDeallocatedEncrypted = encryptedAlloc.buffersDeallocated()
+    println(s"Allocation report:")
+    println(s"  max allocation (bytes) - plain: $maxPlain - encrypted: $maxEncrypted")
+    println(s"  total allocation (bytes) - plain: $totalPlain - encrypted: $totalEncrypted")
+    println(s"  buffers allocated - plain: $buffersAllocatedPlain - encrypted: $buffersAllocatedEncrypted")
+    println(s"  buffers deallocated - plain: $buffersDeallocatedPlain - encrypted: $buffersDeallocatedEncrypted")
+  }
+
 }
 
 object SocketPairFactory extends StrictLogging {
@@ -253,7 +278,7 @@ object SocketPairFactory extends StrictLogging {
     checkBufferDeallocation(socketPair.client.tls.getEncryptedBufferAllocator)
   }
 
-  private def checkBufferDeallocation(allocator: BufferAllocator) = {
+  private def checkBufferDeallocation(allocator: TrackingAllocator) = {
     logger.debug(s"allocator: ${allocator}; allocated: ${allocator.bytesAllocated()}")
     logger.debug(s"allocator: ${allocator}; deallocated: ${allocator.bytesDeallocated()}")
     assert(allocator.bytesAllocated() == allocator.bytesDeallocated(), " - some buffers were not deallocated")

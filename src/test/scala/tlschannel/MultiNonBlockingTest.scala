@@ -1,20 +1,13 @@
 package tlschannel
 
-import java.nio.ByteBuffer
-import java.nio.channels.SelectionKey
-
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
-
+import org.scalatest.{BeforeAndAfterAll, ConfigMap, FunSuite, Matchers}
 import com.typesafe.scalalogging.slf4j.StrictLogging
-
 import tlschannel.helpers.NonBlockingLoops
-import tlschannel.helpers.SocketGroup
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 
-class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging with NonBlockingSuite {
+class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging with NonBlockingSuite with BeforeAndAfterAll {
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
@@ -53,6 +46,10 @@ class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging wit
       NonBlockingLoops.loop(pairs, dataSize, renegotiate = true)
     }
     printReport(report, elapsed)
+  }
+
+  override def afterAll(configMap: ConfigMap) = {
+    factory.printGlobalAllocationReport()
   }
 
 }

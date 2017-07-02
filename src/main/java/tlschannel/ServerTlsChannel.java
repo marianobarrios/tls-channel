@@ -19,10 +19,7 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.StandardConstants;
 
-import tlschannel.impl.BufferHolder;
-import tlschannel.impl.ByteBufferSet;
-import tlschannel.impl.TlsExplorer;
-import tlschannel.impl.TlsChannelImpl;
+import tlschannel.impl.*;
 import tlschannel.impl.TlsChannelImpl.EofException;
 import tlschannel.util.Util;
 
@@ -113,7 +110,7 @@ public class ServerTlsChannel implements TlsChannel {
 
 		public ServerTlsChannel build() {
 			return new ServerTlsChannel(underlying, internalSslContextFactory, sslEngineFactory, sessionInitCallback,
-					runTasks, plainBufferAllocator, encryptedBufferAllocator, waitForCloseConfirmation);
+					runTasks, plainBufferAllocator, encryptedBufferAllocator, releaseBuffers, waitForCloseConfirmation);
 		}
 
 	}
@@ -162,8 +159,9 @@ public class ServerTlsChannel implements TlsChannel {
 	private final Function<SSLContext, SSLEngine> engineFactory;
 	private final Consumer<SSLSession> sessionInitCallback;
 	private final boolean runTasks;
-	private final BufferAllocator plainBufAllocator;
-	private final BufferAllocator encryptedBufAllocator;
+	private final TrackingAllocator plainBufAllocator;
+	private final TrackingAllocator encryptedBufAllocator;
+	private final boolean releaseBuffers;
 	private final boolean waitForCloseConfirmation;
 
 	private final Lock initLock = new ReentrantLock();
@@ -183,16 +181,25 @@ public class ServerTlsChannel implements TlsChannel {
 			boolean runTasks,
 			BufferAllocator plainBufAllocator,
 			BufferAllocator encryptedBufAllocator,
+			boolean releaseBuffers,
 			boolean waitForCloseConfirmation) {
 		this.underlying = underlying;
 		this.internalSslContextFactory = internalSslContextFactory;
 		this.engineFactory = engineFactory;
 		this.sessionInitCallback = sessionInitCallback;
 		this.runTasks = runTasks;
-		this.plainBufAllocator = plainBufAllocator;
-		this.encryptedBufAllocator = encryptedBufAllocator;
+		this.plainBufAllocator = new TrackingAllocator(plainBufAllocator);
+		this.encryptedBufAllocator = new TrackingAllocator(encryptedBufAllocator);
+		this.releaseBuffers = releaseBuffers;
 		this.waitForCloseConfirmation = waitForCloseConfirmation;
-        inEncrypted = new BufferHolder("inEncrypted", Optional.empty(), encryptedBufAllocator, TlsChannelImpl.buffersInitialSize, TlsChannelImpl.maxTlsPacketSize, false /* plainData */);
+        inEncrypted = new BufferHolder(
+                "inEncrypted",
+                Optional.empty(),
+                encryptedBufAllocator,
+                TlsChannelImpl.buffersInitialSize,
+                TlsChannelImpl.maxTlsPacketSize,
+                false /* plainData */,
+                releaseBuffers);
     }
 
 	// @formatter:on
@@ -228,12 +235,12 @@ public class ServerTlsChannel implements TlsChannel {
 	}
 
 	@Override
-	public BufferAllocator getPlainBufferAllocator() {
+	public TrackingAllocator getPlainBufferAllocator() {
 		return plainBufAllocator;
 	}
 
 	@Override
-	public BufferAllocator getEncryptedBufferAllocator() {
+	public TrackingAllocator getEncryptedBufferAllocator() {
 		return encryptedBufAllocator;
 	}
 
@@ -329,7 +336,7 @@ public class ServerTlsChannel implements TlsChannel {
 				sslContext = internalSslContextFactory.getSslContext(() -> getServerNameIndication());
 				SSLEngine engine = engineFactory.apply(sslContext);
 				impl = new TlsChannelImpl(underlying, underlying, engine, Optional.of(inEncrypted), sessionInitCallback,
-						runTasks, plainBufAllocator, encryptedBufAllocator, waitForCloseConfirmation);
+						runTasks, plainBufAllocator, encryptedBufAllocator, releaseBuffers, waitForCloseConfirmation);
 				inEncrypted = null;
 				sniRead = true;
 			}

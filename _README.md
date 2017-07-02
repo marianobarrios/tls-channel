@@ -11,7 +11,8 @@ In other words, a simple library that allows the programmer to have TLS using th
 - Works for both client and server-side TLS.
 - Supports choosing different [SSLContexts](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLContext.html) according to the received [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) (SNI) sent by incoming connections (not supported at all by SSLEngine but universally used by clients).
 - Supports both blocking and non-blocking modes, using the same API, just like SocketChannel does with unencrypted connections.
-- Pluggable buffer strategy.
+- Pluggable buffer strategy (for pooling, for example).
+- Opportunistic buffer release (akin to OpenSSL's SSL_MODE_RELEASE_BUFFERS option), which significantly reduces the memory footprint of idle cached connections.
 - Full control over TLS shutdown.
 
 ### Non-features
@@ -71,9 +72,9 @@ All three alternatives have been taken by many Java libraries and applications, 
 There is of course no strict need to use SSLEngine. The two most common alternatives are:
 
 - Use the [Java Native Interface](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/) (JNI) and call OpenSSL. The Tomcat project has a widely used "[native](http://tomcat.apache.org/native-doc/)" library that easies that task. While using native code can work, this as obvious shortcomings, specially regarding distribution, type compatibility and safety.
-- "[The Legion of the Bouncy Castle](https://www.bouncycastle.org/)" has a "lightweight" TLS API that supports streaming. This works but only in blocking mode, effective just like using the old SSLSocket API.
+- "[The Legion of the Bouncy Castle](https://www.bouncycastle.org/)" has a "lightweight" TLS API that supports streaming. This works but only in blocking mode, effectively just like using the old SSLSocket API.
 
-Of course, these options imply using an alternative implementation, which may not be desired.
+Of course, these options imply using an alternative cryptographic implementation, which may not be desired.
 
 ### Existing open-source SSLEngine users
 

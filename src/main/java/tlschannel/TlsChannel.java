@@ -2,10 +2,7 @@ package tlschannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
-import java.nio.channels.GatheringByteChannel;
-import java.nio.channels.ScatteringByteChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.function.Consumer;
 
 import javax.net.ssl.SSLEngine;
@@ -60,7 +57,10 @@ import javax.net.ssl.SSLSession;
  */
 public interface TlsChannel extends ByteChannel, GatheringByteChannel, ScatteringByteChannel {
 
-	/**
+	BufferAllocator defaultPlainBufferAllocator = new HeapBufferAllocator();
+    BufferAllocator defaultEncryptedBufferAllocator = new DirectBufferAllocator();
+
+    /**
 	 * Return a reference to the underlying {@link ByteChannel}.
 	 */
 	ByteChannel getUnderlying();
@@ -82,19 +82,23 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 */
 	Consumer<SSLSession> getSessionInitCallback();
 
-	/**
-	 * Return the {@link BufferAllocator} to use for unencrypted data.
-	 * 
-	 * @see TlsChannelBuilder#withPlainBufferAllocator(BufferAllocator)
-	 */
-	BufferAllocator getPlainBufferAllocator();
+    /**
+     * Return the {@link BufferAllocator} to use for unencrypted data. Actually, a decorating subclass is returned,
+     * which contains allocation statistics for this channel.
+     *
+     * @see TlsChannelBuilder#withPlainBufferAllocator(BufferAllocator)
+     * @see TrackingAllocator
+     */
+    TrackingAllocator getPlainBufferAllocator();
 
-	/**
-	 * Return the {@link BufferAllocator} to use for encrypted data.
-	 * 
-	 * @see TlsChannelBuilder#withEncryptedBufferAllocator(BufferAllocator)
-	 */
-	BufferAllocator getEncryptedBufferAllocator();
+    /**
+     * Return the {@link BufferAllocator} to use for encrypted data. Actually, a decorating subclass is returned,
+     * which contains allocation statistics for this channel.
+     *
+     * @see TlsChannelBuilder#withEncryptedBufferAllocator(BufferAllocator)
+     * @see TrackingAllocator
+     */
+    TrackingAllocator getEncryptedBufferAllocator();
 
 	/**
 	 * Return whether CPU-intensive tasks are run or not.
@@ -168,7 +172,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * @throws IOException
 	 *             if the underlying channel throws an IOException
 	 */
-	public int read(ByteBuffer dst) throws IOException;
+	int read(ByteBuffer dst) throws IOException;
 
 	/**
 	 * Writes a sequence of bytesProduced to this channel from the given buffer.
@@ -232,7 +236,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * @throws IOException
 	 *             if the underlying channel throws an IOException
 	 */
-	public int write(ByteBuffer src) throws IOException;
+	int write(ByteBuffer src) throws IOException;
 
 	/**
 	 * Initiates a handshake (initial or renegotiation) on this channel. This
@@ -367,7 +371,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * @throws IOException
 	 *             if the underlying channel throws an IOException
 	 */
-	public long write(ByteBuffer[] srcs, int offset, int length) throws IOException;
+	long write(ByteBuffer[] srcs, int offset, int length) throws IOException;
 
 	/**
 	 * Writes a sequence of bytesProduced to this channel from the given buffers.
@@ -388,8 +392,8 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * with respect to non-blocking responses, see {@link #write(ByteBuffer)}
 	 * for more details.
 	 * 
-	 * @param src
-	 *            The buffer from which bytesProduced are to be retrieved
+	 * @param srcs
+	 *            The buffers from which bytesProduced are to be retrieved
 	 *
 	 * @return The number of bytesProduced written, contrary to the behavior specified
 	 *         in {@link ByteChannel}, this method never returns 0, but throws
@@ -413,7 +417,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * @throws IOException
 	 *             if the underlying channel throws an IOExceptions
 	 */
-	public long write(ByteBuffer[] srcs) throws IOException;
+	long write(ByteBuffer[] srcs) throws IOException;
 
 	/**
 	 * Reads a sequence of bytesProduced from this channel into a subsequence of the
@@ -464,7 +468,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * @throws IOException
 	 *             if the underlying channel throws an IOException
 	 */
-	public long read(ByteBuffer[] dsts, int offset, int length) throws IOException;
+	long read(ByteBuffer[] dsts, int offset, int length) throws IOException;
 
 	/**
 	 * Reads a sequence of bytesProduced from this channel into the given buffers.
@@ -512,7 +516,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * @throws IOException
 	 *             if the underlying channel throws an IOException
 	 */
-	public long read(ByteBuffer[] dsts) throws IOException;
+	long read(ByteBuffer[] dsts) throws IOException;
 
 	/**
 	 * Closes the underlying channel. This method first does some form of TLS
@@ -521,7 +525,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 *
 	 * <p>
 	 * The default behavior mimics what happens in a normal (that is, non
-	 * layered) {@link java.net.ssl.SSLSocket#close()}.
+	 * layered) {@link javax.net.ssl.SSLSocket#close()}.
 	 * 
 	 * <p>
 	 * For finer control of the TLS close, use {@link #shutdown()}

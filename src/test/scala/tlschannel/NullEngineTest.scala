@@ -1,26 +1,21 @@
 package tlschannel
 
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
+import org.scalatest.{BeforeAndAfterAll, ConfigMap, FunSuite, Matchers}
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import java.nio.channels.ByteChannel
+
 import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
-import java.nio.ByteBuffer
-import scala.util.Random
-import tlschannel.helpers.TestUtil.functionToRunnable
+
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
-import tlschannel.helpers.SocketGroup
 import tlschannel.helpers.Loops
-import tlschannel.helpers.SocketPair
 
 /**
  * Test using a null engine (pass-through).	The purpose of the test is to remove
  * the overhead of the real {@link SSLEngine} to be able to test the overhead of the
  * {@link TlsSocketChannel}.
  */
-class NullEngineTest extends FunSuite with Matchers with StrictLogging {
+class NullEngineTest extends FunSuite with Matchers with StrictLogging with BeforeAndAfterAll {
 
   val (cipher, sslContext) = SslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
@@ -65,6 +60,10 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging {
       }
     }
     info(f"Total time: ${elapsedTotal / 1000}%5d ms")
+  }
+
+  override def afterAll(configMap: ConfigMap) = {
+    factory.printGlobalAllocationReport()
   }
 
 }

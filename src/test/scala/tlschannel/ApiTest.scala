@@ -6,17 +6,12 @@ import java.nio.channels.Channels
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-import java.io.IOException
 import javax.net.ssl.SSLContext
-import java.util.function.Consumer
-import javax.net.ssl.SSLEngine
 import javax.net.ssl.SSLSession
 
 import tlschannel.helpers.TestUtil.fnToConsumer
 import tlschannel.impl.{BufferHolder, ByteBufferSet, TlsChannelImpl}
 import java.util.Optional
-
-import tlschannel.helpers.TestUtil
 
 class ApiTest extends FunSuite with Matchers {
 
@@ -34,8 +29,9 @@ class ApiTest extends FunSuite with Matchers {
       Optional.empty[BufferHolder],
       (_: SSLSession) => (),
       true,
-      new HeapBufferAllocator,
-      new HeapBufferAllocator,
+      new TrackingAllocator(new HeapBufferAllocator),
+      new TrackingAllocator(new HeapBufferAllocator),
+      true /* releaseBuffers */,
       false /* waitForCloseConfirmation */)
   }
 

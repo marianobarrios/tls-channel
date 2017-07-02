@@ -38,7 +38,7 @@ public class ClientTlsChannel implements TlsChannel {
 
 		public ClientTlsChannel build() {
 			return new ClientTlsChannel(underlying, sslEngine, sessionInitCallback, runTasks, plainBufferAllocator,
-					encryptedBufferAllocator, waitForCloseConfirmation);
+					encryptedBufferAllocator, releaseBuffers, waitForCloseConfirmation);
 		}
 
 	}
@@ -59,13 +59,22 @@ public class ClientTlsChannel implements TlsChannel {
 	private final ByteChannel underlying;
 	private final TlsChannelImpl impl;
 
-	private ClientTlsChannel(ByteChannel underlying, SSLEngine engine, Consumer<SSLSession> sessionInitCallback,
-			boolean runTasks, BufferAllocator plainBufferAllocator, BufferAllocator encryptedBufferAllocator, boolean waitForCloseNotifyOnClose) {
+	private ClientTlsChannel(
+			ByteChannel underlying,
+			SSLEngine engine,
+			Consumer<SSLSession> sessionInitCallback,
+			boolean runTasks,
+			BufferAllocator plainBufAllocator,
+			BufferAllocator encryptedBufAllocator,
+			boolean releaseBuffers,
+			boolean waitForCloseNotifyOnClose) {
 		if (!engine.getUseClientMode())
 			throw new IllegalArgumentException("SSLEngine must be in client mode");
 		this.underlying = underlying;
+		TrackingAllocator trackingPlainBufAllocator = new TrackingAllocator(plainBufAllocator);
+		TrackingAllocator trackingEncryptedAllocator = new TrackingAllocator(encryptedBufAllocator);
 		impl = new TlsChannelImpl(underlying, underlying, engine, Optional.empty(), sessionInitCallback, runTasks,
-				plainBufferAllocator, encryptedBufferAllocator, waitForCloseNotifyOnClose);
+				trackingPlainBufAllocator, trackingEncryptedAllocator, releaseBuffers, waitForCloseNotifyOnClose);
 	}
 
 	@Override
@@ -84,12 +93,12 @@ public class ClientTlsChannel implements TlsChannel {
 	}
 
 	@Override
-	public BufferAllocator getPlainBufferAllocator() {
+	public TrackingAllocator getPlainBufferAllocator() {
 		return impl.getPlainBufferAllocator();
 	}
 
 	@Override
-	public BufferAllocator getEncryptedBufferAllocator() {
+	public TrackingAllocator getEncryptedBufferAllocator() {
 		return impl.getEncryptedBufferAllocator();
 	}
 

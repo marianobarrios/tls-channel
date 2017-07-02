@@ -16,19 +16,43 @@ public class BufferHolder {
     public final BufferAllocator allocator;
     public final boolean plainData;
     public final int maxSize;
+    public final boolean opportunisticDispose;
 
     public ByteBuffer buffer;
+    public int lastSize;
 
-    public BufferHolder(String name, Optional<ByteBuffer> buffer, BufferAllocator allocator, int initialSize, int maxSize, boolean plainData) {
+    public BufferHolder(String name, Optional<ByteBuffer> buffer, BufferAllocator allocator, int initialSize, int maxSize, boolean plainData, boolean opportunisticDispose) {
         this.name = name;
         this.allocator = allocator;
         this.buffer = buffer.orElseGet(() -> allocator.allocate(initialSize));
         this.maxSize = maxSize;
         this.plainData = plainData;
+        this.opportunisticDispose = opportunisticDispose;
+        this.lastSize = this.buffer.capacity();
     }
 
-    public void dispose() {
-        allocator.free(buffer);
+    public boolean disposeIfEmpty() {
+       if (opportunisticDispose && buffer.position() == 0) {
+           return dispose();
+       } else {
+           return false;
+       }
+    }
+
+    public boolean dispose() {
+        if (buffer != null) {
+            allocator.free(buffer);
+            buffer = null;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void recover() {
+        if (buffer == null) {
+            buffer = allocator.allocate(lastSize);
+        }
     }
 
     public void resize(int newCapacity) {
@@ -57,6 +81,7 @@ public class BufferHolder {
         }
         allocator.free(buffer);
         buffer = newBuffer;
+        lastSize = newCapacity;
     }
 
     /**
@@ -83,6 +108,10 @@ public class BufferHolder {
         buffer.position(0);
         buffer.put(zeros, 0, buffer.remaining());
         buffer.reset();
+    }
+
+    public boolean nullOrEmpty() {
+        return buffer == null || buffer.position() == 0;
     }
 
 }

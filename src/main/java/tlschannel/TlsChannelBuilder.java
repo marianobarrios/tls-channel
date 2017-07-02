@@ -1,9 +1,11 @@
 package tlschannel;
 
+import java.io.IOException;
 import java.nio.channels.ByteChannel;
 import java.util.function.Consumer;
 
 import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 
 public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 
@@ -13,8 +15,9 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 	Consumer<SSLSession> sessionInitCallback = session -> {};
 	// @formatter:on
 	boolean runTasks = true;
-	BufferAllocator plainBufferAllocator = new HeapBufferAllocator();
-	BufferAllocator encryptedBufferAllocator = new DirectBufferAllocator();
+	BufferAllocator plainBufferAllocator = TlsChannel.defaultPlainBufferAllocator;
+	BufferAllocator encryptedBufferAllocator = TlsChannel.defaultEncryptedBufferAllocator;
+	boolean releaseBuffers = true;
 	boolean waitForCloseConfirmation = false;
 
 	TlsChannelBuilder(ByteChannel underlying) {
@@ -62,6 +65,22 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 	 */
 	public T withSessionInitCallback(Consumer<SSLSession> sessionInitCallback) {
 		this.sessionInitCallback = sessionInitCallback;
+		return getThis();
+	}
+
+	/**
+	 * Whether to release unused buffers in the mid of connections. Equivalent to
+	 * OpenSSL's SSL_MODE_RELEASE_BUFFERS.
+	 * <p>
+	 * Default is to release. Releasing unused buffers is specially effective
+	 * in the case case of idle long-lived connections, when the memory footprint
+	 * can be reduced significantly. A potential reason for setting this value
+	 * to <code>false</code> is performance, since more releases means more
+	 * allocations, which have a cost. This is effectively a memory-time trade-off.
+	 * However, in most cases the default behavior makes sense.
+	 */
+	public T withReleaseBuffers(boolean releaseBuffers) {
+		this.releaseBuffers = releaseBuffers;
 		return getThis();
 	}
 
