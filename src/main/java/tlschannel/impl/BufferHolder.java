@@ -24,14 +24,20 @@ public class BufferHolder {
     public BufferHolder(String name, Optional<ByteBuffer> buffer, BufferAllocator allocator, int initialSize, int maxSize, boolean plainData, boolean opportunisticDispose) {
         this.name = name;
         this.allocator = allocator;
-        this.buffer = buffer.orElseGet(() -> allocator.allocate(initialSize));
+        this.buffer = buffer.orElse(null);
         this.maxSize = maxSize;
         this.plainData = plainData;
         this.opportunisticDispose = opportunisticDispose;
-        this.lastSize = this.buffer.capacity();
+        this.lastSize = buffer.map(b -> b.capacity()).orElse(initialSize);
     }
 
-    public boolean disposeIfEmpty() {
+    public void prepare() {
+        if (buffer == null) {
+            buffer = allocator.allocate(lastSize);
+        }
+    }
+
+    public boolean release() {
        if (opportunisticDispose && buffer.position() == 0) {
            return dispose();
        } else {
@@ -46,12 +52,6 @@ public class BufferHolder {
             return true;
         } else {
             return false;
-        }
-    }
-
-    public void recover() {
-        if (buffer == null) {
-            buffer = allocator.allocate(lastSize);
         }
     }
 

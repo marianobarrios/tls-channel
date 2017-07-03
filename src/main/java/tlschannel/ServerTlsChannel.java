@@ -346,25 +346,30 @@ public class ServerTlsChannel implements TlsChannel {
 	}
 
 	private Optional<String> getServerNameIndication() throws IOException, EofException {
-		Util.assertTrue(inEncrypted.buffer.position() == 0);
-		int recordHeaderSize = readRecordHeaderSize();
-		while (inEncrypted.buffer.position() < recordHeaderSize) {
-			if (!inEncrypted.buffer.hasRemaining()) {
-			    inEncrypted.enlarge();
-			}
-			TlsChannelImpl.readFromChannel(underlying, inEncrypted.buffer); // IO block
-		}
-        inEncrypted.buffer.flip();
-		Map<Integer, SNIServerName> serverNames = TlsExplorer.explore(inEncrypted.buffer);
-        inEncrypted.buffer.compact();
-		SNIServerName hostName = serverNames.get(StandardConstants.SNI_HOST_NAME);
-		if (hostName != null && hostName instanceof SNIHostName) {
-			SNIHostName sniHostName = (SNIHostName) hostName;
-			return Optional.of(sniHostName.getAsciiName());
-		} else {
-			return Optional.empty();
-		}
-	}
+		Util.assertTrue(inEncrypted.nullOrEmpty());
+		inEncrypted.prepare();
+		try {
+            int recordHeaderSize = readRecordHeaderSize();
+            while (inEncrypted.buffer.position() < recordHeaderSize) {
+                if (!inEncrypted.buffer.hasRemaining()) {
+                    inEncrypted.enlarge();
+                }
+                TlsChannelImpl.readFromChannel(underlying, inEncrypted.buffer); // IO block
+            }
+            inEncrypted.buffer.flip();
+            Map<Integer, SNIServerName> serverNames = TlsExplorer.explore(inEncrypted.buffer);
+            inEncrypted.buffer.compact();
+            SNIServerName hostName = serverNames.get(StandardConstants.SNI_HOST_NAME);
+            if (hostName != null && hostName instanceof SNIHostName) {
+                SNIHostName sniHostName = (SNIHostName) hostName;
+                return Optional.of(sniHostName.getAsciiName());
+            } else {
+                return Optional.empty();
+            }
+        } finally {
+		    inEncrypted.release();
+        }
+    }
 
 	private int readRecordHeaderSize() throws IOException, EofException {
 		while (inEncrypted.buffer.position() < TlsExplorer.RECORD_HEADER_SIZE) {
