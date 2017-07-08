@@ -1,6 +1,7 @@
 package tlschannel;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAccumulator;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -13,8 +14,8 @@ public class TrackingAllocator implements BufferAllocator {
 
     private LongAdder bytesAllocatedAdder = new LongAdder();
     private LongAdder bytesDeallocatedAdder = new LongAdder();
-    private LongAdder currentAllocationSizeAdder = new LongAdder();
-    private LongAccumulator maxAllocationSizeAcc = new LongAccumulator(Math::max, Long.MIN_VALUE);
+    private AtomicLong currentAllocationSize = new AtomicLong();
+    private LongAccumulator maxAllocationSizeAcc = new LongAccumulator(Math::max, 0);
 
     private LongAdder buffersAllocatedAdder = new LongAdder();
     private LongAdder buffersDeallocatedAdder = new LongAdder();
@@ -25,7 +26,7 @@ public class TrackingAllocator implements BufferAllocator {
 
     public ByteBuffer allocate(int size) {
         bytesAllocatedAdder.add(size);
-        currentAllocationSizeAdder.add(size);
+        currentAllocationSize.addAndGet(size);
         buffersAllocatedAdder.increment();
         return impl.allocate(size);
     }
@@ -33,8 +34,8 @@ public class TrackingAllocator implements BufferAllocator {
     public void free(ByteBuffer buffer) {
         int size = buffer.capacity();
         bytesDeallocatedAdder.add(size);
-        maxAllocationSizeAcc.accumulate(currentAllocationSizeAdder.longValue());
-        currentAllocationSizeAdder.add(-size);
+        maxAllocationSizeAcc.accumulate(currentAllocationSize.longValue());
+        currentAllocationSize.addAndGet(-size);
         buffersDeallocatedAdder.increment();
         impl.free(buffer);
     }
@@ -48,7 +49,7 @@ public class TrackingAllocator implements BufferAllocator {
     }
 
     public long currentAllocation() {
-        return currentAllocationSizeAdder.longValue();
+        return currentAllocationSize.longValue();
     }
 
     public long maxAllocation() {
