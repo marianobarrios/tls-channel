@@ -6,7 +6,6 @@ import java.security.MessageDigest
 import scala.util.Random
 import org.scalatest.Matchers
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import tlschannel.BufferAllocator
 import tlschannel.helpers.TestUtil.Memo
 import tlschannel.helpers.TestUtil.functionToRunnable
 
