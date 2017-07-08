@@ -48,10 +48,7 @@ public class ByteBufferSet {
 				break;
 			ByteBuffer dstBuffer = array[i];
 			int bytes = Math.min(from.remaining(), dstBuffer.remaining());
-			ByteBuffer tmp = from.duplicate();
-			tmp.limit(from.position() + bytes);
-			dstBuffer.put(tmp);
-			from.position(from.position() + bytes);
+			ByteBufferUtil.copy(from, dstBuffer, bytes);
 			totalBytes += bytes;
 		}
 		return totalBytes;
@@ -59,18 +56,20 @@ public class ByteBufferSet {
 
 
 	public ByteBufferSet put(ByteBuffer from, int length) {
+		if (from.remaining() < length) {
+			throw new IllegalArgumentException();
+		}
 		if (remaining() < length) {
 			throw new IllegalArgumentException();
 		}
 		int totalBytes = 0;
 		for (int i = offset; i < offset + this.length; i++) {
 			int pending = length - totalBytes;
+            if (pending == 0)
+                break;
 			int bytes = Math.min(pending, (int) remaining());
 			ByteBuffer dstBuffer = array[i];
-			ByteBuffer tmp = from.duplicate();
-			tmp.limit(from.position() + bytes);
-			dstBuffer.put(tmp);
-			from.position(from.position() + bytes);
+			ByteBufferUtil.copy(from, dstBuffer, bytes);
 			totalBytes += bytes;
 		}
 		return this;
@@ -83,28 +82,27 @@ public class ByteBufferSet {
 				break;
 			ByteBuffer srcBuffer = array[i];
 			int bytes = Math.min(dst.remaining(), srcBuffer.remaining());
-			ByteBuffer tmp = srcBuffer.duplicate();
-			tmp.limit(srcBuffer.position() + bytes);
-			dst.put(tmp);
-			srcBuffer.position(srcBuffer.position() + bytes);
+			ByteBufferUtil.copy(srcBuffer, dst, bytes);
 			totalBytes += bytes;
 		}
 		return totalBytes;
 	}
 	
 	public ByteBufferSet get(ByteBuffer dst, int length) {
+		if (remaining() < length) {
+			throw new IllegalArgumentException();
+		}
 		if (dst.remaining() < length) {
 			throw new IllegalArgumentException();
 		}
 		int totalBytes = 0;
 		for (int i = offset; i < offset + this.length; i++) {
 			int pending = length - totalBytes;
+			if (pending == 0)
+			    break;
 			ByteBuffer srcBuffer = array[i];
 			int bytes = Math.min(pending, srcBuffer.remaining());
-			ByteBuffer tmp = srcBuffer.duplicate();
-			tmp.limit(srcBuffer.position() + bytes);
-			dst.put(tmp);
-			srcBuffer.position(srcBuffer.position() + bytes);
+			ByteBufferUtil.copy(srcBuffer, dst, bytes);
 			totalBytes += bytes;
 		}
 		return this;
