@@ -95,37 +95,35 @@ object NonBlockingLoops extends Matchers {
         try {
           endpoint match {
             case writer: WriterEndpoint =>
-              val buffer = writer.buffer
-              while (writer.remaining > 0) {
+              do {
                 if (renegotiationCount < maxRenegotiations) {
                   if (random.nextBoolean()) {
                     renegotiationCount += 1
                     writer.socketGroup.tls.renegotiate()
                   }
                 }
-                if (!buffer.hasRemaining()) {
-                  writer.random.nextBytes(buffer.array())
-                  buffer.position(0)
-                  buffer.limit(math.min(buffer.capacity, writer.remaining))
+                if (!writer.buffer.hasRemaining()) {
+                  writer.random.nextBytes(writer.buffer.array())
+                  writer.buffer.position(0)
+                  writer.buffer.limit(math.min(writer.buffer.capacity, writer.remaining))
                 }
-                val oldPosition = buffer.position
+                val oldPosition = writer.buffer.position
                 try {
-                  val c = writer.socketGroup.external.write(buffer)
-                  assert(c > 0) // the necessity of blocking is communicated with exceptions
+                  val c = writer.socketGroup.external.write(writer.buffer)
+                  assert(c >= 0) // the necessity of blocking is communicated with exceptions
                 } finally {
-                  val bytesWriten = buffer.position - oldPosition
+                  val bytesWriten = writer.buffer.position - oldPosition
                   writer.remaining -= bytesWriten
                 }
-              }
+              } while (writer.remaining > 0)
             case reader: ReaderEndpoint =>
-              val buffer = reader.buffer
-              while (reader.remaining > 0) {
-                buffer.clear()
-                val c = reader.socketGroup.external.read(buffer)
+              do {
+                reader.buffer.clear()
+                val c = reader.socketGroup.external.read(reader.buffer)
                 assert(c > 0) // the necessity of blocking is communicated with exceptions
-                reader.digest.update(buffer.array, 0, c)
+                reader.digest.update(reader.buffer.array, 0, c)
                 reader.remaining -= c
-              }
+              } while (reader.remaining > 0)
           }
         } catch {
           case e: NeedsWriteException =>

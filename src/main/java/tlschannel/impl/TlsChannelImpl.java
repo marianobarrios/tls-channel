@@ -339,9 +339,11 @@ public class TlsChannelImpl implements ByteChannel {
 	// write
 
 	public long write(ByteBufferSet source) throws IOException {
-		long bytesToConsume = source.remaining();
-		if (bytesToConsume == 0)
-			return 0;
+		/*
+		 * Note that we should enter the write loop even in the case that the source buffer has no remaining bytes,
+		 * as it could be the case, in non-blocking usage, that the user is forced to call write again after the
+		 * underlying channel is available for writing, just to write pending encrypted bytes.
+		 */
 		handshake();
 		writeLock.lock();
 		try {
