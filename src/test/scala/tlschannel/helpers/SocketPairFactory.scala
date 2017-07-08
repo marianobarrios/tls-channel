@@ -206,15 +206,14 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
 
   def nullNioNio(internalClientChunkSize: Option[Int], internalServerChunkSize: Option[Int],
     encryptedBufferAllocator: BufferAllocator): SocketPair = {
-    nullNioNioN(1, internalClientChunkSize, internalServerChunkSize, true, encryptedBufferAllocator).head
+    nullNioNioN(1, internalClientChunkSize, internalServerChunkSize, encryptedBufferAllocator).head
   }
 
   def nullNioNioN(
     qtty: Int,
     internalClientChunkSize: Option[Int],
     internalServerChunkSize: Option[Int],
-    runTasks: Boolean = true,
-    encryptedBufferAllocator: BufferAllocator): Seq[SocketPair] = {
+    encryptedBufferAllocator: BufferAllocator = globalEncryptedTrackingAllocator): Seq[SocketPair] = {
     val serverSocket = ServerSocketChannel.open()
     try {
       serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
@@ -235,12 +234,12 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
 
         val clientChannel = ClientTlsChannel.newBuilder(plainClient, new NullSslEngine)
           .withPlainBufferAllocator(globalPlainTrackingAllocator)
-          .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
+          .withEncryptedBufferAllocator(encryptedBufferAllocator)
           .withReleaseBuffers(releaseBuffers)
           .build()
         val serverChannel = ServerTlsChannel.newBuilder(plainServer, new NullSslContext)
           .withPlainBufferAllocator(globalPlainTrackingAllocator)
-          .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
+          .withEncryptedBufferAllocator(encryptedBufferAllocator)
           .withReleaseBuffers(releaseBuffers)
           .build()
 
