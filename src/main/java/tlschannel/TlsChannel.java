@@ -199,7 +199,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 * some of the bytesProduced or possibly none at all, in this case a
 	 * {@link WouldBlockException} will be thrown. Note that this also includes
 	 * the possibility of a {@link NeedsReadException}, due to the fact that,
-	 * during a TLS handshake, bytesProduced need to be read from the underlying channel.
+	 * during a TLS handshake, bytes need to be read from the underlying channel.
 	 * In any case, after a {@link WouldBlockException}, the operation should be
 	 * retried when the underlying channel is ready (for reading or writing,
 	 * depending on the subclass).
