@@ -32,7 +32,7 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging with Befo
         val socketPair = factory.nullNioNio(
           internalClientChunkSize = Some(size1),
           internalServerChunkSize = Some(size1),
-          new HeapBufferAllocator)
+          factory.globalPlainTrackingAllocator)
         val elapsed = TestUtil.time {
           Loops.halfDuplex(socketPair, dataSize)
         }
@@ -50,7 +50,7 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging with Befo
         val socketPair = factory.nullNioNio(
           internalClientChunkSize = Some(size1),
           internalServerChunkSize = Some(size1),
-          new DirectBufferAllocator)
+          factory.globalEncryptedTrackingAllocator)
         val elapsed = TestUtil.time {
           Loops.halfDuplex(socketPair, dataSize)
         }
