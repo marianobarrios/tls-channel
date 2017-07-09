@@ -5,13 +5,15 @@ import javax.net.ssl.SSLEngineResult.HandshakeStatus
 import java.nio.ByteBuffer
 import javax.net.ssl.SSLEngineResult
 import javax.net.ssl.SSLEngineResult.Status
+
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import tlschannel.impl.ByteBufferSet
+import org.scalatest.Assertions
+import tlschannel.impl.{ByteBufferSet, ByteBufferUtil}
 
 /*
  * "Null" {@link SSLEngine} that does nothing to the bytesProduced.
  */
-class NullSslEngine extends SSLEngine with StrictLogging {
+class NullSslEngine extends SSLEngine with StrictLogging with Assertions {
 
   /**
    * Internal buffers are still used to prevent any underlying optimization of
@@ -46,17 +48,16 @@ class NullSslEngine extends SSLEngine with StrictLogging {
   val wrapBuffer = ByteBuffer.allocate(bufferSize)
 
   def unwrap(src: ByteBuffer, dsts: Array[ByteBuffer], offset: Int, length: Int): SSLEngineResult = {
-    val srcSet = new ByteBufferSet(src)
     val dstSet = new ByteBufferSet(dsts, offset, length)
-    if (!srcSet.hasRemaining)
+    if (!src.hasRemaining)
       return new SSLEngineResult(Status.BUFFER_UNDERFLOW, HandshakeStatus.NOT_HANDSHAKING, 0, 0)
-    val unwrapSize = math.min(unwrapBuffer.capacity, src.remaining).asInstanceOf[Int]
+    val unwrapSize = math.min(unwrapBuffer.capacity, src.remaining)
     if (dstSet.remaining < unwrapSize)
       return new SSLEngineResult(Status.BUFFER_OVERFLOW, HandshakeStatus.NOT_HANDSHAKING, 0, 0)
     unwrapBuffer.clear()
-    srcSet.get(unwrapBuffer, unwrapSize)
+    ByteBufferUtil.copy(src, unwrapBuffer, unwrapSize);
     unwrapBuffer.flip()
-    dstSet.put(unwrapBuffer, unwrapSize)
+    dstSet.putRemaining(unwrapBuffer)
     return new SSLEngineResult(Status.OK, HandshakeStatus.NOT_HANDSHAKING, unwrapSize, unwrapSize)
   }
 
