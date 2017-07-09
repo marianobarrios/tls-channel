@@ -92,11 +92,7 @@ HTTP client/server | [Apache HttpComponents](https://hc.apache.org/) | [org.apac
 HTTP server | [Jetty](Jetty) | [org.eclipse.jetty.io.ssl.SslConnection](https://github.com/eclipse/jetty.project/blob/master/jetty-io/src/main/java/org/eclipse/jetty/io/ssl/SslConnection.java)
 Distributed file system | [XtreemFS](http://www.xtreemfs.org/) | [org.xtreemfs.foundation.pbrpc.channels.SSLChannelIO](https://github.com/xtreemfs/xtreemfs/blob/master/java/xtreemfs-foundation/src/main/java/org/xtreemfs/foundation/pbrpc/channels/SSLChannelIO.java)
 Tor client | [Orchid](https://subgraph.com/orchid/index.en.html) | [com.subgraph.orchid.sockets.sslengine.SSLEngineManager](https://github.com/subgraph/Orchid/blob/master/src/com/subgraph/orchid/sockets/sslengine/SSLEngineManager.java)
-
-## Usage
-
-TODO
-
+    
 ## Implementation
 
 ### Requirements
@@ -106,6 +102,10 @@ TLS Channel requires Java 8.
 ### Size and Dependencies
 
 TLS Channel has no dependencies. The only necessary jar file size is below 50 KB.
+
+## Similiar efforts
+
+- [NIO SSL](https://github.com/baswerc/niossl) is a simple library with a similar purpose, writen by Corey Baswell.
 
 ## Credits
 
