@@ -30,7 +30,7 @@ class NullMultiNonBlockingTest extends FunSuite with Matchers with NonBlockingSu
   }
 
   override def afterAll(configMap: ConfigMap) = {
-    printGlobalAllocationReport(factory)
+    factory.printGlobalAllocationReport()
   }
 
 }
