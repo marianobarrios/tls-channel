@@ -101,11 +101,15 @@ TLS Channel requires Java 8.
 
 ### Size and Dependencies
 
-TLS Channel has no dependencies. The only necessary jar file size is below 50 KB.
+The library has only one dependency: [SLF4J](https://www.slf4j.org/). The main jar file size is below 50 KB.
 
-## Similiar efforts
+### Logging
 
-- [NIO SSL](https://github.com/baswerc/niossl) is a simple library with a similar purpose, writen by Corey Baswell.
+The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most widely used pluggable logging framework for the JVM. As a policy, _all_ logging event emitted are at `TRACE` level, which is below the default threshold in most logging implementations and thus completely silent by default.
+
+## Similar efforts
+
+- [NIO SSL](https://github.com/baswerc/niossl) is a simple library with a similar purpose, written by Corey Baswell.
 
 ## Credits
 
