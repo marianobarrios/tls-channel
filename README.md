@@ -13,7 +13,7 @@ In other words, a simple library that allows the programmer to have TLS using th
 - Works for both client and server-side TLS.
 - Supports choosing different [SSLContexts](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLContext.html) according to the received [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) (SNI) sent by incoming connections (not supported at all by SSLEngine but universally used by clients).
 - Supports both blocking and non-blocking modes, using the same API, just like SocketChannel does with unencrypted connections.
-- Pluggable buffer strategy (for pooling, for example).
+- Pluggable buffer strategy (to do buffer pooling, or to use direct buffers for IO).
 - Opportunistic buffer release (akin to OpenSSL's SSL_MODE_RELEASE_BUFFERS option), which significantly reduces the memory footprint of idle cached connections.
 - Full control over TLS shutdown.
 
