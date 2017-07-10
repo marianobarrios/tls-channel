@@ -5,6 +5,8 @@ TLS Channel is a library that implements a [ByteChannel](https://docs.oracle.com
 
 In other words, a simple library that allows the programmer to have TLS using the same standard socket API used for plaintext, just like OpenSSL does for C, only for Java, filling a specially painful missing feature of the standard Java library.
 
+[![Build Status](https://travis-ci.org/marianobarrios/tls-channel.svg?branch=master)](https://travis-ci.org/marianobarrios/tls-channel)
+
 ### Main features
 
 - Implements [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html), [GatheringByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/GatheringByteChannel.html) and [ScatteringByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ScatteringByteChannel.html), the same interfaces implemented by [SocketChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/SocketChannel.html), effectively making encryption an implementation detail. There is no need to directly call SSLEngine at all.
