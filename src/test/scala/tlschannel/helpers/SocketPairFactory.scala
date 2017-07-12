@@ -9,11 +9,9 @@ import javax.net.ssl.SSLServerSocket
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLEngine
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import javax.crypto.Cipher
 
-import tlschannel.helpers.TestUtil.fnToFunction
-import tlschannel.helpers.TestUtil.fnToConsumer
 import java.nio.channels.ByteChannel
 import java.util.Optional
 
@@ -103,7 +101,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
     val rawServer = serverSocket.accept()
     serverSocket.close()
     val server = ServerTlsChannel
-      .newBuilder(rawServer, sslContextFactory(serverName, sslContext) _)
+      .newBuilder(rawServer, nameOpt => sslContextFactory(serverName, sslContext)(nameOpt))
       .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
       .build()
     (client, SocketGroup(server, server, rawServer))
@@ -177,7 +175,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) exte
           .withReleaseBuffers(releaseBuffers)
           .build()
         val serverChannel = ServerTlsChannel
-          .newBuilder(plainServer, sslContextFactory(serverName, sslContext) _)
+          .newBuilder(plainServer, nameOpt => sslContextFactory(serverName, sslContext)(nameOpt))
           .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
           .withRunTasks(runTasks)
           .withWaitForCloseConfirmation(waitForCloseConfirmation)

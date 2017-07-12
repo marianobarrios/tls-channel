@@ -6,9 +6,8 @@ import java.nio.channels.ClosedChannelException
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import tlschannel.helpers._
-import tlschannel.helpers.TestUtil.functionToRunnable
 import java.nio.channels.AsynchronousCloseException
 
 class CloseTest extends FunSuite with Matchers with StrictLogging {

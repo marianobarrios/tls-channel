@@ -51,10 +51,6 @@ public final class TlsExplorer {
 		}
 	}
 
-	public final static int getRequiredSize(byte[] source, int offset, int length) {
-		return getRequiredSize(ByteBuffer.wrap(source, offset, length).asReadOnlyBuffer());
-	}
-
 	public final static Map<Integer, SNIServerName> explore(ByteBuffer source) throws SSLProtocolException {
 		if (source.remaining() < RECORD_HEADER_SIZE)
 			throw new BufferUnderflowException();
@@ -75,11 +71,6 @@ public final class TlsExplorer {
 		} finally {
 			source.reset();
 		}
-	}
-
-	public final static Map<Integer, SNIServerName> explore(byte[] source, int offset, int length)
-			throws SSLProtocolException {
-		return explore(ByteBuffer.wrap(source, offset, length).asReadOnlyBuffer());
 	}
 
 	/*

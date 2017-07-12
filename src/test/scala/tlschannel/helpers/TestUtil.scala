@@ -1,8 +1,10 @@
 package tlschannel.helpers
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
-import java.util.function.Consumer
+import java.time.Duration
+
+import com.typesafe.scalalogging.StrictLogging
 import java.util.concurrent.ConcurrentHashMap
+
 import scala.collection.JavaConversions._
 
 object TestUtil extends StrictLogging {
@@ -20,35 +22,17 @@ object TestUtil extends StrictLogging {
     }
   }
 
-  def time[A](thunk: => A): (A, Long) = {
+  def time[A](thunk: => A): (A, Duration) = {
     val start = System.nanoTime()
     val res = thunk
-    val time = (System.nanoTime() - start) / 1000
+    val time = Duration.ofNanos(System.nanoTime() - start)
     (res, time)
   }
 
-  def time[A](thunk: => Unit): Long = {
+  def time[A](thunk: => Unit): Duration = {
     val start = System.nanoTime()
     thunk
-    (System.nanoTime() - start) / 1000
-  }
-
-  implicit def functionToRunnable(fn: () => Unit): Runnable = {
-    new Runnable {
-      def run() = fn()
-    }
-  }
-
-  implicit def fnToConsumer[A](fn: A => Unit): Consumer[A] = {
-    new Consumer[A] {
-      def accept(a: A) = fn(a)
-    }
-  }
-
-  implicit def fnToFunction[A, B](fn: A => B): java.util.function.Function[A, B] = {
-    new java.util.function.Function[A, B] {
-      def apply(a: A): B = fn(a)
-    }
+    Duration.ofNanos(System.nanoTime() - start)
   }
 
   implicit class StreamWithTakeWhileInclusive[A](stream: Stream[A]) {

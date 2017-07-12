@@ -1,7 +1,7 @@
 package tlschannel
 
-import org.scalatest.{BeforeAndAfterAll, ConfigMap, FunSuite, Matchers}
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
+import com.typesafe.scalalogging.StrictLogging
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
@@ -48,7 +48,7 @@ class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging wit
     printReport(report, elapsed)
   }
 
-  override def afterAll(configMap: ConfigMap) = {
+  override def afterAll() = {
     factory.printGlobalAllocationReport()
   }
 

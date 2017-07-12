@@ -6,11 +6,14 @@ import javax.net.ssl.TrustManagerFactory
 import java.security.KeyStore
 
 object SslContextFactory {
-    
+
+
+
   val certificateCommonName = "name" // must match what's in the certificates
   
   val authenticatedContext = {
     val sslContext = SSLContext.getInstance("TLSv1.2")
+
     val ks = KeyStore.getInstance("JKS");
     for (keystoreFile <- resource.managed(getClass.getClassLoader.getResourceAsStream("keystore.jks"))) {
       ks.load(keystoreFile, "password".toCharArray())

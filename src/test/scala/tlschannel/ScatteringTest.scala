@@ -3,13 +3,12 @@ package tlschannel
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 
 import tlschannel.helpers.Loops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
-import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
 
 class ScatteringTest extends FunSuite with Matchers with StrictLogging {
 
@@ -24,7 +23,7 @@ class ScatteringTest extends FunSuite with Matchers with StrictLogging {
     val elapsed = TestUtil.time {
       Loops.halfDuplex(socketPair, dataSize, scattering = true)
     }
-    info(f"${elapsed / 1000}%5d ms")
+    info(f"$elapsed%5s")
   }
 
 }

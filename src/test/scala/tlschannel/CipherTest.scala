@@ -2,12 +2,11 @@ package tlschannel
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import java.nio.channels.ByteChannel
 import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
 import java.nio.ByteBuffer
 import scala.util.Random
-import tlschannel.helpers.TestUtil.functionToRunnable
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
@@ -36,7 +35,8 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
         val elapsed = TestUtil.time {
           Loops.halfDuplex(socketPair, dataSize, renegotiation = true)
         }
-        info(f"$cipher%-45s - ${elapsed / 1000}%5d ms")
+        val protocol = socketPair.client.tls.getSslEngine.getSession.getProtocol
+        info(f"$protocol%-12s $cipher%-50s ${elapsed.toMillis}%6s ms")
       }
     }
   }
@@ -52,7 +52,8 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
         val elapsed = TestUtil.time {
           Loops.fullDuplex(socketPair, dataSize)
         }
-        info(f"$cipher%-45s - ${elapsed / 1000}%5d ms")
+        val protocol = socketPair.client.tls.getSslEngine.getSession.getProtocol
+        info(f"$protocol%-12s $cipher%-50s ${elapsed.toMillis}%6s ms")
       }
     }
   }

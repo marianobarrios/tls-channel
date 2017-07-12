@@ -1,7 +1,7 @@
 package tlschannel
 
-import org.scalatest.{BeforeAndAfterAll, ConfigMap, FunSuite, Matchers}
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
+import com.typesafe.scalalogging.StrictLogging
 
 import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
 
@@ -36,10 +36,10 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging with Befo
         val elapsed = TestUtil.time {
           Loops.halfDuplex(socketPair, dataSize)
         }
-        info(f"-eng-> $size1%5d -net-> $size1%5d -eng-> - ${elapsed / 1000}%5d ms")
+        info(f"-eng-> $size1%5d -net-> $size1%5d -eng-> - ${elapsed.toMillis}%5s ms")
       }
     }
-    info(f"Total time: ${elapsedTotal / 1000}%5d ms")
+    info(f"Total time: $elapsedTotal%5s")
   }
 
   test("null engine - half duplex - direct buffers") {
@@ -54,13 +54,13 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging with Befo
         val elapsed = TestUtil.time {
           Loops.halfDuplex(socketPair, dataSize)
         }
-        info(f"-eng-> $size1%5d -net-> $size1%5d -eng-> - ${elapsed / 1000}%5d ms")
+        info(f"-eng-> $size1%5d -net-> $size1%5d -eng-> - ${elapsed.toMillis}%5s ms")
       }
     }
-    info(f"Total time: ${elapsedTotal / 1000}%5d ms")
+    info(f"Total time: ${elapsedTotal.toMillis}%5s ms")
   }
 
-  override def afterAll(configMap: ConfigMap) = {
+  override def afterAll() = {
     factory.printGlobalAllocationReport()
   }
 

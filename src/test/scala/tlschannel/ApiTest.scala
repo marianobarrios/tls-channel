@@ -9,7 +9,6 @@ import java.nio.ByteBuffer
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
 
-import tlschannel.helpers.TestUtil.fnToConsumer
 import tlschannel.impl.{BufferHolder, ByteBufferSet, TlsChannelImpl}
 import java.util.Optional
 

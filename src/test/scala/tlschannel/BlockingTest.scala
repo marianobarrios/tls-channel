@@ -1,7 +1,7 @@
 package tlschannel
 
 import org.scalatest._
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
@@ -31,7 +31,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
       val elapsed = TestUtil.time {
         Loops.halfDuplex(socketPair, dataSize, renegotiation = true)
       }
-      info(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d - ${elapsed / 1000}%5d ms")
+      info(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d - ${elapsed.toMillis}%5d ms")
     }
   }
 
@@ -50,7 +50,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
       val elapsed = TestUtil.time {
         Loops.fullDuplex(socketPair, dataSize)
       }
-      info(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d - ${elapsed / 1000}%5d ms")
+      info(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d - ${elapsed.toMillis}%5d ms")
     }
   }
 

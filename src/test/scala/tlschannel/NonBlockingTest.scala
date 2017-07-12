@@ -3,7 +3,7 @@ package tlschannel
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory

@@ -13,10 +13,10 @@ import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
 
 import tlschannel.helpers.TestUtil.IterableWithForany
-import tlschannel.helpers.TestUtil.functionToRunnable
-
 import org.scalatest.Matchers
 import java.security.MessageDigest
+
+import scala.concurrent.duration.Duration
 
 object NonBlockingLoops extends Matchers {
 
@@ -48,7 +48,7 @@ object NonBlockingLoops extends Matchers {
     needWriteCount: Int,
     renegotiationCount: Int,
     asyncTasksRun: Int,
-    totalAsyncTaskRunningTimeMs: Long)
+    totalAsyncTaskRunningTime: Duration)
 
   def loop(socketPairs: Seq[SocketPair], dataSize: Int, renegotiate: Boolean): Report = {
 
@@ -83,7 +83,7 @@ object NonBlockingLoops extends Matchers {
 
     val random = new Random
 
-    val totalTaskTimeMicros = new LongAdder
+    val totalTaskTimeNanos = new LongAdder
 
     val dataHash = Loops.expectedBytesHash(dataSize)
 
@@ -133,14 +133,15 @@ object NonBlockingLoops extends Matchers {
             needReadCount += 1
             endpoint.key.interestOps(SelectionKey.OP_READ)
           case e: NeedsTaskException =>
-            executor.submit { () =>
+            val r: Runnable = { () =>
               val elapsed = TestUtil.time {
                 e.getTask.run()
               }
               selector.wakeup()
               readyTaskSockets.add(endpoint)
-              totalTaskTimeMicros.add(elapsed)
+              totalTaskTimeNanos.add(elapsed.toNanos)
             }
+            executor.submit(r)
             taskCount += 1
         }
       }
@@ -156,7 +157,7 @@ object NonBlockingLoops extends Matchers {
       assert(dataHash === reader.digest.digest())
     }
 
-    Report(selectorCycles, needReadCount, needWriteCount, renegotiationCount, taskCount, totalTaskTimeMicros.sum() / 1000)
+    Report(selectorCycles, needReadCount, needWriteCount, renegotiationCount, taskCount, Duration.fromNanos(totalTaskTimeNanos.longValue()))
   }
 
   def getSelectedEndpoints(selector: Selector): Seq[Endpoint] = {

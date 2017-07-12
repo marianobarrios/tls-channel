@@ -1,7 +1,6 @@
 package tlschannel
 
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.ConfigMap
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
 import tlschannel.helpers.NonBlockingLoops
@@ -29,7 +28,7 @@ class NullMultiNonBlockingTest extends FunSuite with Matchers with NonBlockingSu
     printReport(report, elapsed)
   }
 
-  override def afterAll(configMap: ConfigMap) = {
+  override def afterAll() = {
     factory.printGlobalAllocationReport()
   }
 

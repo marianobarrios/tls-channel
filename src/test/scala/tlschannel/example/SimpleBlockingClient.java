@@ -13,7 +13,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 
-public class BlockingExample {
+public class SimpleBlockingClient {
 
     public static final String domain = "www.howsmyssl.com";
     public static final String httpLine =

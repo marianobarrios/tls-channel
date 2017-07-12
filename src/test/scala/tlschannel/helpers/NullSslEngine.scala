@@ -6,7 +6,7 @@ import java.nio.ByteBuffer
 import javax.net.ssl.SSLEngineResult
 import javax.net.ssl.SSLEngineResult.Status
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import org.scalatest.Assertions
 import tlschannel.impl.{ByteBufferSet, ByteBufferUtil}
 

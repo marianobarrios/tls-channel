@@ -3,21 +3,14 @@ package tlschannel
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
 import scala.util.Random
-import java.io.IOException
-import tlschannel.helpers.TestUtil.functionToRunnable
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
 import java.net.Socket
 import java.nio.channels.ByteChannel
 import javax.net.ssl.SSLSocket
 import java.nio.ByteBuffer
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
-import java.net.SocketException
-import tlschannel.helpers.SocketPair
-import java.nio.channels.ClosedChannelException
 
 class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
 
@@ -100,7 +93,7 @@ class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
       serverWriter.close()
       clientWriter.close()
     }
-    info(s"elapsed: ${elapsed / 1000} ms")
+    info(s"elapsed: ${elapsed.toMillis} ms")
   }
 
   /**
@@ -117,7 +110,7 @@ class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
       clientWriter.close()
       serverWriter.close()
     }
-    info(s"elapsed: ${elapsed / 1000} ms")
+    info(s"elapsed: ${elapsed.toMillis} ms")
   }
 
   // OLD IO -> OLD IO    
