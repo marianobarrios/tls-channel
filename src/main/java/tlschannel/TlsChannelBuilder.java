@@ -84,25 +84,25 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 		return getThis();
 	}
 
-	/**
-	 * Whether to wait for TLS close confirmation when executing a local close
-	 * on the channel. If the underlying channel is blocking, setting this to
-	 * true will block (potentially until it times out, or indefinitely) the
-	 * close operation until the counterpart confirms the close on their side
-	 * (sending a close_notifiy packet. Is the underlying channel is
-	 * non-blocking, setting this parameter to true is ineffective.
-	 * <p>
-	 * Setting this value to {@link true} emulates the behavior of
-	 * {@link SSLSocket} when used in layered mode (and without autoClose).
-	 * <p>
-	 * Even when this behavior is enabled, the close operation will not
-	 * propagate any {@link IOException} thrown during the TLS close exchange
-	 * and just proceed to close the underlying channel. For more control over
-	 * the close procedure {@link TlsChannel#shutdown()} should be used.
-	 * <p>
-	 * Default is to not wait.
-	 */
-	public T withWaitForCloseConfirmation(boolean waitForCloseConfirmation) {
+    /**
+     * <p> Whether to wait for TLS close confirmation when executing a local {@link TlsChannel#close()} on the channel.
+     * If the underlying channel is blocking, setting this to <code>true</code> will block (potentially until it times
+     * out, or indefinitely) the close operation until the counterpart confirms the close on their side (sending a
+     * close_notify alert. If the underlying channel is non-blocking, setting this parameter to true is ineffective.
+     * </p>
+     *
+     * <p> Setting this value to <code>true</code> emulates the behavior of {@link SSLSocket} when used in layered mode
+     * (and without autoClose). </p>
+     *
+     * <p> Even when this behavior is enabled, the close operation will not propagate any {@link IOException} thrown
+     * during the TLS close exchange and just proceed to close the underlying channel. </p>
+     *
+     * <p> Default is to not wait and close immediately. The proper closing procedure can be initiated at any moment
+     * using {@link TlsChannel#shutdown()}.</p>
+     *
+     * @see TlsChannel#shutdown()
+     */
+    public T withWaitForCloseConfirmation(boolean waitForCloseConfirmation) {
 		this.waitForCloseConfirmation = waitForCloseConfirmation;
 		return getThis();
 	}

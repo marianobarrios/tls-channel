@@ -1,6 +1,5 @@
 # TLS Channel
 
-
 TLS Channel is a library that implements a [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html) interface to a [TLS](https://tools.ietf.org/html/rfc5246) (Transport Layer Security) connection. The library delegates all cryptographic operations to the standard Java TLS implementation: [SSLEngine](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLEngine.html); effectively hiding it behind an easy-to-use streamming API, that allows to securitize JVM applications with minimal added complexity.
 
 In other words, a simple library that allows the programmer to have TLS using the same standard socket API used for plaintext, just like OpenSSL does for C, only for Java, filling a specially painful missing feature of the standard Java library.
@@ -9,26 +8,27 @@ In other words, a simple library that allows the programmer to have TLS using th
 
 ### Main features
 
-- Implements [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html), [GatheringByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/GatheringByteChannel.html) and [ScatteringByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ScatteringByteChannel.html), the same interfaces implemented by [SocketChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/SocketChannel.html), effectively making encryption an implementation detail. There is no need to directly call SSLEngine at all.
+- Implements [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html), [GatheringByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/GatheringByteChannel.html) and [ScatteringByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ScatteringByteChannel.html), the same interfaces implemented by [SocketChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/SocketChannel.html), effectively making encryption an implementation detail. There is no need to directly call SSLEngine except for the initial setup.
 - Works for both client and server-side TLS.
-- Supports choosing different [SSLContexts](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLContext.html) according to the received [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) (SNI) sent by incoming connections (not supported at all by SSLEngine but universally used by clients).
+- Supports choosing different [SSLContexts](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLContext.html) according to the received [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) (SNI) sent by incoming connections (not supported at all by SSLEngine but universally used by web browsers and servers).
 - Supports both blocking and non-blocking modes, using the same API, just like SocketChannel does with unencrypted connections.
 - Pluggable buffer strategy (to do buffer pooling, or to use direct buffers for IO).
+- Full and automatic zeroing of all the plaintext contained in internal buffers right after the data stops being necessary.
 - Opportunistic buffer release (akin to OpenSSL's SSL_MODE_RELEASE_BUFFERS option), which significantly reduces the memory footprint of idle cached connections.
-- Full control over TLS shutdown.
+- Full control over TLS shutdown to prevent truncation attacks.
 
 ### Non-features
 
 Being a API layer, TLS Channel delegates all cryptographic operations to SSLEngine, leveraging it 100%. This implies that:
 
 - With the exception of a few bytes of parsing at the beginning of the connection, to look for the SNI, the whole protocol implementation is done by the SSLEngine (this parsing is not done at all if SNI support is not required).
-- Both the SSLContext and SSLEngine are supplied by the client; these classes are the ones responsible for protocol configuration, including hostname validation, client-side authentication, etc.
+- Both the SSLContext and SSLEngine are supplied by the client; these classes are the ones responsible for protocol configuration, including hostname validation, client-side authentication, encryption, protocol implementation, etc.
 
 ## Rationale
 
 By far, the most used cryptography solution is TLS (a.k.a. SSL). TLS works on top of the Transport Control Protocol (TCP), maintaining its core abstractions: two independent byte streams, one in each direction, with ordered at-most-once delivery.
 
-[Recent](https://www.schneier.com/blog/archives/2014/06/gchq_intercept_.html) [trends](https://www.schneier.com/blog/archives/2013/10/nsa_eavesdroppi_2.html) have increased the pressure to add encryption in even more use cases. From a usability perspective, the industry response should come in the form of less friction to add security. One example of this is the "[Let's Encrypt](https://www.schneier.com/blog/archives/2013/10/nsa_eavesdroppi_2.html)" project. From the programming perspective, it then only makes sense to replicate the existing interface (that is, something similar to the highly successful and familiar Berkeley Sockets) for the cryptographic streams. And indeed this is what the majority of the industry has done:
+[Recent](https://www.schneier.com/blog/archives/2014/06/gchq_intercept_.html) [trends](https://www.schneier.com/blog/archives/2013/10/nsa_eavesdroppi_2.html) have increased the pressure to add encryption in even more use cases. There have been indeed many efforts to reduce friction regarding security. One example of this is the "[Let's Encrypt](https://www.schneier.com/blog/archives/2013/10/nsa_eavesdroppi_2.html)" project. From the programming perspective, the overwhelming consensus has been to replicate the existing interface (that is, something similar to the highly successful and familiar Berkeley Sockets) for the cryptographic streams:
 
 - The most used TLS library is [OpenSSL](https://www.openssl.org/). Written in C and (along with some forks) the *de facto* standard for C and C++. Also widely used in Python, PHP, Ruby and Node.js.
 - The Go language has its own implementation, package [crypto/tls](https://golang.org/pkg/crypto/tls/).
@@ -64,7 +64,7 @@ Version 1.5 saw the advent of [SSLEngine](https://docs.oracle.com/javase/8/docs/
 Of course, many programmers don't manipulate TCP or TLS streams directly, but use protocol libraries (e.g., [Apache HttpClient](https://hc.apache.org/httpcomponents-client-ga/)). However, in the case that direct socket-like access is needed, the programmer has essentially three alternatives:
 
 1. Use the old (implicitly deprecated) socket API. This implies being subject to its limitations, which means, among other things, only blocking behavior.
-- Use SSLEngine directly. This is a hard task, which is <em>very</em> difficult to accomplish correctly, and in most cases completely out of proportion to the effort of writing the application code.
+- Use SSLEngine directly. This is a hard task, which is _very_ difficult to accomplish correctly, and in most cases completely out of proportion to the effort of writing the application code.
 - Use some higher-level IO library, like [Netty](https://netty.io/), [Project Grizzly](https://grizzly.java.net/), [Apache Mina](https://mina.apache.org/) or [JBoss XNIO](http://xnio.jboss.org/). These frameworks supply event architectures that intend to easy the task of writing programs that use non-blocking IO. They are big framework-like libraries, sometimes themselves with dependencies. Using one of these is the path chosen by many, but it is not an option if the programmer cannot commit to a particular event architecture, couple the application code to an idiosyncratic library, or include a big dependency.
 
 All three alternatives have been taken by many Java libraries and applications, with no clear preference among leading open-source Java projects. Even though these options can work reasonable well, there was still no clear and standard solution.

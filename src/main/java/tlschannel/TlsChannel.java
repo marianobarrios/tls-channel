@@ -537,68 +537,49 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	 */
 	void close() throws IOException;
 
-	/**
-	 * Shuts down the TLS connection. This method emulates the behavior of
-	 * OpenSSL's
-	 * <a href="https://wiki.openssl.org/index.php/Manual:SSL_shutdown(3)">
-	 * SSL_shutdown()</a>.
-	 * 
-	 * <p>
-	 * The shutdown procedure consists of two steps: the sending of the
-	 * "close notify" shutdown alert and the reception of the peer's
-	 * "close notify". According to the TLS standard, it is acceptable for an
-	 * application to only send its shutdown alert and then close the underlying
-	 * connection without waiting for the peer's response (this way resources
-	 * can be saved). When the underlying connection shall be used for more
-	 * communications, the complete shutdown procedure (bidirectional
-	 * "close notify" alerts) must be performed, so that the peers stay
-	 * synchronized.
-	 * 
-	 * <p>
-	 * This class supports both uni- and bidirectional shutdown by its 2 step
-	 * behavior, using this method.
-	 * 
-	 * <p>
-	 * When this is the first party to send the "close notify" alert, this
-	 * method will only send the alert, set the {@link #shutdownSent()} flag and
-	 * return <code>false</code>. If a unidirectional shutdown is enough
-	 * (because the underlying channel will be closed anyway), this first call
-	 * is sufficient. In order to complete the bidirectional shutdown handshake,
-	 * This method must be called again. The second call will wait for the
-	 * peer's "close notify" shutdown alert. On success, the second call will
-	 * return <code>true</code>.
-	 * 
-	 * <p>
-	 * If the peer already sent the "close notify" alert and it was already
-	 * processed implicitly inside a read operation, the
-	 * {@link #shutdownReceived()} flag is already set. This method will then
-	 * send the "close notify" alert, set the {@link #shutdownSent()} flag and
-	 * immediately return <code>true</code>. It is therefore recommended to
-	 * check the return value of this method and call it again, if the
-	 * bidirectional shutdown is not yet complete.
-	 * 
-	 * <p>
-	 * If the underlying channel is blocking, this method will only return once
-	 * the handshake step has been finished or an error occurred.
-	 * 
-	 * <p>
-	 * If the underlying channel is non-blocking, this method may throw
-	 * {@link WouldBlockException}, if the underlying channel could not support
-	 * the continuation of the handshake. The calling process then must repeat
-	 * the call after taking appropriate action (like waiting in a selector in
-	 * case of a {@link SocketChannel}).
-	 * 
-	 * @return whether the closing is finished.
-	 * 
-	 * @throws IOException
-	 *             if the underlying channel throws an IOException
-	 * 
-	 * @throws WouldBlockException
-	 *             if the channel is in non-blocking mode and the IO operation
-	 *             cannot be completed immediately
-	 * 
-	 */
-	boolean shutdown() throws IOException;
+    /**
+     * Shuts down the TLS connection. This method emulates the behavior of OpenSSL's <a
+     * href="https://wiki.openssl.org/index.php/Manual:SSL_shutdown(3)"> SSL_shutdown()</a>.</p>
+     *
+     * <p> The shutdown procedure consists of two steps: the sending of the "close notify" shutdown alert and the
+     * reception of the peer's "close notify". According to the TLS standard, it is acceptable for an application to
+     * only send its shutdown alert and then close the underlying connection without waiting for the peer's response.
+     * When the underlying connection shall be used for more communications, the complete shutdown procedure
+     * (bidirectional "close notify" alerts) must be performed, so that the peers stay synchronized.</p>
+     *
+     * <p> This class supports both uni- and bidirectional shutdown by its 2 step behavior, using this method.</p>
+     *
+     * <p> When this is the first party to send the "close notify" alert, this method will only send the alert, set the
+     * {@link #shutdownSent()} flag and return <code>false</code>. If a unidirectional shutdown is enough, this first
+     * call is sufficient. In order to complete the bidirectional shutdown handshake, This method must be called again.
+     * The second call will wait for the peer's "close notify" shutdown alert. On success, the second call will return
+     * <code>true</code>.</p>
+     *
+     * <p> If the peer already sent the "close notify" alert and it was already processed implicitly inside a read
+     * operation, the {@link #shutdownReceived()} flag is already set. This method will then send the "close notify"
+     * alert, set the {@link #shutdownSent()} flag and immediately return <code>true</code>. It is therefore recommended
+     * to check the return value of this method and call it again, if the bidirectional shutdown is not yet
+     * complete.</p>
+     *
+     * <p> If the underlying channel is blocking, this method will only return once the handshake step has been finished
+     * or an error occurred.</p>
+     *
+     * <p> If the underlying channel is non-blocking, this method may throw {@link WouldBlockException} if the
+     * underlying channel could not support the continuation of the handshake. The calling process then must repeat the
+     * call after taking appropriate action (like waiting in a selector in case of a {@link SocketChannel}).</p>
+     *
+     * <p> Note that despite not being mandated by the specification, a proper TLS close is important to prevent
+     * truncation attacks, which consists, essentially, of an adversary introducing TCP FIN segments to trick on party
+     * to ignore the final bytes of a secure stream. For more details, see <a href="https://hal.inria.fr/hal-01102013">the
+     * original paper</a>.</p>
+     *
+     * @return whether the closing is finished.
+     * @throws IOException         if the underlying channel throws an IOException
+     * @throws WouldBlockException if the channel is in non-blocking mode and the IO operation cannot be completed
+     *                             immediately
+     * @see TlsChannelBuilder#withWaitForCloseConfirmation(boolean)
+     */
+    boolean shutdown() throws IOException;
 
 	/**
 	 * Return whether this side of the connection has already received the close
