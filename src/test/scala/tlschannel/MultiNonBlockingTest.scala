@@ -9,8 +9,9 @@ import tlschannel.helpers.TestUtil
 
 class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging with NonBlockingSuite with BeforeAndAfterAll {
 
-  val (cipher, sslContext) = SslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
+  val sslContextFactory = new SslContextFactory
+  val (cipher, sslContext) = sslContextFactory.standardCipher
+  val factory = new SocketPairFactory(sslContext)
   val dataSize = 100 * 1024
   val totalConnections = 200
 

@@ -10,8 +10,10 @@ import tlschannel.helpers.Loops
 
 class BlockingTest extends FunSuite with Matchers with StrictLogging {
 
-  val (cipher, sslContext) = SslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
+  val sslContextFactory = new SslContextFactory
+
+  val (cipher, sslContext) = sslContextFactory.standardCipher
+  val factory = new SocketPairFactory(sslContext)
   val dataSize = 80 * 1000
 
   /**
@@ -19,7 +21,7 @@ class BlockingTest extends FunSuite with Matchers with StrictLogging {
    */
   test("half duplex (with renegotiations)") {
     val sizes = Stream.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
-    val (cipher, _) = SslContextFactory.standardCipher
+    val (cipher, _) = sslContextFactory.standardCipher
     for ((size1, size2) <- (sizes zip sizes.reverse)) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
       val socketPair = factory.nioNio(

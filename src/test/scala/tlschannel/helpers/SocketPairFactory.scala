@@ -31,7 +31,7 @@ case class SocketGroup(external: ByteChannel, tls: TlsChannel, plain: SocketChan
  * Additionally, all the raw (non-encrypted) socket channel are wrapped with a chunking decorator that partitions
  * the bytesProduced of any read or write operation.
  */
-class SocketPairFactory(val sslContext: SSLContext, val serverName: String) extends StrictLogging {
+class SocketPairFactory(val sslContext: SSLContext, val serverName: String = SslContextFactory.certificateCommonName) extends StrictLogging {
 
   private val releaseBuffers = true
 

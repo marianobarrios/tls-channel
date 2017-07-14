@@ -2,19 +2,19 @@ package tlschannel
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
-
 import com.typesafe.scalalogging.StrictLogging
-
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
+import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
 
 class NonBlockingTest extends FunSuite with Matchers with StrictLogging with NonBlockingSuite {
 
-  val (cipher, sslContext) = SslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
+  val sslContextFactory = new SslContextFactory
+  val (cipher, sslContext) = sslContextFactory.standardCipher
+  val factory = new SocketPairFactory(sslContext)
   val dataSize = 200 * 1024
 
   test("selector loop") {

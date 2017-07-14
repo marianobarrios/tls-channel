@@ -5,15 +5,10 @@ import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.TrustManagerFactory
 import java.security.KeyStore
 
-object SslContextFactory {
-
-
-
-  val certificateCommonName = "name" // must match what's in the certificates
+class SslContextFactory(val protocol: String = "TLSv1.2") {
   
   val authenticatedContext = {
-    val sslContext = SSLContext.getInstance("TLSv1.2")
-
+    val sslContext = SSLContext.getInstance(protocol)
     val ks = KeyStore.getInstance("JKS");
     for (keystoreFile <- resource.managed(getClass.getClassLoader.getResourceAsStream("keystore.jks"))) {
       ks.load(keystoreFile, "password".toCharArray())
@@ -27,7 +22,7 @@ object SslContextFactory {
   }
   
   val anonContext = {
-    val ctx = SSLContext.getInstance("TLSv1.2")
+    val ctx = SSLContext.getInstance(protocol)
     ctx.init(null, null, null)
     ctx
   }
@@ -37,9 +32,13 @@ object SslContextFactory {
     .filterNot(_ == "TLS_EMPTY_RENEGOTIATION_INFO_SCSV") // this is not a real cipher, but a hack actually
     .filterNot(_.startsWith("TLS_ECDH_RSA_"))
     .filterNot(_.startsWith("TLS_KRB5_"))
+    .filter(c => protocol >= "TLSv1.2" || !c.endsWith("_SHA256"))
     .toSeq
-  
-  val anonCiphers = ciphers(anonContext).filter(_.contains("_anon_")).toSeq
+
+  val anonCiphers = ciphers(anonContext)
+    .filter(_.contains("_anon_"))
+    .filter(c => protocol >= "TLSv1.2" || !c.endsWith("_SHA256"))
+    .toSeq
 
   val allCiphers = {
     val ret = authenticatedCiphers.map((_, authenticatedContext)) ++ anonCiphers.map((_, anonContext))
@@ -54,6 +53,11 @@ object SslContextFactory {
       .filter(_.startsWith("TLS_"))
   }
   
+}
+
+object SslContextFactory {
+
   val tlsMaxDataSize = math.pow(2, 14).toInt
-  
+  val certificateCommonName = "name" // must match what's in the certificates
+
 }

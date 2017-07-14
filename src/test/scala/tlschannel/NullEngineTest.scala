@@ -2,13 +2,12 @@ package tlschannel
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
 import com.typesafe.scalalogging.StrictLogging
-
 import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
-
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.Loops
+import tlschannel.helpers.SslContextFactory
 
 /**
  * Test using a null engine (pass-through).	The purpose of the test is to remove
@@ -17,8 +16,9 @@ import tlschannel.helpers.Loops
  */
 class NullEngineTest extends FunSuite with Matchers with StrictLogging with BeforeAndAfterAll {
 
-  val (cipher, sslContext) = SslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
+  val sslContextFactory = new SslContextFactory
+  val (cipher, sslContext) = sslContextFactory.standardCipher
+  val factory = new SocketPairFactory(sslContext)
   val dataSize = 1 * 200 * 1024 * 1024
 
   // heat cache

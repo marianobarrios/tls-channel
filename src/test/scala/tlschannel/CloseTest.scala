@@ -12,8 +12,10 @@ import java.nio.channels.AsynchronousCloseException
 
 class CloseTest extends FunSuite with Matchers with StrictLogging {
 
-  val (cipher, sslContext) = SslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
+  val sslContextFactory = new SslContextFactory
+
+  val (cipher, sslContext) = sslContextFactory.standardCipher
+  val factory = new SocketPairFactory(sslContext)
   val data = Array[Byte](15)
 
   test("SSLSocket") {
