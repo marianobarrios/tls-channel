@@ -13,7 +13,12 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * Client example. Connects to a public TLS reporting service.
+ */
 public class SimpleBlockingClient {
+
+    private static final Charset utf8 = StandardCharsets.UTF_8;
 
     public static final String domain = "www.howsmyssl.com";
     public static final String httpLine =
@@ -45,8 +50,7 @@ public class SimpleBlockingClient {
                 while (tlsChannel.read(res) != -1)
                     ;
                 res.flip();
-                Charset charset = StandardCharsets.UTF_8;
-                System.out.println(charset.decode(res).toString());
+                System.out.println(utf8.decode(res).toString());
 
             }
         }
