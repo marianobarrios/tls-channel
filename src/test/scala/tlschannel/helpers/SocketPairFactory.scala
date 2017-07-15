@@ -17,6 +17,7 @@ import java.util.Optional
 import sun.security.ssl.SSLSocketImpl
 import tlschannel.util.Util
 import javax.net.ssl.SNIHostName
+import javax.net.ssl.SNIServerName
 
 import scala.collection.JavaConversions._
 import tlschannel._
@@ -35,6 +36,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
   private val releaseBuffers = true
 
   private val clientSniHostName = new SNIHostName(serverName)
+  private val expectedSniHostName = SNIHostName.createSNIMatcher(serverName /* regex! */)
 
   def fixedCipherServerSslEngineFactory(cipher: String)(sslContext: SSLContext): SSLEngine = {
     val engine = sslContext.createSSLEngine()
@@ -43,14 +45,16 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     engine
   }
 
-  def sslContextFactory(expectedName: String, sslContext: SSLContext)(name: Optional[String]): SSLContext = {
+  def sslContextFactory(expectedName: SNIServerName, sslContext: SSLContext)(name: Optional[SNIServerName]): SSLContext = {
     if (name.isPresent) {
       val n = name.get
       logger.debug("ContextFactory, requested name: " + n)
-      Util.assertTrue(n == expectedName)
+      if (!expectedSniHostName.matches(n)) {
+        throw new IllegalArgumentException(s"Received SNI $n does not match $serverName")
+      }
       sslContext
     } else {
-      throw new IllegalStateException("SNI expected")
+      throw new IllegalArgumentException("SNI expected")
     }
   }
 
@@ -111,7 +115,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     val rawServer = serverSocket.accept()
     serverSocket.close()
     val server = ServerTlsChannel
-      .newBuilder(rawServer, nameOpt => sslContextFactory(serverName, sslContext)(nameOpt))
+      .newBuilder(rawServer, nameOpt => sslContextFactory(clientSniHostName, sslContext)(nameOpt))
       .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
       .build()
     (client, SocketGroup(server, server, rawServer))
@@ -185,7 +189,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
           .withReleaseBuffers(releaseBuffers)
           .build()
         val serverChannel = ServerTlsChannel
-          .newBuilder(plainServer, nameOpt => sslContextFactory(serverName, sslContext)(nameOpt))
+          .newBuilder(plainServer, nameOpt => sslContextFactory(clientSniHostName, sslContext)(nameOpt))
           .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
           .withRunTasks(runTasks)
           .withWaitForCloseConfirmation(waitForCloseConfirmation)

@@ -28,38 +28,40 @@ import tlschannel.util.Util;
  */
 public class ServerTlsChannel implements TlsChannel {
 
-	@FunctionalInterface
-	private interface SniReader {
-		Optional<String> readSni() throws IOException, EofException;
+    private interface SslContextStrategy {
+
+        @FunctionalInterface
+        interface SniReader {
+            Optional<SNIServerName> readSni() throws IOException, EofException;
+        }
+
+        SSLContext getSslContext(SniReader sniReader) throws IOException, EofException;
+
 	}
 
-	private interface InternalSslContextFactory {
-		SSLContext getSslContext(SniReader sniReader) throws IOException, EofException;
-	}
+	private static class SniSslContextStrategy implements SslContextStrategy {
 
-	private static class SniSslContextFactory implements InternalSslContextFactory {
+		private SniSslContextFactory sniSslContextFactory;
 
-		private Function<Optional<String>, SSLContext> function;
-
-		public SniSslContextFactory(Function<Optional<String>, SSLContext> function) {
-			this.function = function;
+		public SniSslContextStrategy(SniSslContextFactory sniSslContextFactory) {
+			this.sniSslContextFactory = sniSslContextFactory;
 		}
 
 		@Override
 		public SSLContext getSslContext(SniReader sniReader) throws IOException, EofException {
 			// IO block
-			Optional<String> nameOpt = sniReader.readSni();
+			Optional<SNIServerName> nameOpt = sniReader.readSni();
 			// call client code
-			return function.apply(nameOpt);
+			return sniSslContextFactory.getSslContext(nameOpt);
 		}
 
 	}
 
-	private static class FixedSslContextFactory implements InternalSslContextFactory {
+	private static class FixedSslContextStrategy implements SslContextStrategy {
 
 		private final SSLContext sslContext;
 
-		public FixedSslContextFactory(SSLContext sslContext) {
+		public FixedSslContextStrategy(SSLContext sslContext) {
 			this.sslContext = sslContext;
 		}
 
@@ -85,17 +87,17 @@ public class ServerTlsChannel implements TlsChannel {
 	 */
 	public static class Builder extends TlsChannelBuilder<Builder> {
 
-		private final InternalSslContextFactory internalSslContextFactory;
+		private final SslContextStrategy internalSslContextFactory;
 		private Function<SSLContext, SSLEngine> sslEngineFactory = ServerTlsChannel::defaultSSLEngineFactory;
 
 		private Builder(ByteChannel underlying, SSLContext sslContext) {
 			super(underlying);
-			this.internalSslContextFactory = new FixedSslContextFactory(sslContext);
+			this.internalSslContextFactory = new FixedSslContextStrategy(sslContext);
 		}
 
-		private Builder(ByteChannel wrapped, Function<Optional<String>, SSLContext> sslContextFactory) {
+		private Builder(ByteChannel wrapped, SniSslContextFactory sslContextFactory) {
 			super(wrapped);
-			this.internalSslContextFactory = new SniSslContextFactory(sslContextFactory);
+			this.internalSslContextFactory = new SniSslContextStrategy(sslContextFactory);
 		}
 
 		@Override
@@ -150,12 +152,12 @@ public class ServerTlsChannel implements TlsChannel {
 	 * @see <a href="https://tools.ietf.org/html/rfc6066#section-3">Server Name
 	 *      Indication</a>
 	 */
-	public static Builder newBuilder(ByteChannel underlying, Function<Optional<String>, SSLContext> sslContextFactory) {
+	public static Builder newBuilder(ByteChannel underlying, SniSslContextFactory sslContextFactory) {
 		return new Builder(underlying, sslContextFactory);
 	}
 
 	private final ByteChannel underlying;
-	private final InternalSslContextFactory internalSslContextFactory;
+	private final SslContextStrategy internalSslContextFactory;
 	private final Function<SSLContext, SSLEngine> engineFactory;
 	private final Consumer<SSLSession> sessionInitCallback;
 	private final boolean runTasks;
@@ -175,7 +177,7 @@ public class ServerTlsChannel implements TlsChannel {
 	// @formatter:off
 	private ServerTlsChannel(
 			ByteChannel underlying, 
-			InternalSslContextFactory internalSslContextFactory,
+			SslContextStrategy internalSslContextFactory,
 			Function<SSLContext, SSLEngine> engineFactory, 
 			Consumer<SSLSession> sessionInitCallback, 
 			boolean runTasks,
@@ -345,7 +347,7 @@ public class ServerTlsChannel implements TlsChannel {
 		}
 	}
 
-	private Optional<String> getServerNameIndication() throws IOException, EofException {
+	private Optional<SNIServerName> getServerNameIndication() throws IOException, EofException {
 		Util.assertTrue(inEncrypted.nullOrEmpty());
 		inEncrypted.prepare();
 		try {
@@ -362,7 +364,7 @@ public class ServerTlsChannel implements TlsChannel {
             SNIServerName hostName = serverNames.get(StandardConstants.SNI_HOST_NAME);
             if (hostName != null && hostName instanceof SNIHostName) {
                 SNIHostName sniHostName = (SNIHostName) hostName;
-                return Optional.of(sniHostName.getAsciiName());
+                return Optional.of(sniHostName);
             } else {
                 return Optional.empty();
             }
