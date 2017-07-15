@@ -3,14 +3,9 @@ package tlschannel
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
 import com.typesafe.scalalogging.StrictLogging
-import java.nio.channels.ByteChannel
-import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
-import java.nio.ByteBuffer
-import scala.util.Random
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
-import tlschannel.helpers.SocketPair
 import tlschannel.helpers.Loops
 
 class CipherTest extends FunSuite with Matchers with StrictLogging {

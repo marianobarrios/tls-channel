@@ -15,12 +15,12 @@ import java.nio.channels.ByteChannel
 import java.util.Optional
 
 import sun.security.ssl.SSLSocketImpl
-import tlschannel.util.Util
 import javax.net.ssl.SNIHostName
 import javax.net.ssl.SNIServerName
 
-import scala.collection.JavaConversions._
 import tlschannel._
+
+import scala.collection.JavaConverters.seqAsJavaList
 
 case class SocketPair(client: SocketGroup, server: SocketGroup)
 
@@ -74,7 +74,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     engine.setEnabledCipherSuites(Array(cipher))
     val sslParams = engine.getSSLParameters() // returns a value object
     sslParams.setEndpointIdentificationAlgorithm("HTTPS")
-    sslParams.setServerNames(Seq(clientSniHostName))
+    sslParams.setServerNames(seqAsJavaList(Seq(clientSniHostName)))
     engine.setSSLParameters(sslParams)
     engine
   }
@@ -97,7 +97,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     val chosenPort = serverSocket.getLocalPort
     val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
     val sslParameters = client.getSSLParameters // returns a value object
-    sslParameters.setServerNames(Seq(clientSniHostName))
+    sslParameters.setServerNames(seqAsJavaList(Seq(clientSniHostName)))
     client.setSSLParameters(sslParameters)
     val server = serverSocket.accept().asInstanceOf[SSLSocket]
     serverSocket.close()
@@ -110,7 +110,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
     val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
     val sslParameters = client.getSSLParameters // returns a value object
-    sslParameters.setServerNames(Seq(clientSniHostName))
+    sslParameters.setServerNames(seqAsJavaList(Seq(clientSniHostName)))
     client.setSSLParameters(sslParameters)
     val rawServer = serverSocket.accept()
     serverSocket.close()

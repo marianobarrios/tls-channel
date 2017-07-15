@@ -103,7 +103,6 @@ object Loops extends Matchers with StrictLogging {
     close: Boolean = false): Unit = TestUtil.cannotFail {
 
     logger.debug(s"Starting reader loop. Size: $size, gathering: $gathering")
-    val random = new Random(seed)
     val readArray = Array.ofDim[Byte](bufferSize)
     var bytesRemaining = size
     val digest = MessageDigest.getInstance(hashAlgorithm)
@@ -144,10 +143,6 @@ object Loops extends Matchers with StrictLogging {
 
   private def multiWrap(buffer: ByteBuffer) = {
     Array(ByteBuffer.allocate(0), buffer, ByteBuffer.allocate(0))
-  }
-
-  private def remaining(buffers: Array[ByteBuffer]) = {
-    buffers.map(_.remaining.toLong).sum
   }
 
 }

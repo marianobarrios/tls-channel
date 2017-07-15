@@ -1,6 +1,7 @@
 package tlschannel;
 
 import java.io.IOException;
+import java.nio.channels.ByteChannel;
 
 /**
  * Base class for exceptions used to control flow.
@@ -14,12 +15,16 @@ import java.io.IOException;
  */
 public abstract class TlsChannelFlowControlException extends IOException {
 
-	/**
-	 * For efficiency, override this method to do nothing.
-	 */
-	@Override
-	public Throwable fillInStackTrace() {
-		return this;
-	}
+    public TlsChannelFlowControlException() {
+        super();
+    }
+
+    /**
+     * For efficiency, override this method to do nothing.
+     */
+    @Override
+    public Throwable fillInStackTrace() {
+        return this;
+    }
 
 }

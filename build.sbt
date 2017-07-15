@@ -15,12 +15,10 @@ publishTo := {
 }
 
 scalacOptions := Seq(
-	"-language:implicitConversions", 
-	"-Ywarn-dead-code",
-	"-Ywarn-inaccessible",
-	"-Ywarn-nullary-unit",
-	"-Ywarn-nullary-override",
-	"-Ywarn-infer-any")
+	"-language:implicitConversions",
+  "-Xlint",
+  "-deprecation",
+  "-Xfatal-warnings")
 
 name := "tls-channel"
 

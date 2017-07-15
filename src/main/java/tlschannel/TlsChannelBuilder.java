@@ -7,6 +7,9 @@ import java.util.function.Consumer;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
+/**
+ * Base class for builders of {@link TlsChannel}.
+ */
 public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 
 	final ByteChannel underlying;
@@ -28,7 +31,7 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 
 	/**
 	 * Whether CPU-intensive tasks are run or not. Default is to do run them. If
-	 * setting this {@link false}, the calling code should be prepared to handle
+	 * setting this <code>false</code>, the calling code should be prepared to handle
 	 * {@link NeedsTaskException}}
 	 */
 	public T withRunTasks(boolean runTasks) {

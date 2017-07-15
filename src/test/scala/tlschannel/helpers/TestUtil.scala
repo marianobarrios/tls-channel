@@ -5,7 +5,7 @@ import java.time.Duration
 import com.typesafe.scalalogging.StrictLogging
 import java.util.concurrent.ConcurrentHashMap
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters.mapAsScalaMap
 
 object TestUtil extends StrictLogging {
 
@@ -72,7 +72,7 @@ object TestUtil extends StrictLogging {
    */
   case class Memo[I <% K, K, O](f: I => O) extends (I => O) {
     val cache = new ConcurrentHashMap[K, O]
-    override def apply(x: I) = cache.getOrElseUpdate(x, f(x))
+    override def apply(x: I) = mapAsScalaMap(cache).getOrElseUpdate(x, f(x))
   }
   
 }

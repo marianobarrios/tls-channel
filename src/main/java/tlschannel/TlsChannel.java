@@ -538,7 +538,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
 	void close() throws IOException;
 
     /**
-     * Shuts down the TLS connection. This method emulates the behavior of OpenSSL's <a
+     * <p> Shuts down the TLS connection. This method emulates the behavior of OpenSSL's <a
      * href="https://wiki.openssl.org/index.php/Manual:SSL_shutdown(3)"> SSL_shutdown()</a>.</p>
      *
      * <p> The shutdown procedure consists of two steps: the sending of the "close notify" shutdown alert and the
