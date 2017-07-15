@@ -4,7 +4,6 @@ import tlschannel.ClientTlsChannel;
 import tlschannel.TlsChannel;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -33,12 +32,8 @@ public class SimpleBlockingClient {
         try (SocketChannel rawChannel = SocketChannel.open()) {
             rawChannel.connect(new InetSocketAddress(domain, 443));
 
-            // instantiate SSLEngine and set in client mode
-            SSLEngine sslEngine = sslContext.createSSLEngine();
-            sslEngine.setUseClientMode(true);
-
             // create TlsChannel builder, combining the raw channel and the SSLEngine, using minimal options
-            ClientTlsChannel.Builder builder = ClientTlsChannel.newBuilder(rawChannel, sslEngine);
+            ClientTlsChannel.Builder builder = ClientTlsChannel.newBuilder(rawChannel, sslContext);
 
             // instantiate TlsChannel
             try (TlsChannel tlsChannel = builder.build()) {

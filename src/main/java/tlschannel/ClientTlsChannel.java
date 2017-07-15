@@ -3,6 +3,7 @@ package tlschannel;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import java.nio.channels.ByteChannel;
 import javax.net.ssl.SSLSession;
@@ -13,6 +14,8 @@ import tlschannel.impl.TlsChannelImpl;
 import java.nio.channels.Channel;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A client-side {@link TlsChannel}.
@@ -24,11 +27,16 @@ public class ClientTlsChannel implements TlsChannel {
 	 */
 	public static class Builder extends TlsChannelBuilder<Builder> {
 
-		private final SSLEngine sslEngine;
+		private Supplier<SSLEngine> sslEngineFactory;
 
 		private Builder(ByteChannel underlying, SSLEngine sslEngine) {
 			super(underlying);
-			this.sslEngine = sslEngine;
+			this.sslEngineFactory = () -> sslEngine;
+		}
+
+		private Builder(ByteChannel underlying, SSLContext sslContext) {
+			super(underlying);
+			this.sslEngineFactory = () -> defaultSSLEngineFactory(sslContext);
 		}
 
 		@Override
@@ -36,11 +44,17 @@ public class ClientTlsChannel implements TlsChannel {
 			return this;
 		}
 
-		public ClientTlsChannel build() {
-			return new ClientTlsChannel(underlying, sslEngine, sessionInitCallback, runTasks, plainBufferAllocator,
-					encryptedBufferAllocator, releaseBuffers, waitForCloseConfirmation);
-		}
+        public ClientTlsChannel build() {
+            return new ClientTlsChannel(underlying, sslEngineFactory.get(), sessionInitCallback, runTasks,
+                    plainBufferAllocator, encryptedBufferAllocator, releaseBuffers, waitForCloseConfirmation);
+        }
 
+	}
+
+	private static SSLEngine defaultSSLEngineFactory(SSLContext sslContext) {
+		SSLEngine engine = sslContext.createSSLEngine();
+		engine.setUseClientMode(true);
+		return engine;
 	}
 
 	/**
@@ -55,6 +69,19 @@ public class ClientTlsChannel implements TlsChannel {
 	public static Builder newBuilder(ByteChannel underlying, SSLEngine sslEngine) {
 		return new Builder(underlying, sslEngine);
 	}
+
+    /**
+     * Create a new {@link Builder}, configured with a underlying
+     * {@link Channel} and a {@link SSLContext}.
+     *
+     * @param underlying
+     *            a reference to the underlying {@link ByteChannel}
+     * @param sslContext
+     *            a context to use with this channel, it will be used to create a client {@link SSLEngine}.
+     */
+    public static Builder newBuilder(ByteChannel underlying, SSLContext sslContext) {
+        return new Builder(underlying, sslContext);
+    }
 
 	private final ByteChannel underlying;
 	private final TlsChannelImpl impl;
