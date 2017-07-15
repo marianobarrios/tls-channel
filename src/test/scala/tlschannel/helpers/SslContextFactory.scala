@@ -32,12 +32,14 @@ class SslContextFactory(val protocol: String = "TLSv1.2") {
     .filterNot(_ == "TLS_EMPTY_RENEGOTIATION_INFO_SCSV") // this is not a real cipher, but a hack actually
     .filterNot(_.startsWith("TLS_ECDH_RSA_"))
     .filterNot(_.startsWith("TLS_KRB5_"))
-    .filter(c => protocol >= "TLSv1.2" || !c.endsWith("_SHA256"))
+    // disable SHA2 for older versions
+    .filter(c => protocol >= "TLSv1.2" || !c.endsWith("_SHA256") && !c.endsWith("_SHA384"))
     .toSeq
 
   val anonCiphers = ciphers(anonContext)
     .filter(_.contains("_anon_"))
-    .filter(c => protocol >= "TLSv1.2" || !c.endsWith("_SHA256"))
+    // disable SHA2 for older versions
+    .filter(c => protocol >= "TLSv1.2" || !c.endsWith("_SHA256") && !c.endsWith("_SHA384"))
     .toSeq
 
   val allCiphers = {
