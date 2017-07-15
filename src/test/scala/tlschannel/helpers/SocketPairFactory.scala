@@ -11,7 +11,6 @@ import javax.net.ssl.SSLEngine
 
 import com.typesafe.scalalogging.StrictLogging
 import javax.crypto.Cipher
-
 import java.nio.channels.ByteChannel
 import java.util.Optional
 
@@ -35,6 +34,8 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
 
   private val releaseBuffers = true
 
+  private val clientSniHostName = new SNIHostName(serverName)
+
   def fixedCipherServerSslEngineFactory(cipher: String)(sslContext: SSLContext): SSLEngine = {
     val engine = sslContext.createSSLEngine()
     engine.setUseClientMode(false)
@@ -43,11 +44,14 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
   }
 
   def sslContextFactory(expectedName: String, sslContext: SSLContext)(name: Optional[String]): SSLContext = {
-    name.ifPresent { (n: String) =>
+    if (name.isPresent) {
+      val n = name.get
       logger.debug("ContextFactory, requested name: " + n)
       Util.assertTrue(n == expectedName)
+      sslContext
+    } else {
+      throw new IllegalStateException("SNI expected")
     }
-    sslContext
   }
 
   val localhost = InetAddress.getByName(null)
@@ -60,13 +64,13 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
   val globalPlainTrackingAllocator = new TrackingAllocator(TlsChannel.defaultPlainBufferAllocator)
   val globalEncryptedTrackingAllocator = new TrackingAllocator(TlsChannel.defaultEncryptedBufferAllocator)
 
-  private def createClientSslEngine(cipher: String, peerHost: String, peerPort: Integer): SSLEngine = {
-    val engine = sslContext.createSSLEngine(peerHost, peerPort)
+  private def createClientSslEngine(cipher: String, peerPort: Integer): SSLEngine = {
+    val engine = sslContext.createSSLEngine(serverName, peerPort)
     engine.setUseClientMode(true)
     engine.setEnabledCipherSuites(Array(cipher))
     val sslParams = engine.getSSLParameters() // returns a value object
     sslParams.setEndpointIdentificationAlgorithm("HTTPS")
-    sslParams.setServerNames(Seq(new SNIHostName(serverName)))
+    sslParams.setServerNames(Seq(clientSniHostName))
     engine.setSSLParameters(sslParams)
     engine
   }
@@ -88,6 +92,9 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     val serverSocket = createSslServerSocket(cipher)
     val chosenPort = serverSocket.getLocalPort
     val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
+    val sslParameters = client.getSSLParameters // returns a value object
+    sslParameters.setServerNames(Seq(clientSniHostName))
+    client.setSSLParameters(sslParameters)
     val server = serverSocket.accept().asInstanceOf[SSLSocket]
     serverSocket.close()
     (client, server)
@@ -98,6 +105,9 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
     val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
     val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
+    val sslParameters = client.getSSLParameters // returns a value object
+    sslParameters.setServerNames(Seq(clientSniHostName))
+    client.setSSLParameters(sslParameters)
     val rawServer = serverSocket.accept()
     serverSocket.close()
     val server = ServerTlsChannel
@@ -115,7 +125,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     val server = serverSocket.accept().asInstanceOf[SSLSocket]
     serverSocket.close()
     val client = ClientTlsChannel
-      .newBuilder(rawClient, createClientSslEngine(cipher, serverName, chosenPort))
+      .newBuilder(rawClient, createClientSslEngine(cipher, chosenPort))
       .build()
     (SocketGroup(client, client, rawClient), server)
   }
@@ -167,7 +177,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
         }
 
         val clientChannel = ClientTlsChannel
-          .newBuilder(plainClient, createClientSslEngine(cipher, serverName, chosenPort))
+          .newBuilder(plainClient, createClientSslEngine(cipher, chosenPort))
           .withRunTasks(runTasks)
           .withWaitForCloseConfirmation(waitForCloseConfirmation)
           .withPlainBufferAllocator(globalPlainTrackingAllocator)
