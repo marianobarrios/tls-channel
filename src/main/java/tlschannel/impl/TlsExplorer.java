@@ -61,7 +61,7 @@ public final class TlsExplorer {
 			byte thirdByte = source.get();
 			if ((firstByte & 0x80) != 0 && thirdByte == 0x01) {
 				// looks like a V2ClientHello
-				throw new SSLProtocolException("SSL 2.0 not supported");
+				return new HashMap<>();
 			} else if (firstByte == 22) {
 				// 22: handshake record
 				return exploreTLSRecord(source, firstByte);
