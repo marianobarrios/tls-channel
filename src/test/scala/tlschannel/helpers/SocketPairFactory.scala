@@ -45,14 +45,14 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     engine
   }
 
-  def sslContextFactory(expectedName: SNIServerName, sslContext: SSLContext)(name: Optional[SNIServerName]): SSLContext = {
+  def sslContextFactory(expectedName: SNIServerName, sslContext: SSLContext)(name: Optional[SNIServerName]): Optional[SSLContext] = {
     if (name.isPresent) {
       val n = name.get
       logger.debug("ContextFactory, requested name: " + n)
       if (!expectedSniHostName.matches(n)) {
         throw new IllegalArgumentException(s"Received SNI $n does not match $serverName")
       }
-      sslContext
+      Optional.of(sslContext)
     } else {
       throw new IllegalArgumentException("SNI expected")
     }

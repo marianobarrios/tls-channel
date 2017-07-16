@@ -16,6 +16,7 @@ import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.StandardConstants;
 
@@ -57,12 +58,15 @@ public class ServerTlsChannel implements TlsChannel {
             // IO block
             Optional<SNIServerName> nameOpt = sniReader.readSni();
             // call client code
+            Optional<SSLContext> chosenContext;
             try {
-                return sniSslContextFactory.getSslContext(nameOpt);
+                chosenContext = sniSslContextFactory.getSslContext(nameOpt);
             } catch (Exception e) {
                 logger.trace("client code threw exception during evaluation of server name indication", e);
                 throw new TlsChannelCallbackException("SNI callback failed", e);
             }
+            return chosenContext.orElseThrow(
+                    () -> new SSLHandshakeException("No ssl context available for received SNI: " + nameOpt));
         }
 
     }
