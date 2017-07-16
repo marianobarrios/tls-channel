@@ -19,14 +19,19 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.StandardConstants;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tlschannel.impl.*;
 import tlschannel.impl.TlsChannelImpl.EofException;
+import tlschannel.util.TlsChannelCallbackException;
 import tlschannel.util.Util;
 
 /**
  * A server-side {@link TlsChannel}.
  */
 public class ServerTlsChannel implements TlsChannel {
+
+    private static final Logger logger = LoggerFactory.getLogger(ServerTlsChannel.class);
 
     private interface SslContextStrategy {
 
@@ -52,7 +57,12 @@ public class ServerTlsChannel implements TlsChannel {
 			// IO block
 			Optional<SNIServerName> nameOpt = sniReader.readSni();
 			// call client code
-			return sniSslContextFactory.getSslContext(nameOpt);
+            try {
+                return sniSslContextFactory.getSslContext(nameOpt);
+			} catch (Exception e) {
+                logger.trace("client code threw exception during evaluation of server name indication", e);
+                throw new TlsChannelCallbackException("SNI callback failed", e);
+            }
 		}
 
 	}
@@ -83,8 +93,8 @@ public class ServerTlsChannel implements TlsChannel {
 	}
 
 	/**
-	 * Builder of {@link ServerTlsChannel}
-	 */
+     * Builder of {@link ServerTlsChannel}
+     */
 	public static class Builder extends TlsChannelBuilder<Builder> {
 
 		private final SslContextStrategy internalSslContextFactory;
@@ -118,47 +128,37 @@ public class ServerTlsChannel implements TlsChannel {
 	}
 
 	/**
-	 * Create a new {@link Builder}, configured with a underlying
-	 * {@link Channel} and a fixed {@link SSLContext}, which will be used to
-	 * create the {@link SSLEngine}.
-	 * 
-	 * @param underlying
-	 *            a reference to the underlying {@link ByteChannel}
-	 * @param sslContext
-	 *            a fixed {@link SSLContext} to be used
-	 */
+     * Create a new {@link Builder}, configured with a underlying
+     * {@link Channel} and a fixed {@link SSLContext}, which will be used to
+     * create the {@link SSLEngine}.
+     *
+     * @param underlying a reference to the underlying {@link ByteChannel}
+     * @param sslContext a fixed {@link SSLContext} to be used
+     */
 	public static Builder newBuilder(ByteChannel underlying, SSLContext sslContext) {
 		return new Builder(underlying, sslContext);
 	}
 
-	/**
-	 * Create a new {@link Builder}, configured with a underlying
-	 * {@link Channel} and a custom {@link SSLContext} factory, which will be
-	 * used to create the context (in turn used to create the {@link SSLEngine},
-	 * as a function of the SNI received at the TLS connection start.
-	 * <p>
-	 * <b>Implementation note:</b><br>
-	 * Due to limitations of {@link SSLEngine}, configuring a
-	 * {@link ServerTlsChannel} to select the {@link SSLContext} based on the
-	 * SNI value implies parsing the first TLS frame (ClientHello) independently
-	 * of the SSLEngine.
-	 * 
-	 * @param underlying
-	 *            a reference to the underlying {@link ByteChannel}
-	 * @param sslContextFactory
-	 *            a function from an optional SNI to the {@link SSLContext} to
-	 *            be used
-	 * 
-	 * @see <a href="https://tools.ietf.org/html/rfc6066#section-3">Server Name
-	 *      Indication</a>
-	 */
-	public static Builder newBuilder(ByteChannel underlying, SniSslContextFactory sslContextFactory) {
-		return new Builder(underlying, sslContextFactory);
-	}
+    /**
+     * <p> Create a new {@link Builder}, configured with a underlying {@link Channel} and a custom {@link SSLContext}
+     * factory, which will be used to create the context (in turn used to create the {@link SSLEngine}, as a function of
+     * the SNI received at the TLS connection start. </p>
+     *
+     * <p><b>Implementation note:</b><br> Due to limitations of {@link SSLEngine}, configuring a {@link
+     * ServerTlsChannel} to select the {@link SSLContext} based on the SNI value implies parsing the first TLS frame
+     * (ClientHello) independently of the SSLEngine. </p>
+     *
+     * @param underlying        a reference to the underlying {@link ByteChannel}
+     * @param sslContextFactory a function from an optional SNI to the {@link SSLContext} to be used
+     * @see <a href="https://tools.ietf.org/html/rfc6066#section-3">Server Name Indication</a>
+     */
+    public static Builder newBuilder(ByteChannel underlying, SniSslContextFactory sslContextFactory) {
+        return new Builder(underlying, sslContextFactory);
+    }
 
 	private final ByteChannel underlying;
-	private final SslContextStrategy internalSslContextFactory;
-	private final Function<SSLContext, SSLEngine> engineFactory;
+    private final SslContextStrategy sslContextStrategy;
+    private final Function<SSLContext, SSLEngine> engineFactory;
 	private final Consumer<SSLSession> sessionInitCallback;
 	private final boolean runTasks;
 	private final TrackingAllocator plainBufAllocator;
@@ -176,17 +176,17 @@ public class ServerTlsChannel implements TlsChannel {
 
 	// @formatter:off
 	private ServerTlsChannel(
-			ByteChannel underlying, 
+			ByteChannel underlying,
 			SslContextStrategy internalSslContextFactory,
-			Function<SSLContext, SSLEngine> engineFactory, 
-			Consumer<SSLSession> sessionInitCallback, 
+			Function<SSLContext, SSLEngine> engineFactory,
+			Consumer<SSLSession> sessionInitCallback,
 			boolean runTasks,
 			BufferAllocator plainBufAllocator,
 			BufferAllocator encryptedBufAllocator,
 			boolean releaseBuffers,
 			boolean waitForCloseConfirmation) {
 		this.underlying = underlying;
-		this.internalSslContextFactory = internalSslContextFactory;
+		this.sslContextStrategy = internalSslContextFactory;
 		this.engineFactory = engineFactory;
 		this.sessionInitCallback = sessionInitCallback;
 		this.runTasks = runTasks;
@@ -213,7 +213,7 @@ public class ServerTlsChannel implements TlsChannel {
 
 	/**
 	 * Return the used {@link SSLContext}.
-	 * 
+	 *
 	 * @return if context if present, of null if the TLS connection as not been
 	 *         initializer, or the SNI not received yet.
 	 */
@@ -335,8 +335,15 @@ public class ServerTlsChannel implements TlsChannel {
 		initLock.lock();
 		try {
 			if (!sniRead) {
-				sslContext = internalSslContextFactory.getSslContext(() -> getServerNameIndication());
-				SSLEngine engine = engineFactory.apply(sslContext);
+				sslContext = sslContextStrategy.getSslContext(this::getServerNameIndication);
+				// call client code
+                SSLEngine engine;
+                try {
+                    engine = engineFactory.apply(sslContext);
+                } catch (Exception e) {
+                    logger.trace("client threw exception in SSLEngine factory", e);
+                    throw new TlsChannelCallbackException("SSLEngine creation callback failed", e);
+                }
 				impl = new TlsChannelImpl(underlying, underlying, engine, Optional.of(inEncrypted), sessionInitCallback,
 						runTasks, plainBufAllocator, encryptedBufAllocator, releaseBuffers, waitForCloseConfirmation);
 				inEncrypted = null;

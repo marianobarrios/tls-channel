@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tlschannel.*;
+import tlschannel.util.TlsChannelCallbackException;
 import tlschannel.util.Util;
 
 import java.nio.channels.ReadableByteChannel;
@@ -483,7 +484,12 @@ public class TlsChannelImpl implements ByteChannel {
 				logger.trace("Called engine.beginHandshake()");
 				handshake(Optional.empty(), Optional.empty());
 				// call client code
-				initSessionCallback.accept(engine.getSession());
+				try {
+					initSessionCallback.accept(engine.getSession());
+				} catch (Exception e) {
+                    logger.trace("client code threw exception in session initialization callback", e);
+                    throw new TlsChannelCallbackException("session initialization callback failed", e);
+				}
 				negotiated = true;
 			}
 		} finally {
