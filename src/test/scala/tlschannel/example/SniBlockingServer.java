@@ -18,7 +18,7 @@ import java.security.GeneralSecurityException;
 import java.util.Optional;
 
 /**
- * <p> Server examples. Accepts one connection and echos bytes sent by the client into standard outout.</p>
+ * <p> Server example. Accepts one connection and echos bytes sent by the client into standard output.</p>
  * <p> To test, use: </p>
  * <code>
  * openssl s_client -connect localhost:10000 -servername domain.com -tls1
