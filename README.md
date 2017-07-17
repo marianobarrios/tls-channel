@@ -95,17 +95,11 @@ HTTP server | [Jetty](Jetty) | [org.eclipse.jetty.io.ssl.SslConnection](https://
 Distributed file system | [XtreemFS](http://www.xtreemfs.org/) | [org.xtreemfs.foundation.pbrpc.channels.SSLChannelIO](https://github.com/xtreemfs/xtreemfs/blob/master/java/xtreemfs-foundation/src/main/java/org/xtreemfs/foundation/pbrpc/channels/SSLChannelIO.java)
 Tor client | [Orchid](https://subgraph.com/orchid/index.en.html) | [com.subgraph.orchid.sockets.sslengine.SSLEngineManager](https://github.com/subgraph/Orchid/blob/master/src/com/subgraph/orchid/sockets/sslengine/SSLEngineManager.java)
 
-## Compatibility and certificate validation
-
-Because the protocol implementation is fully delegated to SSLEngine, there are no limitations regarding TLS versions: whatever is supported by the Java implementation used will work. 
-
-The same applies to certificate validation. All configuration is done using the SSLContext object, which TLS Channel takes as is.
-
 ## Usage
 
-Being an instance of ByteChannel, normal IO operations are done just in the usual way. For instantiation of both client and server connections, builders are used:
+Being an instance of ByteChannel, normal IO operations are just done in the usual way. For instantiation of both client and server connections, builders are used:
 
-```
+```java
 ByteChannel rawChannel = ...
 SSLContext sslContext = ...
 ClientTlsChannel tlsChannel = ClientTlsChannel
@@ -113,7 +107,7 @@ ClientTlsChannel tlsChannel = ClientTlsChannel
     .build();
 ```
 
-```
+```java
 ByteChannel rawChannel = ...
 SSLContext sslContext = ...
 ServerTlsChannel tlsChannel = ServerTlsChannel
@@ -130,7 +124,7 @@ Complete examples:
 
 To use SNI-based selection of the SSLContext, a different builder factory method exists, receiving instances of `SslContextFactory`.
 
-```
+```java
 SslContextFactory sslContextFactory = (Optional<SNIServerName> sniServerName) -> {
     Optional<SSLContext> ret = ...
     return ret;
@@ -152,7 +146,7 @@ In the case of TLS Channel, in practice, it is necessary to maintain compatibili
 
 Typical usage inside a selector loop looks like this:
 
-```
+```java
 try {
     int c = tlsChannel.read(buffer);
     ...
@@ -171,7 +165,7 @@ Selector loops work under the assumption that they don't (mostly) block. This is
 
 A single IO thread is in general enough for plaintext connections. But TLS can be CPU-intensive, in particular asymmetric cryptography when establishing sessions. Fortunately, SSLEngine encapsulates those, returning `Runnable` objects that the client code can run in any thread. TLS Channel can be configured to either run those as part of IO operations (that is, in-thread)—the default behavior—or not, letting the calling code handle them. The latter option should be enabled at construction time:
  
-```
+```java
 TlsChannel tlsChannel = ServerTlsChannel
     .newBuilder(rawChannel, sslContext)
     .withRunTasks(false)
@@ -180,7 +174,7 @@ TlsChannel tlsChannel = ServerTlsChannel
 
 Then an additional exception type is used to communicate that a task is ready to run, `NeedsTaskException`:
 
-```
+```java
 try {
     int c = tlsChannel.read(buffer);
     ...
@@ -196,6 +190,12 @@ try {
     });
 }
 ```
+
+## Compatibility and certificate validation
+
+Because the protocol implementation is fully delegated to SSLEngine, there are no limitations regarding TLS versions: whatever is supported by the Java implementation used will work. 
+
+The same applies to certificate validation. All configuration is done using the SSLContext object, which TLS Channel takes as is.
 
 Complete example: [non-blocking server with off-loop tasks](src/test/scala/tlschannel/example/NonBlockingServerWithOffLoopTasks.java)
 
