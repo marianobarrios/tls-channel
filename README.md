@@ -6,6 +6,9 @@ In other words, a simple library that allows the programmer to have TLS using th
 
 [![Build Status](https://travis-ci.org/marianobarrios/tls-channel.svg?branch=master)](https://travis-ci.org/marianobarrios/tls-channel)
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/tls-channel/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/tls-channel)
+[![Javadoc](http://javadoc-badge.appspot.com/com.github.marianobarrios/tls-channel.svg?label=javadoc)](http://javadoc-badge.appspot.com/com.github.marianobarrios/tls-channel)
+
 ### Main features
 
 - Implements [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html), [GatheringByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/GatheringByteChannel.html) and [ScatteringByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ScatteringByteChannel.html), the same interfaces implemented by [SocketChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/SocketChannel.html), effectively making encryption an implementation detail. There is no need to directly call SSLEngine except for the initial setup.
