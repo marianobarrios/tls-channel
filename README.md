@@ -194,13 +194,48 @@ try {
 }
 ```
 
+Complete example: [non-blocking server with off-loop tasks](src/test/scala/tlschannel/example/NonBlockingServerWithOffLoopTasks.java)
+
+## Buffers
+
+TLS Channel uses buffers for its operation. Every channel uses at least two "encrypted" buffers that hold ciphertext, one for reading from the underlying channel and other for writing to it. Additionally, a third buffer may be needed for read operations when the user-supplied buffer is smaller than the minimum SSLEngine needs for placing the decrypted bytes.
+
+All buffers are created from optionally user-supplied factories (instances of [BufferAllocator](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/index.html)). It is also possible to supply different allocators for plain and ciphertext. For example:
+
+```java
+ServerTlsChannel tlsChannel = ServerTlsChannel
+    .newBuilder(rawChannel, sslContext)
+    .withPlainBufferAllocator(new HeapBufferAllocator())
+    .withEncryptedBufferAllocator(new DirectBufferAllocator())
+    .build();
+```
+
+This is indeed the default behavior. The rationale for the encrypted buffers is that, in the most common use case, the underlying channel is a [SocketChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/SocketChannel.html). This channel actually does native IO operations, which are generally faster using direct buffers.
+
+The plain buffers are not involved in IO, and so standard heap allocation is used by default.
+
+### Zeroing
+
+Buffers containing plain text are always immediately zeroed after the bytes are returned.
+
+### Buffer release
+
+TLS Channel supports opportunistic buffer release, a similar feature to OpenSSL's `SSL_MODE_RELEASE_BUFFERS` option. If, after any operation, a buffers does not contain any bytes pending, it is released back to the pool. This feature can reduce memory consumption dramatically in the case of long-lived idle connections, which tend to happen when implementing server-side HTTP.
+ 
+ The option is enabled by default, and could be disabled if desired:
+ 
+```java
+ServerTlsChannel tlsChannel = ServerTlsChannel
+    .newBuilder(rawChannel, sslContext)
+    .withReleaseBuffers(false)
+    .build();
+```
+
 ## Compatibility and certificate validation
 
 Because the protocol implementation is fully delegated to SSLEngine, there are no limitations regarding TLS versions: whatever is supported by the Java implementation used will work. 
 
 The same applies to certificate validation. All configuration is done using the SSLContext object, which TLS Channel takes as is.
-
-Complete example: [non-blocking server with off-loop tasks](src/test/scala/tlschannel/example/NonBlockingServerWithOffLoopTasks.java)
 
 ## Implementation
 
