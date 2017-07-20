@@ -200,7 +200,7 @@ Complete example: [non-blocking server with off-loop tasks](src/test/scala/tlsch
 
 TLS Channel uses buffers for its operation. Every channel uses at least two "encrypted" buffers that hold ciphertext, one for reading from the underlying channel and other for writing to it. Additionally, a third buffer may be needed for read operations when the user-supplied buffer is smaller than the minimum SSLEngine needs for placing the decrypted bytes.
 
-All buffers are created from optionally user-supplied factories (instances of [BufferAllocator](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/index.html)). It is also possible to supply different allocators for plain and ciphertext. For example:
+All buffers are created from optionally user-supplied factories (instances of [BufferAllocator](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/tlschannel/BufferAllocator.html)). It is also possible to supply different allocators for plain and ciphertext. For example:
 
 ```java
 ServerTlsChannel tlsChannel = ServerTlsChannel
