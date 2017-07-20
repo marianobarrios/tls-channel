@@ -5,8 +5,8 @@ import javax.net.ssl.SSLContext;
 import java.util.Optional;
 
 /**
- * Factory for {@link SSLContext}s, based in an optional {@link SNIServerName}. Implementations of this interface should
- * be supplied to {@link ServerTlsChannel} instances, to be able to pick the correct context (and so the correct
+ * Factory for {@link SSLContext}s, based in an optional {@link SNIServerName}. Implementations of this interface are
+ * supplied to {@link ServerTlsChannel} instances, to select the correct context (and so the correct
  * certificate) based on the server name provided by the client.
  */
 @FunctionalInterface

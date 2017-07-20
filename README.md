@@ -1,6 +1,6 @@
 # TLS Channel
 
-TLS Channel is a library that implements a [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html) interface to a [TLS](https://tools.ietf.org/html/rfc5246) (Transport Layer Security) connection. The library delegates all cryptographic operations to the standard Java TLS implementation: [SSLEngine](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLEngine.html); effectively hiding it behind an easy-to-use streamming API, that allows to securitize JVM applications with minimal added complexity.
+TLS Channel is a library that implements a [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html) interface to a [TLS](https://tools.ietf.org/html/rfc5246) (Transport Layer Security) connection. The library delegates all cryptographic operations to the standard Java TLS implementation: [SSLEngine](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLEngine.html); effectively hiding it behind an easy-to-use streaming API, that allows to securitize JVM applications with minimal added complexity.
 
 In other words, a simple library that allows the programmer to have TLS using the same standard socket API used for plaintext, just like OpenSSL does for C, only for Java, filling a specially painful missing feature of the standard Java library.
 
@@ -13,12 +13,12 @@ In other words, a simple library that allows the programmer to have TLS using th
 
 - Implements [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html), [GatheringByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/GatheringByteChannel.html) and [ScatteringByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ScatteringByteChannel.html), the same interfaces implemented by [SocketChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/SocketChannel.html), effectively making encryption an implementation detail. There is no need to directly call SSLEngine except for the initial setup.
 - Works for both client and server-side TLS.
-- Supports choosing different [SSLContexts](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLContext.html) according to the received [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) (SNI) sent by incoming connections (not supported at all by SSLEngine but universally used by web browsers and servers).
-- Supports both blocking and non-blocking modes, using the same API, just like SocketChannel does with unencrypted connections.
+- **Server-side SNI**: Supports choosing different [SSLContexts](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLContext.html) according to the received [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) sent by incoming connections (not supported at all by SSLEngine but universally used by web browsers and servers).
+- Supports both **blocking and non-blocking** modes, using the same API, just like SocketChannel does with unencrypted connections.
 - Pluggable buffer strategy (to do buffer pooling, or to use direct buffers for IO).
-- Full and automatic zeroing of all the plaintext contained in internal buffers right after the data stops being necessary.
-- Opportunistic buffer release (akin to OpenSSL's SSL_MODE_RELEASE_BUFFERS option), which significantly reduces the memory footprint of idle cached connections.
-- Full control over TLS shutdown to prevent truncation attacks.
+- Full and **automatic zeroing** of all the plaintext contained in internal buffers right after the data stops being necessary.
+- **Opportunistic buffer release** (akin to OpenSSL's SSL_MODE_RELEASE_BUFFERS option), which significantly reduces the memory footprint of idle cached connections.
+- Full control over **TLS shutdown** to prevent truncation attacks.
 
 ### Non-features
 
@@ -123,29 +123,13 @@ Complete examples:
 - [Simple blocking client](src/test/scala/tlschannel/example/SimpleBlockingClient.java)
 - [Simple blocking server](src/test/scala/tlschannel/example/SimpleBlockingServer.java)
 
-### SNI
-
-To use SNI-based selection of the SSLContext, a different builder factory method exists, receiving instances of `SslContextFactory`.
-
-```java
-SslContextFactory sslContextFactory = (Optional<SNIServerName> sniServerName) -> {
-    Optional<SSLContext> ret = ...
-    return ret;
-};
-ServerTlsChannel tlsChannel = ServerTlsChannel
-    .newBuilder(rawChannel, sslContextFactory)
-    .build();
-```
-
-Complete example: [SNI-aware server](src/test/scala/tlschannel/example/SniBlockingServer.java)
-
 ### Non-blocking
 
-Standard `ByteChannel`s communicate that operations would block—and so that they should be retried when the channel is ready—returning zero. However, as TLS handshakes happen transparently and involve multiple messages from each side, both a read and a write operation could be blocked waiting for either a read (byte available) or a write (buffer space available) in the underlying socket. That is, some way to distinguish between read- or write-related blocking is needed.
+Standard ByteChannel instances communicate the fact that operations would block—and so that they should be retried when the channel is ready—returning zero. However, as TLS handshakes happen transparently and involve multiple messages from each side, both a read and a write operation could be blocked waiting for either a read (byte available) or a write (buffer space available) in the underlying socket. That is, some way to distinguish between read- or write-related blocking is needed.
 
 Ideally, a more complex return type would suffice—not merely an `int` but some object including more information. For instance, OpenSSL uses special error codes for these conditions: `SSL_ERROR_WANT_READ` and `SSL_ERROR_WANT_WRITE`.
 
-In the case of TLS Channel, in practice, it is necessary to maintain compatibility with the existing `ByteChannel` interface. That's why an somewhat unorthodox approach is used: when the operation would block, special exceptions are thrown: `NeedsReadException` and `NeedsWriteException`, meaning that the operation should be retried when the underlying channel is ready for reading or writing, respectively. 
+In the case of TLS Channel, it is in practice necessary to maintain compatibility with the existing ByteChannel interface. That's why an somewhat unorthodox approach is used: when the operation would block, special exceptions are thrown: [NeedsReadException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/index.html) and [NeedsWriteException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/index.html), meaning that the operation should be retried when the underlying channel is ready for reading or writing, respectively. 
 
 Typical usage inside a selector loop looks like this:
 
@@ -166,7 +150,7 @@ Complete example: [non-blocking server](src/test/scala/tlschannel/example/NonBlo
 
 Selector loops work under the assumption that they don't (mostly) block. This is  enough when it is possible to have as many loops as CPU cores. However, Java selectors don't work very well with multiple threads, requiring complicated synchronization; this leads to them being used almost universally from a single thread. 
 
-A single IO thread is in general enough for plaintext connections. But TLS can be CPU-intensive, in particular asymmetric cryptography when establishing sessions. Fortunately, SSLEngine encapsulates those, returning `Runnable` objects that the client code can run in any thread. TLS Channel can be configured to either run those as part of IO operations (that is, in-thread)—the default behavior—or not, letting the calling code handle them. The latter option should be enabled at construction time:
+A single IO thread is in general enough for plaintext connections. But TLS can be CPU-intensive, in particular asymmetric cryptography when establishing sessions. Fortunately, SSLEngine encapsulates those, returning [Runnable](https://docs.oracle.com/javase/8/docs/api/java/lang/Runnable.html) objects that the client code can run in any thread. TLS Channel can be configured to either run those as part of IO operations (that is, in-thread)—the default behavior—or not, letting the calling code handle them. The latter option should be enabled at construction time:
  
 ```java
 TlsChannel tlsChannel = ServerTlsChannel
@@ -175,7 +159,7 @@ TlsChannel tlsChannel = ServerTlsChannel
     .build();
 ```
 
-Then an additional exception type is used to communicate that a task is ready to run, `NeedsTaskException`:
+An exception ([NeedsTaskException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/index.html)) is then used to communicate that a task is ready to run. (Using an exception is needed for the same reasons explained in the previous section):
 
 ```java
 try {
@@ -195,6 +179,26 @@ try {
 ```
 
 Complete example: [non-blocking server with off-loop tasks](src/test/scala/tlschannel/example/NonBlockingServerWithOffLoopTasks.java)
+
+### Server Name Indication - server side
+
+The [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) is a special TLS extension designed to solve a chicken-and-egg situation between the certificate offered by the server (depending on the host required by the client for multi-host servers) and the host name sent by client in HTTP request headers (necessarily after the connection is established). The extension allows the client to anticipate the required host in the ClientHello message.
+
+Java added support for SNI in version 7. The feature can be accessed using the [SSLParameters](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLParameters.html) class. Sadly, this only works for the client side. For the server, the class allows only to accept or reject connections based on the host name, not to choose the certificate offered. 
+
+In TLS Channel, to use SNI-based selection of the SSLContext, a different builder factory method exists, receiving instances of [SniSslContextFactory](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/index.html).
+
+```java
+SniSslContextFactory contextFactory = (Optional<SNIServerName> sniServerName) -> {
+    Optional<SSLContext> ret = ...
+    return ret;
+};
+ServerTlsChannel tlsChannel = ServerTlsChannel
+    .newBuilder(rawChannel, contextFactory)
+    .build();
+```
+
+Complete example: [SNI-aware server](src/test/scala/tlschannel/example/SniBlockingServer.java)
 
 ## Buffers
 
