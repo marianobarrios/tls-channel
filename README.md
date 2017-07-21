@@ -105,7 +105,7 @@ Being an instance of ByteChannel, normal IO operations are just done in the usua
 ```java
 ByteChannel rawChannel = ...
 SSLContext sslContext = ...
-ClientTlsChannel tlsChannel = ClientTlsChannel
+TlsChannel tlsChannel = ClientTlsChannel
     .newBuilder(rawChannel, sslContext)
     .build();
 ```
@@ -113,10 +113,12 @@ ClientTlsChannel tlsChannel = ClientTlsChannel
 ```java
 ByteChannel rawChannel = ...
 SSLContext sslContext = ...
-ServerTlsChannel tlsChannel = ServerTlsChannel
+TlsChannel tlsChannel = ServerTlsChannel
     .newBuilder(rawChannel, sslContext)
     .build();
 ```
+
+Typical usage involved creating either a [ClientTlsChannel](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/tlschannel/ClientTlsChannel.html) or a [ServerTlsChannel](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/tlschannel/ServerTlsChannel.html), for client and server connections respectively. Both classes implement [TlsChannel](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/tlschannel/TlsChannel.html), where most of the methods are defined.
 
 Complete examples:
 
@@ -193,7 +195,7 @@ SniSslContextFactory contextFactory = (Optional<SNIServerName> sniServerName) ->
     Optional<SSLContext> ret = ...
     return ret;
 };
-ServerTlsChannel tlsChannel = ServerTlsChannel
+TlsChannel tlsChannel = ServerTlsChannel
     .newBuilder(rawChannel, contextFactory)
     .build();
 ```
@@ -207,7 +209,7 @@ TLS Channel uses buffers for its operation. Every channel uses at least two "enc
 All buffers are created from optionally user-supplied factories (instances of [BufferAllocator](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/tlschannel/BufferAllocator.html)). It is also possible to supply different allocators for plain and ciphertext. For example:
 
 ```java
-ServerTlsChannel tlsChannel = ServerTlsChannel
+TlsChannel tlsChannel = ServerTlsChannel
     .newBuilder(rawChannel, sslContext)
     .withPlainBufferAllocator(new HeapBufferAllocator())
     .withEncryptedBufferAllocator(new DirectBufferAllocator())
@@ -229,7 +231,7 @@ TLS Channel supports opportunistic buffer release, a similar feature to OpenSSL'
  The option is enabled by default, and could be disabled if desired:
  
 ```java
-ServerTlsChannel tlsChannel = ServerTlsChannel
+TlsChannel tlsChannel = ServerTlsChannel
     .newBuilder(rawChannel, sslContext)
     .withReleaseBuffers(false)
     .build();
