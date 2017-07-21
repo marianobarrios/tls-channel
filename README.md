@@ -118,7 +118,7 @@ TlsChannel tlsChannel = ServerTlsChannel
     .build();
 ```
 
-Typical usage involved creating either a [ClientTlsChannel](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/tlschannel/ClientTlsChannel.html) or a [ServerTlsChannel](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/tlschannel/ServerTlsChannel.html), for client and server connections respectively. Both classes implement [TlsChannel](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/tlschannel/TlsChannel.html), where most of the methods are defined.
+Typical usage involved creating either a [ClientTlsChannel](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/ClientTlsChannel.html) or a [ServerTlsChannel](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/ServerTlsChannel.html), for client and server connections respectively. Both classes implement [TlsChannel](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/TlsChannel.html), where most of the methods are defined.
 
 Complete examples:
 
@@ -131,7 +131,7 @@ Standard ByteChannel instances communicate the fact that operations would blockâ
 
 Ideally, a more complex return type would sufficeâ€”not merely an `int` but some object including more information. For instance, OpenSSL uses special error codes for these conditions: `SSL_ERROR_WANT_READ` and `SSL_ERROR_WANT_WRITE`.
 
-In the case of TLS Channel, it is in practice necessary to maintain compatibility with the existing ByteChannel interface. That's why an somewhat unorthodox approach is used: when the operation would block, special exceptions are thrown: [NeedsReadException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/index.html) and [NeedsWriteException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/index.html), meaning that the operation should be retried when the underlying channel is ready for reading or writing, respectively. 
+In the case of TLS Channel, it is in practice necessary to maintain compatibility with the existing ByteChannel interface. That's why an somewhat unorthodox approach is used: when the operation would block, special exceptions are thrown: [NeedsReadException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/NeedsReadException.html) and [NeedsWriteException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/NeedsWriteException.html), meaning that the operation should be retried when the underlying channel is ready for reading or writing, respectively. 
 
 Typical usage inside a selector loop looks like this:
 
@@ -161,7 +161,7 @@ TlsChannel tlsChannel = ServerTlsChannel
     .build();
 ```
 
-An exception ([NeedsTaskException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/index.html)) is then used to communicate that a task is ready to run. (Using an exception is needed for the same reasons explained in the previous section):
+An exception ([NeedsTaskException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/NeedsTaskException.html)) is then used to communicate that a task is ready to run. (Using an exception is needed for the same reasons explained in the previous section):
 
 ```java
 try {
@@ -188,7 +188,7 @@ The [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) is a sp
 
 Java added support for SNI in version 7. The feature can be accessed using the [SSLParameters](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLParameters.html) class. Sadly, this only works for the client side. For the server, the class allows only to accept or reject connections based on the host name, not to choose the certificate offered. 
 
-In TLS Channel, to use SNI-based selection of the SSLContext, a different builder factory method exists, receiving instances of [SniSslContextFactory](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/index.html).
+In TLS Channel, to use SNI-based selection of the SSLContext, a different builder factory method exists, receiving instances of [SniSslContextFactory](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/SniSslContextFactory.html).
 
 ```java
 SniSslContextFactory contextFactory = (Optional<SNIServerName> sniServerName) -> {
@@ -206,7 +206,7 @@ Complete example: [SNI-aware server](src/test/scala/tlschannel/example/SniBlocki
 
 TLS Channel uses buffers for its operation. Every channel uses at least two "encrypted" buffers that hold ciphertext, one for reading from the underlying channel and other for writing to it. Additionally, a third buffer may be needed for read operations when the user-supplied buffer is smaller than the minimum SSLEngine needs for placing the decrypted bytes.
 
-All buffers are created from optionally user-supplied factories (instances of [BufferAllocator](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0-RC1/tls-channel-0.1.0-RC1-javadoc.jar/!/tlschannel/BufferAllocator.html)). It is also possible to supply different allocators for plain and ciphertext. For example:
+All buffers are created from optionally user-supplied factories (instances of [BufferAllocator](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/BufferAllocator.html)). It is also possible to supply different allocators for plain and ciphertext. For example:
 
 ```java
 TlsChannel tlsChannel = ServerTlsChannel
