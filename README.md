@@ -261,7 +261,8 @@ The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most 
 
 - [NIO SSL](https://github.com/baswerc/niossl) is a simple library with a similar purpose, written by Corey Baswell.
 - [sslfacade](https://github.com/kashifrazzaqui/sslfacade) is an attempt to offer a more reasonable interface than SSLEngine, written by Kashif Razzaqui.
- 
+- [sslengine.example](https://github.com/alkarn/sslengine.example) shows how to use SSLEngine, wrapping it in custom classes. It was written by Alex Karnezis.
+
 ## Credits
 
 This work is based on a preliminary implementation by [Claudio Martinez](https://github.com/cldmartinez/) and [Mariano Barrios](https://github.com/marianobarrios/) at [Despegar](https://github.com/despegar).
