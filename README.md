@@ -49,7 +49,7 @@ In version 1.4, a [new IO API](https://docs.oracle.com/javase/8/docs/api/java/ni
 
 - Non-blocking operations.
 - A higher lever API, based on wrapped buffers ([ByteBuffers](https://docs.oracle.com/javase/8/docs/api/java/nio/ByteBuffer.html)).
-- Direct IO, with "direct" ByteBuffers, that can live out of the heap. This is specially advantageous, as the JVM forces an extra copy for any heap array sent in a native call (to facilitate synchronization with the garbage collector).
+- Direct IO, with "direct" ByteBuffers, that can live out of the heap. This is specially advantageous for sockets, as the JVM forces an extra copy of any heap-based array sent in a native call (to facilitate synchronization with the garbage collector). Not having the buffer in the heap avoids this copy, improving performance (at the cost of slightly more complicated memory management).
 - "[Scattering](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ScatteringByteChannel.html)" and "[gathering](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/GatheringByteChannel.html)" API, that is, the ability to use more than one sequential buffer in the same IO operation.
  
 But no TLS support, which was only available in old-style sockets.
