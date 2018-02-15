@@ -182,7 +182,7 @@ try {
 
 Complete example: [non-blocking server with off-loop tasks](src/test/scala/tlschannel/example/NonBlockingServerWithOffLoopTasks.java)
 
-### Server Name Indication - server side
+### Server Name Indication – server side
 
 The [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) is a special TLS extension designed to solve a chicken-and-egg situation between the certificate offered by the server (depending on the host required by the client for multi-host servers) and the host name sent by client in HTTP request headers (necessarily after the connection is established). The extension allows the client to anticipate the required host in the ClientHello message.
 
