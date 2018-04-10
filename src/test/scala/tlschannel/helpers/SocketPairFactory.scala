@@ -171,7 +171,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
         val rawClient = SocketChannel.open(address)
         val rawServer = serverSocket.accept()
 
-        val plainClient = externalClientChunkSize match {
+        val plainClient = internalClientChunkSize match {
           case Some(size) => new ChunkingByteChannel(rawClient, chunkSize = size)
           case None => rawClient
         }
