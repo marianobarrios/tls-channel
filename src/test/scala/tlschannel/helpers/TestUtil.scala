@@ -1,6 +1,7 @@
 package tlschannel.helpers
 
 import java.time.Duration
+import java.util.SplittableRandom
 
 import com.typesafe.scalalogging.StrictLogging
 import java.util.concurrent.ConcurrentHashMap
@@ -74,5 +75,23 @@ object TestUtil extends StrictLogging {
     val cache = new ConcurrentHashMap[K, O]
     override def apply(x: I) = mapAsScalaMap(cache).getOrElseUpdate(x, f(x))
   }
-  
+
+  def nextBytes(random: SplittableRandom, bytes: Array[Byte]): Unit = {
+    nextBytes(random, bytes, bytes.length)
+  }
+
+  def nextBytes(random: SplittableRandom, bytes: Array[Byte], len: Int): Unit = {
+    var i = 0
+    //val len = bytes.length
+    while (i < len) {
+      var rnd = random.nextInt()
+      var n = Math.min(len - i, Integer.SIZE / java.lang.Byte.SIZE)
+      while (n > 0) {
+        bytes(i) = rnd.toByte
+        rnd >>= java.lang.Byte.SIZE
+        n -= 1
+        i += 1
+      }
+    }
+  }
 }

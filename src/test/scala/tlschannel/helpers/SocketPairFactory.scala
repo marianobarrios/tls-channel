@@ -13,25 +13,38 @@ import com.typesafe.scalalogging.StrictLogging
 import javax.crypto.Cipher
 import java.nio.channels.ByteChannel
 import java.util.Optional
+import java.util.concurrent.ExecutorService
 
 import sun.security.ssl.SSLSocketImpl
 import javax.net.ssl.SNIHostName
 import javax.net.ssl.SNIServerName
 
 import tlschannel._
+import tlschannel.async.AsynchronousTlsChannel
+import tlschannel.async.AsynchronousTlsChannelGroup
+import tlschannel.async.ExtendedAsynchronousByteChannel
 
 import scala.collection.JavaConverters.seqAsJavaList
+import scala.util.Random
 
 case class SocketPair(client: SocketGroup, server: SocketGroup)
 
+case class AsyncSocketPair(client: AsyncSocketGroup, server: AsyncSocketGroup)
+
 case class SocketGroup(external: ByteChannel, tls: TlsChannel, plain: SocketChannel)
+
+case class AsyncSocketGroup(external: ExtendedAsynchronousByteChannel, tls: TlsChannel, plain: SocketChannel)
+
 
 /**
  * Create pairs of connected sockets (using the loopback interface).
  * Additionally, all the raw (non-encrypted) socket channel are wrapped with a chunking decorator that partitions
  * the bytesProduced of any read or write operation.
  */
-class SocketPairFactory(val sslContext: SSLContext, val serverName: String = SslContextFactory.certificateCommonName) extends StrictLogging {
+class SocketPairFactory(
+  val sslContext: SSLContext,
+  val serverName: String = SslContextFactory.certificateCommonName,
+) extends StrictLogging {
 
   private val releaseBuffers = true
 
@@ -141,7 +154,9 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     externalServerChunkSize: Option[Int] = None,
     internalServerChunkSize: Option[Int] = None,
     runTasks: Boolean = true,
-    waitForCloseConfirmation: Boolean = false): SocketPair = {
+    waitForCloseConfirmation: Boolean = false,
+    pseudoAsyncGroup: Option[AsynchronousTlsChannelGroup] = None,
+  ): SocketPair = {
     nioNioN(
       cipher,
       1,
@@ -150,7 +165,9 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
       externalServerChunkSize,
       internalServerChunkSize,
       runTasks,
-      waitForCloseConfirmation).head
+      waitForCloseConfirmation,
+      pseudoAsyncGroup
+    ).head
   }
 
   def nioNioN(
@@ -161,7 +178,9 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     externalServerChunkSize: Option[Int] = None,
     internalServerChunkSize: Option[Int] = None,
     runTasks: Boolean = true,
-    waitForCloseConfirmation: Boolean = false): Seq[SocketPair] = {
+    waitForCloseConfirmation: Boolean = false,
+    pseudoAsyncGroup: Option[AsynchronousTlsChannelGroup] = None,
+  ): Seq[SocketPair] = {
     val serverSocket = ServerSocketChannel.open()
     try {
       serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
@@ -175,22 +194,20 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
           case Some(size) => new ChunkingByteChannel(rawClient, chunkSize = size)
           case None => rawClient
         }
+
         val plainServer = internalServerChunkSize match {
           case Some(size) => new ChunkingByteChannel(rawServer, chunkSize = size)
           case None => rawServer
         }
 
+        val clientEngine = if (cipher == null) {
+          new NullSslEngine
+        } else {
+          createClientSslEngine(cipher, chosenPort)
+        }
+
         val clientChannel = ClientTlsChannel
-          .newBuilder(plainClient, createClientSslEngine(cipher, chosenPort))
-          .withRunTasks(runTasks)
-          .withWaitForCloseConfirmation(waitForCloseConfirmation)
-          .withPlainBufferAllocator(globalPlainTrackingAllocator)
-          .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
-          .withReleaseBuffers(releaseBuffers)
-          .build()
-        val serverChannel = ServerTlsChannel
-          .newBuilder(plainServer, nameOpt => sslContextFactory(clientSniHostName, sslContext)(nameOpt))
-          .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
+          .newBuilder(plainClient, clientEngine)
           .withRunTasks(runTasks)
           .withWaitForCloseConfirmation(waitForCloseConfirmation)
           .withPlainBufferAllocator(globalPlainTrackingAllocator)
@@ -198,12 +215,50 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
           .withReleaseBuffers(releaseBuffers)
           .build()
 
+
+        val serverChannelBuilder = if (cipher == null) {
+          ServerTlsChannel
+            .newBuilder(plainServer, new NullSslContext)
+        } else {
+          ServerTlsChannel
+            .newBuilder(plainServer, nameOpt => sslContextFactory(clientSniHostName, sslContext)(nameOpt))
+            .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
+        }
+
+        val serverChannel = serverChannelBuilder
+          .withRunTasks(runTasks)
+          .withWaitForCloseConfirmation(waitForCloseConfirmation)
+          .withPlainBufferAllocator(globalPlainTrackingAllocator)
+          .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
+          .withReleaseBuffers(releaseBuffers)
+          .build()
+
+        /*
+         * Handler executor can be null because BlockerByteChannel will only use Futures, never callbacks.
+         */
+
+        val clientAsyncChannel = pseudoAsyncGroup match {
+          case Some(channelGroup) =>
+          rawClient.configureBlocking(false)
+          new BlockerByteChannel(new AsynchronousTlsChannel(channelGroup, clientChannel, rawClient, null))
+          case None =>
+            clientChannel
+        }
+
+        val serverAsyncChannel = pseudoAsyncGroup match {
+          case Some(channelGroup) =>
+            rawServer.configureBlocking(false)
+            new BlockerByteChannel(new AsynchronousTlsChannel(channelGroup, serverChannel, rawServer, null))
+          case None =>
+            serverChannel
+        }
+
         val externalClient = externalClientChunkSize match {
-          case Some(size) => new ChunkingByteChannel(clientChannel, chunkSize = size)
+          case Some(size) => new ChunkingByteChannel(clientAsyncChannel, chunkSize = size)
           case None => clientChannel
         }
         val externalServer = externalClientChunkSize match {
-          case Some(size) => new ChunkingByteChannel(serverChannel, chunkSize = size)
+          case Some(size) => new ChunkingByteChannel(serverAsyncChannel, chunkSize = size)
           case None => serverChannel
         }
 
@@ -216,17 +271,15 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
     }
   }
 
-  def nullNioNio(internalClientChunkSize: Option[Int], internalServerChunkSize: Option[Int],
-    encryptedBufferAllocator: BufferAllocator): SocketPair = {
-    nullNioNioN(1, internalClientChunkSize, internalServerChunkSize, encryptedBufferAllocator).head
-  }
-
-  def nullNioNioN(
+  def asyncN(cipher: String,
+    handlerExecutor: ExecutorService,
+    channelGroup: AsynchronousTlsChannelGroup,
     qtty: Int,
-    internalClientChunkSize: Option[Int],
-    internalServerChunkSize: Option[Int],
-    encryptedBufferAllocator: BufferAllocator = globalEncryptedTrackingAllocator): Seq[SocketPair] = {
+    runTasks: Boolean,
+    waitForCloseConfirmation: Boolean = false,
+  ): Seq[AsyncSocketPair] = {
     val serverSocket = ServerSocketChannel.open()
+
     try {
       serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
       val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
@@ -235,27 +288,46 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String = Ssl
         val rawClient = SocketChannel.open(address)
         val rawServer = serverSocket.accept()
 
-        val plainClient = internalClientChunkSize match {
-          case Some(size) => new ChunkingByteChannel(rawClient, chunkSize = size)
-          case None => rawClient
-        }
-        val plainServer = internalServerChunkSize match {
-          case Some(size) => new ChunkingByteChannel(rawServer, chunkSize = size)
-          case None => rawServer
+        rawClient.configureBlocking(false)
+        rawServer.configureBlocking(false)
+
+        val clientEngine = if (cipher == null) {
+          new NullSslEngine
+        } else {
+          createClientSslEngine(cipher, chosenPort)
         }
 
-        val clientChannel = ClientTlsChannel.newBuilder(plainClient, new NullSslEngine)
+        val clientChannel = ClientTlsChannel
+          .newBuilder(new RandomChunkingByteChannel(rawClient, SocketPairFactory.getChunkingSize _), clientEngine)
+          .withWaitForCloseConfirmation(waitForCloseConfirmation)
           .withPlainBufferAllocator(globalPlainTrackingAllocator)
-          .withEncryptedBufferAllocator(encryptedBufferAllocator)
-          .withReleaseBuffers(releaseBuffers)
-          .build()
-        val serverChannel = ServerTlsChannel.newBuilder(plainServer, new NullSslContext)
-          .withPlainBufferAllocator(globalPlainTrackingAllocator)
-          .withEncryptedBufferAllocator(encryptedBufferAllocator)
+          .withRunTasks(runTasks)
+          .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
           .withReleaseBuffers(releaseBuffers)
           .build()
 
-        SocketPair(SocketGroup(clientChannel, clientChannel, rawClient), SocketGroup(serverChannel, serverChannel, rawServer))
+        val serverChannelBuilder = if (cipher == null) {
+          ServerTlsChannel
+            .newBuilder(new RandomChunkingByteChannel(rawServer, SocketPairFactory.getChunkingSize _), new NullSslContext)
+        } else {
+          ServerTlsChannel.
+            newBuilder(new RandomChunkingByteChannel(rawServer, SocketPairFactory.getChunkingSize _), nameOpt => sslContextFactory(clientSniHostName, sslContext)(nameOpt))
+            .withEngineFactory(fixedCipherServerSslEngineFactory(cipher))
+        }
+
+        val serverChannel = serverChannelBuilder
+          .withWaitForCloseConfirmation(waitForCloseConfirmation)
+          .withPlainBufferAllocator(globalPlainTrackingAllocator)
+          .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
+          .withReleaseBuffers(releaseBuffers)
+          .build()
+
+        val clientAsyncChannel = new AsynchronousTlsChannel(channelGroup, clientChannel, rawClient, handlerExecutor)
+        val serverAsyncChannel = new AsynchronousTlsChannel(channelGroup, serverChannel, rawServer, handlerExecutor)
+
+        val clientPair = AsyncSocketGroup(clientAsyncChannel, clientChannel, rawClient)
+        val serverPair = AsyncSocketGroup(serverAsyncChannel, serverChannel, rawServer)
+        AsyncSocketPair(clientPair, serverPair)
       }
     } finally {
       serverSocket.close()
@@ -289,10 +361,23 @@ object SocketPairFactory extends StrictLogging {
     checkBufferDeallocation(socketPair.client.tls.getEncryptedBufferAllocator)
   }
 
+
+  def checkDeallocation(socketPair: AsyncSocketPair) = {
+    checkBufferDeallocation(socketPair.client.tls.getPlainBufferAllocator)
+    checkBufferDeallocation(socketPair.client.tls.getEncryptedBufferAllocator)
+  }
+
   private def checkBufferDeallocation(allocator: TrackingAllocator) = {
     logger.debug(s"allocator: ${allocator}; allocated: ${allocator.bytesAllocated()}")
     logger.debug(s"allocator: ${allocator}; deallocated: ${allocator.bytesDeallocated()}")
     assert(allocator.bytesAllocated() == allocator.bytesDeallocated(), " - some buffers were not deallocated")
+  }
+
+  def getChunkingSize(): Int = {
+    val labmda = 1.0 / SslContextFactory.tlsMaxDataSize
+    val uniform = Random.nextDouble()
+    val exp = math.log(uniform) * (-1 / labmda)
+    math.max(exp.toInt, 1)
   }
 
 }

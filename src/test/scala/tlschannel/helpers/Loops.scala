@@ -2,8 +2,8 @@ package tlschannel.helpers
 
 import java.nio.ByteBuffer
 import java.security.MessageDigest
+import java.util.SplittableRandom
 
-import scala.util.Random
 import org.scalatest.Matchers
 import com.typesafe.scalalogging.StrictLogging
 import tlschannel.helpers.TestUtil.Memo
@@ -21,7 +21,7 @@ object Loops extends Matchers with StrictLogging {
   val bufferSize = 4 * 5000
 
   val renegotiatePeriod = 10000
-  val hashAlgorithm = "SHA-256"
+  val hashAlgorithm = "MD5" // for speed
 
   /**
    * Test a half-duplex interaction, with (optional) renegotiation
@@ -63,16 +63,15 @@ object Loops extends Matchers with StrictLogging {
     shutdown: Boolean = false,
     close: Boolean = false): Unit = TestUtil.cannotFail {
 
-
     logger.debug(s"Starting writer loop, size: $size, scattering: $scattering, renegotiate:$renegotiate")
-    val random = new Random(seed)
+    val random = new SplittableRandom(seed)
     var bytesSinceRenegotiation = 0
     var bytesRemaining = size
     val bufferArray = Array.ofDim[Byte](bufferSize)
     while (bytesRemaining > 0) {
       val buffer = ByteBuffer.wrap(bufferArray, 0, math.min(bufferSize, bytesRemaining))
-      random.nextBytes(buffer.array)
-      while (buffer.hasRemaining()) {
+      TestUtil.nextBytes(random, buffer.array)
+      while (buffer.hasRemaining) {
         if (renegotiate && bytesSinceRenegotiation > renegotiatePeriod) {
           socketGroup.tls.renegotiate()
           bytesSinceRenegotiation = 0
@@ -84,7 +83,6 @@ object Loops extends Matchers with StrictLogging {
         assert(c > 0, "blocking write must return a positive number")
         bytesSinceRenegotiation += c
         bytesRemaining -= c.toInt
-        assert(c > 0)
         assert(bytesRemaining >= 0)
       }
     }
@@ -116,6 +114,7 @@ object Loops extends Matchers with StrictLogging {
       digest.update(readBuffer.array(), 0, readBuffer.position())
       bytesRemaining -= c
       assert(bytesRemaining >= 0)
+      //logger.debug(s"read $c, remaining: $bytesRemaining")
     }
     if (readEof)
       assert(socketGroup.external.read(ByteBuffer.wrap(readArray)) === -1)
@@ -128,12 +127,12 @@ object Loops extends Matchers with StrictLogging {
 
   val expectedBytesHash = Memo { (size: Int) =>
     val digest = MessageDigest.getInstance(hashAlgorithm)
-    val random = new Random(seed)
+    val random = new SplittableRandom(seed)
     var generated = 0
     val bufferSize = 4 * 1024
     val array = Array.ofDim[Byte](bufferSize)
     while (generated < size) {
-      random.nextBytes(array)
+      TestUtil.nextBytes(random, array)
       val pending = size - generated
       digest.update(array, 0, math.min(bufferSize, pending))
       generated += bufferSize

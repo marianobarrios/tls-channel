@@ -45,6 +45,8 @@ crossPaths := false
 
 javacOptions in (Compile,doc) ++= Seq("-link", "http://docs.oracle.com/javase/8/docs/api/")
 
+//javaOptions in Test += "-Xrunhprof:heap=sites"
+
 sources in (Compile, doc) ~= (_ filter { file =>
 	val parent = file.getParent
 	!parent.endsWith("/engine/misc") && !parent.endsWith("/tlschannel/impl") && !parent.endsWith("/tlschannel/util")  

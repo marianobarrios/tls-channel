@@ -13,9 +13,9 @@ public class ByteBufferSet {
 		if (array == null)
 			throw new NullPointerException();
 		if (array.length < offset) 
-			throw new IllegalArgumentException();
+			throw new IndexOutOfBoundsException();
 		if (array.length < offset + length) 
-			throw new IllegalArgumentException();
+			throw new IndexOutOfBoundsException();
 		for (int i = offset; i < offset + length; i++) {
 			if (array[i] == null)
 				throw new NullPointerException();

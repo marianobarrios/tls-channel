@@ -6,7 +6,6 @@ import com.typesafe.scalalogging.StrictLogging
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
-import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
 
