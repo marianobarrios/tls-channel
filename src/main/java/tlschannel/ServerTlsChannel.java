@@ -359,7 +359,6 @@ public class ServerTlsChannel implements TlsChannel {
     }
 
     private Optional<SNIServerName> getServerNameIndication() throws IOException, EofException {
-        Util.assertTrue(inEncrypted.nullOrEmpty());
         inEncrypted.prepare();
         try {
             int recordHeaderSize = readRecordHeaderSize();
