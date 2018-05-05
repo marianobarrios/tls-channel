@@ -74,10 +74,10 @@ All three alternatives have been taken by many Java libraries and applications, 
 
 #### Non-SSLEngine TLS in Java
 
-There is of course no strict need to use SSLEngine. The two most common alternatives are:
+There is actually no strict need to use SSLEngine. The two most common alternatives are:
 
-- Use the [Java Native Interface](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/) (JNI) and call OpenSSL. The Tomcat project has a widely used "[native](http://tomcat.apache.org/native-doc/)" library that easies that task. While using native code can work, this as obvious shortcomings, specially regarding distribution, type compatibility and safety.
-- "[The Legion of the Bouncy Castle](https://www.bouncycastle.org/)" has a "lightweight" TLS API that supports streaming. This works but only in blocking mode, effectively just like using the old SSLSocket API.
+- Using the [Java Native Interface](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/) (JNI) and calling OpenSSL (or other C library). The Tomcat project has a widely used "[native](http://tomcat.apache.org/native-doc/)" library that easies that task. While using native code can work, it has obvious shortcomings, specially regarding packaging, distribution, type compatibility and runtime safety.
+- "[The Legion of the Bouncy Castle](https://www.bouncycastle.org/)" has a "lightweight" TLS API that supports streaming. This actually works, but only in blocking mode, effectively just like using the old SSLSocket API.
 
 Of course, these options imply using an alternative cryptographic implementation, which may not be desired.
 
