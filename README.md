@@ -37,7 +37,7 @@ By far, the mostly used cryptography solution is TLS (a.k.a. SSL). TLS works on 
 - The Go language has its own implementation, package [crypto/tls](https://golang.org/pkg/crypto/tls/).
 - There is another C library by Mozilla, part of the "[Network Security Services](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS)" (NSS) group of libraries. It's notoriously used by the Firefox browser.
 
-And many more. All this libraries implement a streaming interface, and most let the user switch freely between blocking and non-blocking behavior. But in Java the history, unfortunately, is not so simple.
+And many more. All these libraries implement a streaming interface, and most let the user switch freely between blocking and non-blocking behavior. But in Java the history, unfortunately, is not so simple.
 
 ### The Java TLS problem
 
