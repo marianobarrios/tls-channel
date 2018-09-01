@@ -21,7 +21,7 @@ class NullMultiNonBlockingTest extends FunSuite with Matchers with NonBlockingSu
   val totalConnections = 150
 
   test("running tasks in non-blocking loop") {
-    val pairs = factory.nullNioNioN(totalConnections, None, None)
+    val pairs = factory.nioNioN(cipher = null, totalConnections, None, None)
     val (report, elapsed) = TestUtil.time {
       NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
     }

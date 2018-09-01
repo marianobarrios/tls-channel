@@ -728,4 +728,11 @@ public class TlsChannelImpl implements ByteChannel {
 		return shutdownSent;
 	}
 
+	public ReadableByteChannel plainReadableChannel() {
+		return readChannel;
+	}
+
+	public WritableByteChannel plainWritableChannel() {
+		return writeChannel;
+	}
 }

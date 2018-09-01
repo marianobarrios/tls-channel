@@ -199,13 +199,13 @@ public class ServerTlsChannel implements TlsChannel {
         this.releaseBuffers = releaseBuffers;
         this.waitForCloseConfirmation = waitForCloseConfirmation;
         inEncrypted = new BufferHolder(
-                "inEncrypted",
-                Optional.empty(),
-                encryptedBufAllocator,
-                TlsChannelImpl.buffersInitialSize,
-                TlsChannelImpl.maxTlsPacketSize,
-                false /* plainData */,
-                releaseBuffers);
+            "inEncrypted",
+            Optional.empty(),
+            encryptedBufAllocator,
+            TlsChannelImpl.buffersInitialSize,
+            TlsChannelImpl.maxTlsPacketSize,
+            false /* plainData */,
+            releaseBuffers);
     }
 
     // @formatter:on

@@ -1,7 +1,7 @@
 /**
  * <p> TLS Channel is a library that implements a ByteChannel interface to a TLS (Transport Layer Security) connection.
  * The library delegates all cryptographic operations to the standard Java TLS implementation: SSLEngine; effectively
- * hiding it behind an easy-to-use streamming API, that allows to securitize JVM applications with minimal added
+ * hiding it behind an easy-to-use streaming API, that allows to securitize JVM applications with minimal added
  * complexity.</p>
  *
  * <p> In other words, a simple library that allows the programmer to have TLS using the same standard socket API used

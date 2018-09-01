@@ -55,10 +55,10 @@ class NullSslEngine extends SSLEngine with StrictLogging with Assertions {
     if (dstSet.remaining < unwrapSize)
       return new SSLEngineResult(Status.BUFFER_OVERFLOW, HandshakeStatus.NOT_HANDSHAKING, 0, 0)
     unwrapBuffer.clear()
-    ByteBufferUtil.copy(src, unwrapBuffer, unwrapSize);
+    ByteBufferUtil.copy(src, unwrapBuffer, unwrapSize)
     unwrapBuffer.flip()
     dstSet.putRemaining(unwrapBuffer)
-    return new SSLEngineResult(Status.OK, HandshakeStatus.NOT_HANDSHAKING, unwrapSize, unwrapSize)
+    new SSLEngineResult(Status.OK, HandshakeStatus.NOT_HANDSHAKING, unwrapSize, unwrapSize)
   }
 
   def wrap(srcs: Array[ByteBuffer], offset: Int, length: Int, dst: ByteBuffer): SSLEngineResult = {
@@ -72,7 +72,7 @@ class NullSslEngine extends SSLEngine with StrictLogging with Assertions {
     srcSet.get(wrapBuffer, wrapSize)
     wrapBuffer.flip()
     dst.put(wrapBuffer)
-    return new SSLEngineResult(Status.OK, HandshakeStatus.NOT_HANDSHAKING, wrapSize, wrapSize)
+    new SSLEngineResult(Status.OK, HandshakeStatus.NOT_HANDSHAKING, wrapSize, wrapSize)
   }
 
 }

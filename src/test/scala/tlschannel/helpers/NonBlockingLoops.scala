@@ -15,6 +15,7 @@ import java.nio.channels.SelectionKey
 import tlschannel.helpers.TestUtil.IterableWithForany
 import org.scalatest.Matchers
 import java.security.MessageDigest
+import java.util.SplittableRandom
 
 import scala.concurrent.duration.Duration
 
@@ -29,7 +30,7 @@ object NonBlockingLoops extends Matchers {
       socketGroup: SocketGroup,
       var key: SelectionKey,
       var remaining: Int) extends Endpoint {
-    val random = new Random(Loops.seed)
+    val random = new SplittableRandom(Loops.seed)
     val buffer = ByteBuffer.allocate(Loops.bufferSize)
     buffer.flip()
   }
@@ -102,8 +103,8 @@ object NonBlockingLoops extends Matchers {
                     writer.socketGroup.tls.renegotiate()
                   }
                 }
-                if (!writer.buffer.hasRemaining()) {
-                  writer.random.nextBytes(writer.buffer.array())
+                if (!writer.buffer.hasRemaining) {
+                  TestUtil.nextBytes(writer.random, writer.buffer.array())
                   writer.buffer.position(0)
                   writer.buffer.limit(math.min(writer.buffer.capacity, writer.remaining))
                 }
