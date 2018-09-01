@@ -35,8 +35,8 @@ libraryDependencies ++=
   "org.slf4j" % "slf4j-api" % "1.7.25" ::
   "org.scala-lang" % "scala-library" % "2.12.6" % "test" ::
   "ch.qos.logback" % "logback-classic" % "1.2.3" % "test" ::
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.7.1" % "test" ::
-  "org.scalatest" %% "scalatest" % "3.0.2" % "test" ::
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0" % "test" ::
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test" ::
   "com.jsuereth" %% "scala-arm" % "2.0" % "test" ::
   Nil
 
