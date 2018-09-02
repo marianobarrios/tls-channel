@@ -1,6 +1,7 @@
 package tlschannel.async;
 
 import tlschannel.TlsChannel;
+import tlschannel.async.AsynchronousTlsChannelGroup.RegisteredSocket;
 import tlschannel.impl.ByteBufferSet;
 
 import java.io.IOException;
@@ -14,10 +15,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import tlschannel.async.AsynchronousTlsChannelGroup.RegisteredSocket;
-
-import static tlschannel.async.AsynchronousTlsChannelGroup.WriteOperation;
 import static tlschannel.async.AsynchronousTlsChannelGroup.ReadOperation;
+import static tlschannel.async.AsynchronousTlsChannelGroup.WriteOperation;
 
 /**
  * An {@link AsynchronousByteChannel} that works using {@link TlsChannel}s.
@@ -49,6 +48,17 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
     private final RegisteredSocket registeredSocket;
     private final ExecutorService completionExecutor;
 
+    /**
+     * Initializes a new instance of this class.
+     *
+     * @param channelGroup       group to associate new new channel to
+     * @param tlsChannel         existing TLS channel to be used asynchronously
+     * @param socketChannel      underlying socket
+     * @param completionExecutor executor to run {@link CompletionHandler}, can be <code>null</code> if only futures
+     *                           will be used.
+     * @throws ClosedChannelException if any of the underlying channels are closed.
+     * @throws IllegalArgumentException is the socket is in blocking mode
+     */
     public AsynchronousTlsChannel(
             AsynchronousTlsChannelGroup channelGroup,
             TlsChannel tlsChannel,
