@@ -51,7 +51,10 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
 
     public AsynchronousTlsChannel(
             AsynchronousTlsChannelGroup channelGroup, TlsChannel tlsChannel,
-            SocketChannel socketChannel, ExecutorService handlerExecutor) throws ClosedChannelException {
+            SocketChannel socketChannel, ExecutorService handlerExecutor) throws ClosedChannelException, IllegalArgumentException {
+        if (socketChannel.isBlocking()) {
+            throw new IllegalArgumentException("socket channel must be in non-blocking mode");
+        }
         this.group = channelGroup;
         this.tlsChannel = tlsChannel;
         this.handlerExecutor = handlerExecutor;
