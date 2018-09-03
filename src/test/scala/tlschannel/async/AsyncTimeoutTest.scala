@@ -3,7 +3,6 @@ package tlschannel.async
 import java.nio.ByteBuffer
 import java.nio.channels.CompletionHandler
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.LongAdder
@@ -17,14 +16,13 @@ class AsyncTimeoutTest extends FunSuite with AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.anonContext)
-  val handlerExecutor = Executors.newWorkStealingPool()
 
   val bufferSize = 10
 
   test("scheduled timeout") {
     val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
     val socketPairCount = 1000
-    val socketPairs = factory.asyncN(null, handlerExecutor, channelGroup, socketPairCount, runTasks = true)
+    val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
     val latch = new CountDownLatch(socketPairCount * 2)
     val successWrites = new LongAdder
     val successReads = new LongAdder
@@ -87,7 +85,7 @@ class AsyncTimeoutTest extends FunSuite with AsyncTestBase {
   test("triggered timeout") {
     val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
     val socketPairCount = 1000
-    val socketPairs = factory.asyncN(null, handlerExecutor, channelGroup, socketPairCount, runTasks = true)
+    val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
     val futures = for (AsyncSocketPair(client, server) <- socketPairs) yield {
       val writeBuffer = ByteBuffer.allocate(bufferSize)
       val writeFuture = client.external.write(writeBuffer)

@@ -1,7 +1,6 @@
 package tlschannel.async
 
 import java.nio.ByteBuffer
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 import org.scalatest.FunSuite
@@ -13,14 +12,13 @@ class AsyncShutdownTest extends FunSuite with AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.anonContext)
-  val handlerExecutor = Executors.newWorkStealingPool()
 
   val bufferSize = 10
 
   test("immediate shutdown") {
     val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
     val socketPairCount = 100
-    val socketPairs = factory.asyncN(null, handlerExecutor, channelGroup, socketPairCount, runTasks = true)
+    val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
     for (AsyncSocketPair(client, server) <- socketPairs) {
       val writeBuffer = ByteBuffer.allocate(bufferSize)
       client.external.write(writeBuffer)
@@ -51,7 +49,7 @@ class AsyncShutdownTest extends FunSuite with AsyncTestBase {
   test("non-immediate shutdown") {
     val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
     val socketPairCount = 100
-    val socketPairs = factory.asyncN(null, handlerExecutor, channelGroup, socketPairCount, runTasks = true)
+    val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
     for (AsyncSocketPair(client, server) <- socketPairs) {
       val writeBuffer = ByteBuffer.allocate(bufferSize)
       client.external.write(writeBuffer)

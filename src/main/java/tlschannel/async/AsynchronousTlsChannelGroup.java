@@ -39,7 +39,7 @@ public class AsynchronousTlsChannelGroup {
     /**
      * The main executor of the group has a queue, whose size is a multiple of the number of CPUs.
      */
-    private static final int queueLengthMultiplier = 8;
+    private static final int queueLengthMultiplier = 32;
 
     private static AtomicInteger globalGroupCount = new AtomicInteger();
 
@@ -138,9 +138,9 @@ public class AsynchronousTlsChannelGroup {
      */
     private final AtomicBoolean loggedTaskWarning = new AtomicBoolean();
 
-    private final Selector selector = Selector.open();
+    private final Selector selector;
 
-    private final ExecutorService executor;
+    final ExecutorService executor;
 
     private final ScheduledThreadPoolExecutor timeoutExecutor = new ScheduledThreadPoolExecutor(1, runnable ->
             new Thread(runnable, String.format("async-channel-group-%d-timeout-thread", id))
@@ -173,7 +173,17 @@ public class AsynchronousTlsChannelGroup {
     private LongAdder currentReads = new LongAdder();
     private LongAdder currentWrites = new LongAdder();
 
-    public AsynchronousTlsChannelGroup(int nThreads) throws IOException {
+    /**
+     * Creates an instance of this class.
+     *
+     * @param nThreads number of threads in the executor used to assist the selector loop and run completion handlers.
+     */
+    public AsynchronousTlsChannelGroup(int nThreads) {
+        try {
+            selector = Selector.open();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         timeoutExecutor.setRemoveOnCancelPolicy(true);
         this.executor = new ThreadPoolExecutor(
                 nThreads, nThreads,

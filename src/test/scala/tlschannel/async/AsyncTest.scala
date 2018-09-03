@@ -1,7 +1,5 @@
 package tlschannel.async
 
-import java.util.concurrent.Executors
-
 import org.scalatest.FunSuite
 import tlschannel.helpers.AsyncLoops
 import tlschannel.helpers.SocketPairFactory
@@ -13,14 +11,13 @@ class AsyncTest extends FunSuite with AsyncTestBase {
   val sslContextFactory = new SslContextFactory
   val (cipher, sslContext) = sslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext)
-  val handlerExecutor = Executors.newWorkStealingPool()
   val socketPairCount = 120
 
   test("real engine - run tasks") {
     val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
     val dataSize = 5 * 1024 * 1024
     info(s"data size: $dataSize")
-    val socketPairs = factory.asyncN(cipher, handlerExecutor, channelGroup, socketPairCount, runTasks = true)
+    val socketPairs = factory.asyncN(cipher, channelGroup, socketPairCount, runTasks = true)
     val (report, elapsed) = TestUtil.time {
       AsyncLoops.loop(socketPairs, dataSize)
     }
@@ -39,7 +36,7 @@ class AsyncTest extends FunSuite with AsyncTestBase {
     val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
     val dataSize = 2 * 1024 * 1024
     info(s"data size: $dataSize")
-    val socketPairs = factory.asyncN(cipher, handlerExecutor, channelGroup, socketPairCount, runTasks = false)
+    val socketPairs = factory.asyncN(cipher, channelGroup, socketPairCount, runTasks = false)
     val (report, elapsed) = TestUtil.time {
       AsyncLoops.loop(socketPairs, dataSize)
     }
@@ -61,7 +58,7 @@ class AsyncTest extends FunSuite with AsyncTestBase {
     val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
     val dataSize = 12 * 1024 * 1024
     info(s"data size: $dataSize")
-    val socketPairs = factory.asyncN(cipher = null, handlerExecutor, channelGroup, socketPairCount, runTasks = true)
+    val socketPairs = factory.asyncN(cipher = null, channelGroup, socketPairCount, runTasks = true)
     val (report, elapsed) = TestUtil.time {
       AsyncLoops.loop(socketPairs, dataSize)
     }

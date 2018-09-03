@@ -13,7 +13,6 @@ import com.typesafe.scalalogging.StrictLogging
 import javax.crypto.Cipher
 import java.nio.channels.ByteChannel
 import java.util.Optional
-import java.util.concurrent.ExecutorService
 
 import sun.security.ssl.SSLSocketImpl
 import javax.net.ssl.SNIHostName
@@ -240,7 +239,7 @@ class SocketPairFactory(
         val clientAsyncChannel = pseudoAsyncGroup match {
           case Some(channelGroup) =>
           rawClient.configureBlocking(false)
-          new BlockerByteChannel(new AsynchronousTlsChannel(channelGroup, clientChannel, rawClient, null))
+          new BlockerByteChannel(new AsynchronousTlsChannel(channelGroup, clientChannel, rawClient))
           case None =>
             clientChannel
         }
@@ -248,7 +247,7 @@ class SocketPairFactory(
         val serverAsyncChannel = pseudoAsyncGroup match {
           case Some(channelGroup) =>
             rawServer.configureBlocking(false)
-            new BlockerByteChannel(new AsynchronousTlsChannel(channelGroup, serverChannel, rawServer, null))
+            new BlockerByteChannel(new AsynchronousTlsChannel(channelGroup, serverChannel, rawServer))
           case None =>
             serverChannel
         }
@@ -272,7 +271,6 @@ class SocketPairFactory(
   }
 
   def asyncN(cipher: String,
-    handlerExecutor: ExecutorService,
     channelGroup: AsynchronousTlsChannelGroup,
     qtty: Int,
     runTasks: Boolean,
@@ -322,8 +320,8 @@ class SocketPairFactory(
           .withReleaseBuffers(releaseBuffers)
           .build()
 
-        val clientAsyncChannel = new AsynchronousTlsChannel(channelGroup, clientChannel, rawClient, handlerExecutor)
-        val serverAsyncChannel = new AsynchronousTlsChannel(channelGroup, serverChannel, rawServer, handlerExecutor)
+        val clientAsyncChannel = new AsynchronousTlsChannel(channelGroup, clientChannel, rawClient)
+        val serverAsyncChannel = new AsynchronousTlsChannel(channelGroup, serverChannel, rawServer)
 
         val clientPair = AsyncSocketGroup(clientAsyncChannel, clientChannel, rawClient)
         val serverPair = AsyncSocketGroup(serverAsyncChannel, serverChannel, rawServer)
