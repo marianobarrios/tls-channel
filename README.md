@@ -19,6 +19,7 @@ In other words, a simple library that allows the programmer to implement TLS usi
 - Full and **automatic zeroing** of all the plaintext contained in internal buffers right after the data stops being necessary.
 - **Opportunistic buffer release** (akin to OpenSSL's SSL_MODE_RELEASE_BUFFERS option), which significantly reduces the memory footprint of idle connections.
 - Full control over **TLS shutdown** to prevent truncation attacks.
+- Implements [AsynchronousByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/AsynchronousByteChannel.html), offering compatibility for this higher-level API based on callbacks and futures.
 
 ### Non-features
 
@@ -202,6 +203,25 @@ TlsChannel tlsChannel = ServerTlsChannel
 
 Complete example: [SNI-aware server](src/test/scala/tlschannel/example/SniBlockingServer.java)
 
+### AsynchronousByteChannel
+
+Java 1.7 introduced "asynchronous" byte channels. This infrastructure offers a higher level API for non-blocking IO, using callbacks and futures. Again, TLS is not supported by the standard API. TLSChannel offers complete support for this programming style using the [async](src/main/java/tlschannel/async) package. 
+
+```java
+// build a singleton-like channel group
+AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
+
+// build asynchronous channel, based in an existing TLS channel and the group
+AsynchronousTlsChannel asyncTlsChannel = new AsynchronousTlsChannel(channelGroup, tlsChannel, rawChannel);
+
+// use as any other AsynchronousByteChannel
+asyncTlsChannel.read(res, null, new CompletionHandler<Integer, Object>() {
+    ...
+};
+```
+
+Complete example: [Asynchronous channel server](src/test/scala/tlschannel/example/AsynchronousChannelServer.java)
+
 ## Buffers
 
 TLS Channel uses buffers for its operation. Every channel uses at least two "encrypted" buffers that hold ciphertext, one for reading from the underlying channel and other for writing to it. Additionally, a third buffer may be needed for read operations when the user-supplied buffer is smaller than the minimum SSLEngine needs for placing the decrypted bytes.
@@ -251,11 +271,11 @@ TLS Channel requires Java 8.
 
 ### Size and Dependencies
 
-The library has only one dependency: [SLF4J](https://www.slf4j.org/). The main jar file size is below 50 KB.
+The library has only one dependency: [SLF4J](https://www.slf4j.org/). The main jar file size is below 70 KB.
 
 ### Logging
 
-The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most widely used pluggable logging framework for the JVM. As a policy, _all_ logging event emitted are at `TRACE` level, which is below the default threshold in most logging implementations and thus completely silent by default.
+The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most widely used pluggable logging framework for the JVM. As a policy, _all_ logging events emitted by the core package are at `TRACE` level, which is below the default threshold in most logging implementations and thus completely silent by default. The optional `tlschannel.async` package can log with higher severity in exceptional circumstances, as it manages threads internally.
 
 ## Similar efforts
 
