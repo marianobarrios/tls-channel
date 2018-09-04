@@ -10,7 +10,15 @@ import tlschannel.impl.ByteBufferSet;
 import tlschannel.util.Util;
 
 import java.io.IOException;
-import java.nio.channels.*;
+import java.nio.channels.CancelledKeyException;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.InterruptedByTimeoutException;
+import java.nio.channels.ReadPendingException;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ShutdownChannelGroupException;
+import java.nio.channels.SocketChannel;
+import java.nio.channels.WritePendingException;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
@@ -30,7 +38,8 @@ import java.util.function.LongConsumer;
 
 /**
  * This class encapsulates the infrastructure for running {@link AsynchronousTlsChannel}s. Each instance of this class
- * is a singleton-like object that manages a thread pool that makes it possible to run a group of asynchronous channels.
+ * is a singleton-like object that manages a thread pool that makes it possible to run a group of asynchronous
+ * channels.
  */
 public class AsynchronousTlsChannelGroup {
 
@@ -120,8 +129,8 @@ public class AsynchronousTlsChannelGroup {
     static final class WriteOperation extends Operation {
 
         /**
-         * Because a write operation can flag a block (needs read/write) even after the source buffer was read from,
-         * we need to accumulate consumed bytes.
+         * Because a write operation can flag a block (needs read/write) even after the source buffer was read from, we
+         * need to accumulate consumed bytes.
          */
         long consumesBytes = 0;
 
@@ -467,8 +476,8 @@ public class AsynchronousTlsChannelGroup {
     }
 
     /**
-     * Intended use of the channel group is with sockets that run tasks internally, but out of tolerance,
-     * run tasks in thread in case the socket does not.
+     * Intended use of the channel group is with sockets that run tasks internally, but out of tolerance, run tasks in
+     * thread in case the socket does not.
      */
     private void writeHandlingTasks(RegisteredSocket socket, WriteOperation op) throws IOException {
         while (true) {
@@ -486,7 +495,7 @@ public class AsynchronousTlsChannelGroup {
         if (!loggedTaskWarning.getAndSet(true)) {
             logger.warn(
                     "caught {}; channels used in asynchronous groups should run tasks themselves; " +
-                    "although task is being dealt with anyway, consider configuring channels properly",
+                            "although task is being dealt with anyway, consider configuring channels properly",
                     NeedsTaskException.class.getName());
         }
     }
@@ -553,72 +562,141 @@ public class AsynchronousTlsChannelGroup {
         }
     }
 
+    /**
+     * Whether either {@link #shutdown()} or {@link #shutdownNow()} have been called.
+     *
+     * @return {@code true} if this group has initiated shutdown and {@code false} if the group is active
+     */
     public boolean isShutdown() {
         return shutdown != Shutdown.No;
     }
 
+    /**
+     * Starts the shutdown process. New sockets cannot be registered, already registered one continue operating normally
+     * until they are closed.
+     */
     public void shutdown() {
         shutdown = Shutdown.Wait;
         selector.wakeup();
     }
 
+    /**
+     * Shuts down this channel group immediately. All registered sockets are closed, pending operations may or may not
+     * finish.
+     */
     public void shutdownNow() {
         shutdown = Shutdown.Immediate;
         selector.wakeup();
     }
 
+    /**
+     * Whether this channel group was shut down, and all pending tasks have drained.
+     */
     public boolean isTerminated() {
         return executor.isTerminated();
     }
 
+    /**
+     * Blocks until all registers sockets are closed and pending tasks finished execution after a shutdown request, or
+     * the timeout occurs, or the current thread is interrupted, whichever happens first.
+     *
+     * @param timeout the maximum time to wait
+     * @param unit    the time unit of the timeout argument
+     * @return {@code true} if this group terminated and {@code false} if the group elapsed before termination
+     * @throws InterruptedException if interrupted while waiting
+     */
     public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
         return executor.awaitTermination(timeout, unit);
     }
 
-    public long getSelectionCount() {
+    long getSelectionCount() {
         return selectionCount.longValue();
     }
 
+    /**
+     * Return the total number of read operations that were started.
+     * @return number of operations
+     */
     public long getStartedReadCount() {
         return startedReads.longValue();
     }
 
+    /**
+     * Return the total number of write operations that were started.
+     * @return number of operations
+     */
     public long getStartedWriteCount() {
         return startedWrites.longValue();
     }
 
+    /**
+     * Return the total number of read operations that succeeded.
+     * @return number of operations
+     */
     public long getSuccessfulReadCount() {
         return successfulReads.longValue();
     }
 
+    /**
+     * Return the total number of write operations that succeeded.
+     * @return number of operations
+     */
     public long getSuccessfulWriteCount() {
         return successfulWrites.longValue();
     }
 
+    /**
+     * Return the total number of read operations that failed.
+     * @return number of operations
+     */
     public long getFailedReadCount() {
         return failedReads.longValue();
     }
 
+    /**
+     * Return the total number of write operations that failed.
+     * @return number of operations
+     */
     public long getFailedWriteCount() {
         return failedWrites.longValue();
     }
 
+    /**
+     * Return the total number of read operations that were cancelled.
+     * @return number of operations
+     */
     public long getCancelledReadCount() {
         return cancelledReads.longValue();
     }
 
+    /**
+     * Return the total number of write operations that were cancelled.
+     * @return number of operations
+     */
     public long getCancelledWriteCount() {
         return cancelledWrites.longValue();
     }
 
+    /**
+     * Returns the current number of active read operations.
+     * @return number of operations
+     */
     public long getCurrentReadCount() {
         return currentReads.longValue();
     }
 
+    /**
+     * Returns the current number of active write operations.
+     * @return number of operations
+     */
     public long getCurrentWriteCount() {
         return currentWrites.longValue();
     }
 
+    /**
+     * Returns the current number of registered sockets.
+     * @return number of sockets
+     */
     public long getCurrentRegistrationCount() {
         return currentRegistrations.longValue();
     }

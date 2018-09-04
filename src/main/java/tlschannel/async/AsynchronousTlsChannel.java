@@ -11,7 +11,6 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.CompletionHandler;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -50,10 +49,10 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
     /**
      * Initializes a new instance of this class.
      *
-     * @param channelGroup       group to associate new new channel to
-     * @param tlsChannel         existing TLS channel to be used asynchronously
-     * @param socketChannel      underlying socket
-     * @throws ClosedChannelException if any of the underlying channels are closed.
+     * @param channelGroup  group to associate new new channel to
+     * @param tlsChannel    existing TLS channel to be used asynchronously
+     * @param socketChannel underlying socket
+     * @throws ClosedChannelException   if any of the underlying channels are closed.
      * @throws IllegalArgumentException is the socket is in blocking mode
      */
     public AsynchronousTlsChannel(
@@ -223,11 +222,23 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
         group.executor.submit(() -> handler.completed(0L, attach));
     }
 
+    /**
+     * Tells whether or not this channel is open.
+     *
+     * @return <tt>true</tt> if, and only if, this channel is open
+     */
     @Override
     public boolean isOpen() {
         return tlsChannel.isOpen();
     }
 
+    /**
+     * Closes this channel.
+     *
+     * <p>This method will close the underlying {@link TlsChannel} and also deregister it from its group.</p>
+     *
+     * @throws IOException If an I/O error occurs
+     */
     @Override
     public void close() throws IOException {
         tlsChannel.close();
