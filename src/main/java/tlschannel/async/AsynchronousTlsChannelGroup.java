@@ -203,6 +203,13 @@ public class AsynchronousTlsChannelGroup {
         selectorThread.start();
     }
 
+    /**
+     * Creates an instance of this class, using as many thread as available processors.
+     */
+    public AsynchronousTlsChannelGroup() {
+        this(Runtime.getRuntime().availableProcessors());
+    }
+
     RegisteredSocket registerSocket(TlsChannel reader, SocketChannel socketChannel) throws ClosedChannelException {
         if (shutdown != Shutdown.No) {
             throw new ShutdownChannelGroupException();

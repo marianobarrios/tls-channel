@@ -20,7 +20,7 @@ class AsyncTimeoutTest extends FunSuite with AsyncTestBase {
   val bufferSize = 10
 
   test("scheduled timeout") {
-    val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
+    val channelGroup = new AsynchronousTlsChannelGroup()
     val socketPairCount = 1000
     val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
     val latch = new CountDownLatch(socketPairCount * 2)
@@ -83,7 +83,7 @@ class AsyncTimeoutTest extends FunSuite with AsyncTestBase {
   }
 
   test("triggered timeout") {
-    val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
+    val channelGroup = new AsynchronousTlsChannelGroup()
     val socketPairCount = 1000
     val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
     val futures = for (AsyncSocketPair(client, server) <- socketPairs) yield {

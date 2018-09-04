@@ -16,7 +16,7 @@ class AsyncShutdownTest extends FunSuite with AsyncTestBase {
   val bufferSize = 10
 
   test("immediate shutdown") {
-    val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
+    val channelGroup = new AsynchronousTlsChannelGroup()
     val socketPairCount = 100
     val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
     for (AsyncSocketPair(client, server) <- socketPairs) {
@@ -47,7 +47,7 @@ class AsyncShutdownTest extends FunSuite with AsyncTestBase {
   }
 
   test("non-immediate shutdown") {
-    val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
+    val channelGroup = new AsynchronousTlsChannelGroup()
     val socketPairCount = 100
     val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
     for (AsyncSocketPair(client, server) <- socketPairs) {

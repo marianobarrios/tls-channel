@@ -13,7 +13,7 @@ class PseudoAsyncTest extends FunSuite with Matchers with StrictLogging {
   val sslContextFactory = new SslContextFactory
 
   val (cipher, sslContext) = sslContextFactory.standardCipher
-  val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
+  val channelGroup = new AsynchronousTlsChannelGroup()
   // TODO: close
   val factory = new SocketPairFactory(sslContext)
   val dataSize = 60 * 1000

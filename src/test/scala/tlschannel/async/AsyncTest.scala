@@ -14,7 +14,7 @@ class AsyncTest extends FunSuite with AsyncTestBase {
   val socketPairCount = 120
 
   test("real engine - run tasks") {
-    val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
+    val channelGroup = new AsynchronousTlsChannelGroup()
     val dataSize = 5 * 1024 * 1024
     info(s"data size: $dataSize")
     val socketPairs = factory.asyncN(cipher, channelGroup, socketPairCount, runTasks = true)
@@ -33,7 +33,7 @@ class AsyncTest extends FunSuite with AsyncTestBase {
   }
 
   test("real engine - do not run tasks") {
-    val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
+    val channelGroup = new AsynchronousTlsChannelGroup()
     val dataSize = 2 * 1024 * 1024
     info(s"data size: $dataSize")
     val socketPairs = factory.asyncN(cipher, channelGroup, socketPairCount, runTasks = false)
@@ -55,7 +55,7 @@ class AsyncTest extends FunSuite with AsyncTestBase {
   }
 
   test("null engine") {
-    val channelGroup = new AsynchronousTlsChannelGroup(Runtime.getRuntime.availableProcessors)
+    val channelGroup = new AsynchronousTlsChannelGroup()
     val dataSize = 12 * 1024 * 1024
     info(s"data size: $dataSize")
     val socketPairs = factory.asyncN(cipher = null, channelGroup, socketPairCount, runTasks = true)
