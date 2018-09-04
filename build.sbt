@@ -1,7 +1,7 @@
 scalaVersion := "2.12.6"
 
 organization := "com.github.marianobarrios"
-version := "0.2.0-SNAPSHOT"
+version := "0.2.0"
 description := "TLS Channel"
 homepage := Some(url("https://github.com/marianobarrios/tls-channel"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
