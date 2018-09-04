@@ -557,7 +557,7 @@ public class AsynchronousTlsChannelGroup {
         RegisteredSocket socket;
         while ((socket = pendingRegistrations.poll()) != null) {
             socket.key = socket.socketChannel.register(selector, 0, socket);
-            logger.debug("registered key: {}", socket.key);
+            logger.trace("registered key: {}", socket.key);
             socket.registered.countDown();
         }
     }
