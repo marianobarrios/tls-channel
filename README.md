@@ -16,10 +16,10 @@ In other words, a simple library that allows the programmer to implement TLS usi
 - **Server-side SNI**: Supports choosing different [SSLContexts](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLContext.html) according to the received [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) sent by incoming connections (not supported at all by SSLEngine but universally used by web browsers and servers).
 - Supports both **blocking and non-blocking** modes, using the same API, just like SocketChannel does with unencrypted connections.
 - Pluggable buffer strategy (to, for example, do buffer pooling, or to use direct buffers for IO).
-- Full and **automatic zeroing** of all the plaintext contained in internal buffers right after the data stops being necessary.
+- Full and **automatic zeroing** of all plaintext contained in internal buffers right after the data stops being necessary.
 - **Opportunistic buffer release** (akin to OpenSSL's SSL_MODE_RELEASE_BUFFERS option), which significantly reduces the memory footprint of idle connections.
 - Full control over **TLS shutdown** to prevent truncation attacks.
-- Implements [AsynchronousByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/AsynchronousByteChannel.html), offering compatibility for this higher-level API based on callbacks and futures.
+- An implementation of [AsynchronousByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/AsynchronousByteChannel.html) is supplied, offering compatibility for this higher-level API based on callbacks and futures.
 
 ### Non-features
 
@@ -30,15 +30,13 @@ Being a API layer, TLS Channel delegates all cryptographic operations to SSLEngi
 
 ## Rationale
 
-By far, the mostly used cryptography solution is TLS (a.k.a. SSL). TLS works on top of the Transport Control Protocol (TCP), maintaining its core abstractions: two independent byte streams, one in each direction, with ordered at-most-once delivery.
-
-[Recent](https://www.schneier.com/blog/archives/2014/06/gchq_intercept_.html) [trends](https://www.schneier.com/blog/archives/2013/10/nsa_eavesdroppi_2.html) have increased the incentives to add encryption in even more use cases. There have been indeed many efforts to reduce friction regarding security. One example of this is the "[Let's Encrypt](https://www.schneier.com/blog/archives/2013/10/nsa_eavesdroppi_2.html)" project. With respect to programming, the overwhelming consensus has been opting to replicate the existing interface (that is, something similar to the highly successful and familiar Berkeley Sockets) for the cryptographic streams:
+The most used security protocol is TLS. Created by Netscape in 1994 as SSL (Secure Socket Layer), it experimented widespread adoption, which eventually let to its standarization. TLS works on top of the Transport Control Protocol (TCP), maintaining its core abstractions: two independent byte streams, one in each direction, with ordered at-most-once delivery. Part of the success of TLS was due to its convenient programming interface, similar to the highly successful and familiar Berkeley Sockets. Currenty, there exist a few widely-used implementations:
 
 - The most used TLS library is [OpenSSL](https://www.openssl.org/). Written in C and (along with some forks) the *de facto* standard for C and C++. Also widely used in Python, PHP, Ruby and Node.js.
 - The Go language has its own implementation, package [crypto/tls](https://golang.org/pkg/crypto/tls/).
-- There is another C library by Mozilla, part of the "[Network Security Services](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS)" (NSS) group of libraries. It's notoriously used by the Firefox browser.
+- There is another C library by Mozilla, part of the "[Network Security Services](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS)" (NSS) group of libraries. It's the evolution of the original library wrote by Netscape, and it's now notoriously used by the Firefox browser.
 
-And many more. All these libraries implement a streaming interface, and most let the user switch freely between blocking and non-blocking behavior. But in Java the history, unfortunately, is not so simple.
+And many more. As noted, all these libraries implement a streaming interface, and most also let the user switch freely between blocking and non-blocking behavior. But in Java the history, unfortunately, is not so simple.
 
 ### The Java TLS problem
 
