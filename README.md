@@ -67,7 +67,7 @@ Of course, many programmers don't manipulate TCP or TLS streams directly, but us
 
 1. Use the old (implicitly deprecated) socket API. This implies being subject to its limitations, which means, among other things, only blocking behavior.
 2. Use SSLEngine directly. This is a hard task, which is _very_ difficult to accomplish correctly, and in most cases completely out of proportion to the effort of writing the application code.
-3. Use some higher-level IO library, like [Netty](https://netty.io/), [Project Grizzly](https://grizzly.java.net/), [Apache Mina](https://mina.apache.org/) or [JBoss XNIO](http://xnio.jboss.org/). These frameworks supply event architectures that intend to easy the task of writing programs that use non-blocking IO. They are big framework-like libraries, sometimes themselves with dependencies. Using one of these is the path chosen by many, but it is not an option if the programmer cannot commit to a particular event architecture, couple the application code to an idiosyncratic library, or include a big dependency.
+3. Use some higher-level IO library, like [Netty](https://netty.io/), [Project Grizzly](https://grizzly.java.net/), [Apache Mina](https://mina.apache.org/) or [JBoss XNIO](http://xnio.jboss.org/). These frameworks supply event architectures that intend to ease the task of writing programs that use non-blocking IO. They are big framework-like libraries, sometimes themselves with dependencies. Using one of these is the path chosen by many, but it is not an option if the programmer cannot commit to a particular event architecture, couple the application code to an idiosyncratic library, or include a big dependency.
 
 All three alternatives have been taken by many Java libraries and applications, with no clear preference among leading open-source Java projects. Even though these options can work reasonable well, there was still no clear and standard solution.
 
@@ -75,7 +75,7 @@ All three alternatives have been taken by many Java libraries and applications, 
 
 There is actually no strict need to use SSLEngine. The two most common alternatives are:
 
-- Using the [Java Native Interface](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/) (JNI) and calling OpenSSL (or other C library). The Tomcat project has a widely used "[native](http://tomcat.apache.org/native-doc/)" library that easies that task. While using native code can work, it has obvious shortcomings, specially regarding packaging, distribution, type compatibility and runtime safety.
+- Using the [Java Native Interface](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/) (JNI) and calling OpenSSL (or other C library). The Tomcat project has a widely used "[native](http://tomcat.apache.org/native-doc/)" library that eases that task. While using native code can work, it has obvious shortcomings, specially regarding packaging, distribution, type compatibility and runtime safety.
 - "[The Legion of the Bouncy Castle](https://www.bouncycastle.org/)" has a "lightweight" TLS API that supports streaming. This actually works, but only in blocking mode, effectively just like using the old SSLSocket API.
 
 Of course, these options imply using an alternative cryptographic implementation, which may not be desired.
@@ -183,9 +183,9 @@ Complete example: [non-blocking server with off-loop tasks](src/test/scala/tlsch
 
 ### Server Name Indication – server side
 
-The [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) is a special TLS extension designed to solve a chicken-and-egg situation between the certificate offered by the server (depending on the host required by the client for multi-host servers) and the host name sent by client in HTTP request headers (necessarily after the connection is established). The extension allows the client to anticipate the required host in the ClientHello message.
+The [Server Name Indication](https://tools.ietf.org/html/rfc6066#page-6) (SNI) is a special TLS extension designed to solve a chicken-and-egg situation between the certificate offered by the server (depending on the host required by the client for multi-host servers) and the host name sent by client in HTTP request headers (necessarily after the connection is established). The SNI extension allows the client to anticipate the required host name in the ClientHello message.
 
-Java added support for SNI in version 7. The feature can be accessed using the [SSLParameters](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLParameters.html) class. Sadly, this only works for the client side. For the server, the class allows only to accept or reject connections based on the host name, not to choose the certificate offered. 
+Java added support for SNI in version 7. The feature can be accessed using the [SSLParameters](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLParameters.html) class. Sadly, this only works on the client side. For the server, the class allows only to accept or reject connections based on the host name, not to choose the certificate offered.
 
 In TLS Channel, to use SNI-based selection of the SSLContext, a different builder factory method exists, receiving instances of [SniSslContextFactory](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/SniSslContextFactory.html).
 
@@ -222,9 +222,9 @@ Complete example: [Asynchronous channel server](src/test/scala/tlschannel/exampl
 
 ## Buffers
 
-TLS Channel uses buffers for its operation. Every channel uses at least two "encrypted" buffers that hold ciphertext, one for reading from the underlying channel and other for writing to it. Additionally, a third buffer may be needed for read operations when the user-supplied buffer is smaller than the minimum SSLEngine needs for placing the decrypted bytes.
+TLS Channel uses buffers for its operation. Every channel uses at least two "encrypted" buffers that hold ciphertext, one for reading from the underlying channel and the other for writing to it. Additionally, a third buffer may be needed for read operations when the user-supplied buffer is smaller than the minimum SSLEngine needs for placing the decrypted bytes.
 
-All buffers are created from optionally user-supplied factories (instances of [BufferAllocator](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/BufferAllocator.html)). It is also possible to supply different allocators for plain and ciphertext. For example:
+All buffers are created from optionally user-supplied factories (instances of [BufferAllocator](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/BufferAllocator.html)). It is also possible to supply different allocators for plain and ciphertext; for example:
 
 ```java
 TlsChannel tlsChannel = ServerTlsChannel
@@ -244,9 +244,9 @@ Buffers containing plain text are always immediately zeroed after the bytes are 
 
 ### Buffer release
 
-TLS Channel supports opportunistic buffer release, a similar feature to OpenSSL's `SSL_MODE_RELEASE_BUFFERS` option. If, after any operation, a buffers does not contain any bytes pending, it is released back to the pool. This feature can reduce memory consumption dramatically in the case of long-lived idle connections, which tend to happen when implementing server-side HTTP.
+TLS Channel supports opportunistic buffer release, a similar feature to OpenSSL's `SSL_MODE_RELEASE_BUFFERS` option. If, after any operation, a buffer does not contain any bytes pending, it is released back to the pool. This feature can reduce memory consumption dramatically in the case of long-lived idle connections, which tend to happen when implementing server-side HTTPS.
  
- The option is enabled by default, and could be disabled if desired:
+This option is enabled by default, and could be disabled if desired:
  
 ```java
 TlsChannel tlsChannel = ServerTlsChannel
@@ -265,7 +265,7 @@ The same applies to certificate validation. All configuration is done using the 
 
 ### Requirements
 
-TLS Channel requires Java 8.
+TLS Channel requires Java 8 or newer.
 
 ### Size and Dependencies
 
