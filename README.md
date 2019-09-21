@@ -170,7 +170,7 @@ try {
 } catch (NeedsTaskException e) {
     taskExecutor.execute(() -> {
         e.getTask().run();
-        // when the task finished, add it the the ready-set
+        // when the task finished, add it to the ready-set
         // taskReadyKeys should be a concurrent set that shoud be checked 
         // and emptied as part of the selector loop
         taskReadyKeys.add(key);
