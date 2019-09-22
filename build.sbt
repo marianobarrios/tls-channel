@@ -43,7 +43,11 @@ libraryDependencies ++=
 // Do not put Scala version in the artifact, since Scala is only used for tests.
 crossPaths := false
 
-javacOptions in (Compile,doc) ++= Seq("-link", "http://docs.oracle.com/javase/8/docs/api/")
+javacOptions in (Compile,doc) ++= Seq(
+  "-link", "http://docs.oracle.com/javase/8/docs/api/", 
+  "-source", "1.8", 
+  "-target", "1.8"
+)
 
 //javaOptions in Test += "-Xrunhprof:heap=sites"
 

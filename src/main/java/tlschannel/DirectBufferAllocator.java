@@ -1,8 +1,8 @@
 package tlschannel;
 
-import java.nio.ByteBuffer;
+import tlschannel.util.DirectBufferDeallocator;
 
-import engine.misc.DeallocationHelper;
+import java.nio.ByteBuffer;
 
 /**
  * Allocator that creates direct buffers. The {@link #free(ByteBuffer)} method,
@@ -15,7 +15,7 @@ import engine.misc.DeallocationHelper;
  */
 public class DirectBufferAllocator implements BufferAllocator {
 
-    private DeallocationHelper deallocationHelper = new DeallocationHelper();
+    private final DirectBufferDeallocator deallocator = new DirectBufferDeallocator();
 
     @Override
     public ByteBuffer allocate(int size) {
@@ -25,7 +25,7 @@ public class DirectBufferAllocator implements BufferAllocator {
     @Override
     public void free(ByteBuffer buffer) {
         // do not wait for GC (and finalizer) to run
-        deallocationHelper.deallocate(buffer);
+        deallocator.deallocate(buffer);
     }
 
 }
