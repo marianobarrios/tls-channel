@@ -56,8 +56,7 @@ object AsyncLoops extends Matchers {
       (clientEndpoint, serverEndpoint)
     }
 
-    val writers = endpoints.unzip._1
-    val readers = endpoints.unzip._2
+    val (writers, readers) = endpoints.unzip
     val allEndpoints = writers ++ readers
 
     for (endpoint <- allEndpoints) {

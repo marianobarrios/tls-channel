@@ -71,8 +71,7 @@ object NonBlockingLoops extends Matchers {
       (clientEndpoint, serverEndpoint)
     }
 
-    val writers = endpoints.unzip._1
-    val readers = endpoints.unzip._2
+    val (writers, readers) = endpoints.unzip
     val allEndpoints = writers ++ readers
 
     var taskCount = 0
@@ -108,12 +107,12 @@ object NonBlockingLoops extends Matchers {
                   writer.buffer.position(0)
                   writer.buffer.limit(math.min(writer.buffer.capacity, writer.remaining))
                 }
-                val oldPosition = writer.buffer.position
+                val oldPosition = writer.buffer.position()
                 try {
                   val c = writer.socketGroup.external.write(writer.buffer)
                   assert(c >= 0) // the necessity of blocking is communicated with exceptions
                 } finally {
-                  val bytesWriten = writer.buffer.position - oldPosition
+                  val bytesWriten = writer.buffer.position() - oldPosition
                   writer.remaining -= bytesWriten
                 }
               } while (writer.remaining > 0)

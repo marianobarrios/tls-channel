@@ -11,10 +11,10 @@ class RandomChunkingByteChannel(val wrapped: ByteChannel, chunkSizeSupplier: () 
   def read(in: ByteBuffer): Int = {
     if (!in.hasRemaining)
       return 0
-    val oldLimit = in.limit
+    val oldLimit = in.limit()
     try {
-      val readSize = math.min(chunkSizeSupplier(), in.remaining)
-      in.limit(in.position + readSize)
+      val readSize = math.min(chunkSizeSupplier(), in.remaining())
+      in.limit(in.position() + readSize)
       wrapped.read(in)
     } finally {
       in.limit(oldLimit)
@@ -24,10 +24,10 @@ class RandomChunkingByteChannel(val wrapped: ByteChannel, chunkSizeSupplier: () 
   def write(out: ByteBuffer): Int = {
     if (!out.hasRemaining)
       return 0
-    val oldLimit = out.limit
+    val oldLimit = out.limit()
     try {
-      val writeSize = math.min(chunkSizeSupplier(), out.remaining)
-      out.limit(out.position + writeSize)
+      val writeSize = math.min(chunkSizeSupplier(), out.remaining())
+      out.limit(out.position() + writeSize)
       wrapped.write(out)
     } finally {
       out.limit(oldLimit)

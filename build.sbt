@@ -1,4 +1,4 @@
-scalaVersion := "2.12.6"
+scalaVersion := "2.12.10"
 
 organization := "com.github.marianobarrios"
 version := "0.2.0-SNAPSHOT"
@@ -32,11 +32,11 @@ autoScalaLibrary := false
 parallelExecution in Test := false
 
 libraryDependencies ++=
-  "org.slf4j" % "slf4j-api" % "1.7.25" ::
-  "org.scala-lang" % "scala-library" % "2.12.6" % "test" ::
+  "org.slf4j" % "slf4j-api" % "1.7.28" ::
+  "org.scala-lang" % "scala-library" % "2.12.10" % "test" ::
   "ch.qos.logback" % "logback-classic" % "1.2.3" % "test" ::
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0" % "test" ::
-  "org.scalatest" %% "scalatest" % "3.0.5" % "test" ::
+  "org.scalatest" %% "scalatest" % "3.0.8" % "test" ::
   "com.jsuereth" %% "scala-arm" % "2.0" % "test" ::
   Nil
 
