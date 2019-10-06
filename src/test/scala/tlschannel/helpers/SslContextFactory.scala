@@ -4,9 +4,17 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.TrustManagerFactory
 import java.security.KeyStore
+import java.security.Security
 
-class SslContextFactory(val protocol: String = "TLSv1.2") {
-  
+import com.typesafe.scalalogging.StrictLogging
+
+class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging {
+
+  /*
+   * Overrule paternalistic JVM behavior of forbidding ciphers even if allowed in code.
+   */
+  Security.setProperty("jdk.tls.disabledAlgorithms", "")
+
   val authenticatedContext = {
     val sslContext = SSLContext.getInstance(protocol)
     val ks = KeyStore.getInstance("JKS");
