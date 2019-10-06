@@ -1,6 +1,4 @@
 language: scala
-scala:
-  - 2.12.10
 jdk:
   - openjdk8
 after_failure: "cat log/test.log"
