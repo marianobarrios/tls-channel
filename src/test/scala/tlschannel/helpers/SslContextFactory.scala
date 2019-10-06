@@ -59,8 +59,20 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
   
   private def ciphers(ctx: SSLContext) = {
     ctx.createSSLEngine().getSupportedCipherSuites
-      // Java 8 disabled SSL through another mechanism, ignore that protocol here, to avoid errors 
+      // Java 8 disabled old SSL through another mechanism, ignore that protocol here, to avoid errors
       .filter(_.startsWith("TLS_"))
+      // Remove incompatible combinations
+      .filterNot { c =>
+        protocol != "TLSv1.3" && Set("TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256").contains(c)
+      }
+      // https://bugs.openjdk.java.net/browse/JDK-8224997
+      .filterNot { c =>
+        Set(
+          "TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+          "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+          "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+        ).contains(c)
+      }
   }
   
 }
