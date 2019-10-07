@@ -1,6 +1,5 @@
 package tlschannel
 
-import java.net.SocketException
 import java.nio.ByteBuffer
 import java.nio.channels.ClosedChannelException
 
@@ -17,36 +16,6 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
   val (cipher, sslContext) = sslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext)
   val data = Array[Byte](15)
-
-  test("SSLSocket") {
-    val data = 15
-    val (client, server) = factory.oldOld(cipher)
-    def clientFn(): Unit = {
-      val os = client.getOutputStream
-      os.write(data)
-      os.close()
-      intercept[SocketException] {
-        os.write(1)
-      }
-    }
-    def serverFn(): Unit = {
-      val is = server.getInputStream
-      assert(is.read() === data)
-      assert(is.read() === -1)
-      // repeated
-      assert(is.read() === -1)
-      server.close()
-      intercept[SocketException] {
-        is.read()
-      }
-    }
-    val clientThread = new Thread(() => clientFn())
-    val serverThread = new Thread(() => serverFn())
-    clientThread.start()
-    serverThread.start()
-    clientThread.join()
-    serverThread.join()
-  }
 
   /**
    * Less than a TLS message, to force read/write loops
