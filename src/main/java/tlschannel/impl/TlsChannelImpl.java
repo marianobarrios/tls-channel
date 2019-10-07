@@ -215,8 +215,7 @@ public class TlsChannelImpl implements ByteChannel {
 					break;
 				case NOT_HANDSHAKING:
 				case FINISHED:
-					UnwrapResult res = readAndUnwrap(Optional.of(dest), NOT_HANDSHAKING /* statusCondition */,
-							false /* closing */);
+					UnwrapResult res = readAndUnwrap(Optional.of(dest));
 					if (res.wasClosed) {
 						return -1;
 					}
@@ -255,7 +254,7 @@ public class TlsChannelImpl implements ByteChannel {
 		return bytes;
 	}
 
-	private UnwrapResult unwrapLoop(Optional<ByteBufferSet> dest, HandshakeStatus statusCondition, boolean closing)
+	private UnwrapResult unwrapLoop(Optional<ByteBufferSet> dest, HandshakeStatus originalStatus)
 			throws SSLException {
 		ByteBufferSet effDest = dest.orElseGet(() -> {
             inPlain.prepare();
@@ -268,9 +267,10 @@ public class TlsChannelImpl implements ByteChannel {
 			 * Note that data can be returned even in case of overflow, in that
 			 * case, just return the data.
 			 */
-			if (result.bytesProduced() > 0 || result.getStatus() == Status.BUFFER_UNDERFLOW
-					|| !closing && result.getStatus() == Status.CLOSED
-					|| result.getHandshakeStatus() != statusCondition) {
+			if (result.bytesProduced() > 0
+					|| result.getStatus() == Status.BUFFER_UNDERFLOW
+					|| result.getStatus() == Status.CLOSED
+					|| result.getHandshakeStatus() != originalStatus) {
 				boolean wasClosed = result.getStatus() == Status.CLOSED;
 				return new UnwrapResult(result.bytesProduced(), result.getHandshakeStatus(), wasClosed);
 			}
@@ -532,7 +532,7 @@ public class TlsChannelImpl implements ByteChannel {
                 writeToChannel(); // IO block
 				break;
 			case NEED_UNWRAP:
-				UnwrapResult res = readAndUnwrap(dest, NEED_UNWRAP /* statusCondition */, false /* closing */);
+				UnwrapResult res = readAndUnwrap(dest);
 				status = res.lastHandshakeStatus;
 				if (res.bytesProduced > 0)
 					return res.bytesProduced;
@@ -555,15 +555,16 @@ public class TlsChannelImpl implements ByteChannel {
 		}
 	}
 
-	private UnwrapResult readAndUnwrap(Optional<ByteBufferSet> dest, HandshakeStatus statusCondition, boolean closing)
-			throws IOException, EofException {
+	private UnwrapResult readAndUnwrap(Optional<ByteBufferSet> dest) throws IOException, EofException {
+		// Save status before operation: use it to stop when status changes
+		HandshakeStatus orig = engine.getHandshakeStatus();
 	    inEncrypted.prepare();
 	    try {
             while (true) {
                 Util.assertTrue(inPlain.nullOrEmpty());
-                UnwrapResult res = unwrapLoop(dest, statusCondition, closing);
-                if (res.bytesProduced > 0 || res.lastHandshakeStatus != statusCondition || !closing && res.wasClosed) {
-                    if (res.wasClosed) {
+                UnwrapResult res = unwrapLoop(dest, orig);
+                if (res.bytesProduced > 0 || res.lastHandshakeStatus != orig || res.wasClosed) {
+                	if (res.wasClosed) {
                         shutdownReceived = true;
                     }
                     return res;
@@ -645,7 +646,7 @@ public class TlsChannelImpl implements ByteChannel {
 					/*
 					 * If this side is the first to send close_notify, then,
 					 * inbound is not done and false should be returned (so the
-					 * client waits for the response. If this side is the
+					 * client waits for the response). If this side is the
 					 * second, then inbound was already done, and we can return
 					 * true.
 					 */
@@ -662,7 +663,7 @@ public class TlsChannelImpl implements ByteChannel {
 				if (!shutdownReceived) {
 					try {
 						// IO block
-						readAndUnwrap(Optional.empty(), NEED_UNWRAP /* statusCondition */, true /* closing */);
+						readAndUnwrap(Optional.empty());
 						Util.assertTrue(shutdownReceived);
 					} catch (EofException e) {
 						throw new ClosedChannelException();
