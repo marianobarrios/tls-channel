@@ -19,6 +19,7 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
     */
   test("half duplex (with renegotiations)") {
     for (protocol <- protocols) {
+      logger.debug(s"Testing protocol: $protocol")
       val ctxFactory = new SslContextFactory(protocol)
       for ((cipher, sslContext) <- ctxFactory.allCiphers) {
         withClue(cipher + ": ") {
@@ -28,8 +29,8 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
           val elapsed = TestUtil.time {
             Loops.halfDuplex(socketPair, dataSize, renegotiation = true)
           }
-          val protocol = socketPair.client.tls.getSslEngine.getSession.getProtocol
-          info(f"$protocol%-12s $cipher%-50s ${elapsed.toMillis}%6s ms")
+          val actualProtocol = socketPair.client.tls.getSslEngine.getSession.getProtocol
+          info(f"$actualProtocol%-12s $cipher%-50s ${elapsed.toMillis}%6s ms")
         }
       }
     }
@@ -49,8 +50,8 @@ class CipherTest extends FunSuite with Matchers with StrictLogging {
           val elapsed = TestUtil.time {
             Loops.fullDuplex(socketPair, dataSize)
           }
-          val protocol = socketPair.client.tls.getSslEngine.getSession.getProtocol
-          info(f"$protocol%-12s $cipher%-50s ${elapsed.toMillis}%6s ms")
+          val actualProtocol = socketPair.client.tls.getSslEngine.getSession.getProtocol
+          info(f"$actualProtocol%-12s $cipher%-50s ${elapsed.toMillis}%6s ms")
         }
       }
     }
