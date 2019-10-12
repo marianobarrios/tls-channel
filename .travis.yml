@@ -2,6 +2,7 @@ language: scala
 jdk:
   - openjdk8
   - openjdk11
+  - openjdk12
 after_failure: "cat log/test.log"
 before_script:
   - sudo chmod +x /usr/local/bin/sbt
