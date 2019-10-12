@@ -114,7 +114,6 @@ object Loops extends Matchers with StrictLogging {
       digest.update(readBuffer.array(), 0, readBuffer.position())
       bytesRemaining -= c
       assert(bytesRemaining >= 0)
-      //logger.debug(s"read $c, remaining: $bytesRemaining")
     }
     if (readEof)
       assert(socketGroup.external.read(ByteBuffer.wrap(readArray)) === -1)

@@ -453,6 +453,14 @@ public class TlsChannelImpl implements ByteChannel {
 	 * Force new negotiation
 	 */
 	public void renegotiate() throws IOException {
+		/*
+		 * Renegotiation was removed in TLS 1.3. We have to do the check at this level because SSLEngine will not
+		 * check that, and just enter into undefined behavior.
+		 */
+		// relying in hopefully-robust lexicographic ordering of protocol names
+		if (engine.getSession().getProtocol().compareTo("TLSv1.3") >= 0) {
+			throw new SSLException("renegotiation not supported in TLS 1.3 or latter");
+		}
 		try {
 			doHandshake(true /* force */);
 		} catch (EofException e) {

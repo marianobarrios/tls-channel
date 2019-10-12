@@ -65,7 +65,7 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
           "TLS_KRB5_WITH_RC4_128_MD5",
           "TLS_KRB5_WITH_RC4_128_SHA",
           "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
-          "SSL_RSA_EXPORT_WITH_RC4_40_MD5"
+          "SSL_RSA_EXPORT_WITH_RC4_40_MD5",
         ).contains(c)
       }
 
@@ -74,24 +74,17 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
         !Set("TLSv1.2", "TLSv1.3").contains(protocol) && (c.endsWith("_SHA256") || c.endsWith("_SHA384"))
       }
 
-      // Disable cipher only supported in TLS > 1.3
+      // Disable cipher only supported in TLS >= 1.3
       .filterNot { c =>
-        protocol != "TLSv1.3" &&
+        protocol < "TLSv1.3" &&
           Set(
             "TLS_AES_128_GCM_SHA256",
             "TLS_AES_256_GCM_SHA384",
-            "TLS_CHACHA20_POLY1305_SHA256"
           ).contains(c)
       }
 
       // https://bugs.openjdk.java.net/browse/JDK-8224997
-      .filterNot { c =>
-        Set(
-          "TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
-          "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
-          "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
-        ).contains(c)
-      }
+      .filterNot(_.endsWith("_CHACHA20_POLY1305_SHA256"))
   }
   
 }
