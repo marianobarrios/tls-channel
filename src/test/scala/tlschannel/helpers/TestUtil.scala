@@ -6,11 +6,11 @@ import java.util.SplittableRandom
 import com.typesafe.scalalogging.StrictLogging
 import java.util.concurrent.ConcurrentHashMap
 
-import scala.collection.JavaConverters.mapAsScalaMap
+import scala.jdk.CollectionConverters._
 
 object TestUtil extends StrictLogging {
 
-  def cannotFail(thunk: => Unit) {
+  def cannotFail(thunk: => Unit): Unit = {
     try thunk
     catch {
       case e: Throwable =>
@@ -36,7 +36,7 @@ object TestUtil extends StrictLogging {
     Duration.ofNanos(System.nanoTime() - start)
   }
 
-  implicit class StreamWithTakeWhileInclusive[A](stream: Stream[A]) {
+  implicit class LazyListWithTakeWhileInclusive[A](stream: LazyList[A]) {
     def takeWhileInclusive(p: A => Boolean) = {
       var done = false
       def newPredicate(a: A): Boolean = {
@@ -47,12 +47,6 @@ object TestUtil extends StrictLogging {
         true
       }
       stream.takeWhile(newPredicate)
-    }
-  }
-
-  implicit class IterableWithForany[A](iterable: Iterable[A]) {
-    def forany(p: A => Boolean): Boolean = {
-      !iterable.forall(a => !p(a))
     }
   }
 
@@ -68,12 +62,11 @@ object TestUtil extends StrictLogging {
   /**
    * @param f the function to memoize
    * @tparam I input to f
-   * @tparam K the keys we should use in cache instead of I
    * @tparam O output of f
    */
-  case class Memo[I <% K, K, O](f: I => O) extends (I => O) {
-    val cache = new ConcurrentHashMap[K, O]
-    override def apply(x: I) = mapAsScalaMap(cache).getOrElseUpdate(x, f(x))
+  class Memo[I, O](f: I => O) extends (I => O) {
+    val cache = new ConcurrentHashMap[I, O]
+    override def apply(x: I) = cache.asScala.getOrElseUpdate(x, f(x))
   }
 
   def nextBytes(random: SplittableRandom, bytes: Array[Byte]): Unit = {
@@ -82,7 +75,6 @@ object TestUtil extends StrictLogging {
 
   def nextBytes(random: SplittableRandom, bytes: Array[Byte], len: Int): Unit = {
     var i = 0
-    //val len = bytes.length
     while (i < len) {
       var rnd = random.nextInt()
       var n = Math.min(len - i, Integer.SIZE / java.lang.Byte.SIZE)

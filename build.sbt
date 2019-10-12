@@ -1,4 +1,4 @@
-scalaVersion := "2.12.10"
+scalaVersion := "2.13.1"
 
 organization := "com.github.marianobarrios"
 version := "0.2.0-SNAPSHOT"
@@ -33,11 +33,10 @@ parallelExecution in Test := false
 
 libraryDependencies ++=
   "org.slf4j" % "slf4j-api" % "1.7.28" ::
-  "org.scala-lang" % "scala-library" % "2.12.10" % "test" ::
+  "org.scala-lang" % "scala-library" % "2.13.1" % "test" ::
   "ch.qos.logback" % "logback-classic" % "1.2.3" % "test" ::
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0" % "test" ::
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2" % "test" ::
   "org.scalatest" %% "scalatest" % "3.0.8" % "test" ::
-  "com.jsuereth" %% "scala-arm" % "2.0" % "test" ::
   Nil
 
 // Do not put Scala version in the artifact, since Scala is only used for tests.

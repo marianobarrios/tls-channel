@@ -2,9 +2,8 @@ package tlschannel
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
 import com.typesafe.scalalogging.StrictLogging
-import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
+import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 import tlschannel.helpers.TestUtil
-import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.Loops
 import tlschannel.helpers.SslContextFactory
@@ -25,7 +24,7 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging with Befo
   Loops.expectedBytesHash(dataSize)
 
   test("null engine - half duplex - heap buffers") {
-    val sizes = Stream.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val elapsedTotal = TestUtil.time {
       for (size1 <- sizes) {
         logger.debug(s"Testing sizes: size1=$size1")
@@ -43,7 +42,7 @@ class NullEngineTest extends FunSuite with Matchers with StrictLogging with Befo
   }
 
   test("null engine - half duplex - direct buffers") {
-    val sizes = Stream.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val elapsedTotal = TestUtil.time {
       for (size1 <- sizes) {
         logger.debug(s"Testing sizes: size1=$size1")

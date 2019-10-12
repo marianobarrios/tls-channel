@@ -7,7 +7,7 @@ import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
-import tlschannel.helpers.TestUtil.StreamWithTakeWhileInclusive
+import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 
 class NonBlockingTest extends FunSuite with Matchers with StrictLogging with NonBlockingSuite {
 
@@ -17,8 +17,8 @@ class NonBlockingTest extends FunSuite with Matchers with StrictLogging with Non
   val dataSize = 200 * 1024
 
   test("selector loop") {
-    val sizes = Stream.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
-    for ((size1, size2) <- (sizes zip sizes.reverse)) {
+    val sizes = LazyList.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    for ((size1, size2) <- sizes zip sizes.reverse) {
       logger.debug(s"Sizes: size1=$size1,size2=$size2")
       val socketPair = factory.nioNio(
         cipher,

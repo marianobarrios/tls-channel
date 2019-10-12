@@ -8,6 +8,8 @@ import java.security.Security
 
 import com.typesafe.scalalogging.StrictLogging
 
+import scala.util.Using
+
 class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging {
 
   /*
@@ -18,7 +20,7 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
   val authenticatedContext = {
     val sslContext = SSLContext.getInstance(protocol)
     val ks = KeyStore.getInstance("JKS");
-    for (keystoreFile <- resource.managed(getClass.getClassLoader.getResourceAsStream("keystore.jks"))) {
+    Using(getClass.getClassLoader.getResourceAsStream("keystore.jks")) { keystoreFile =>
       ks.load(keystoreFile, "password".toCharArray())
       val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
       tmf.init(ks)
@@ -46,7 +48,7 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
   val standardCipher = ("TLS_DH_anon_WITH_AES_128_CBC_SHA", anonContext)
   
   private def ciphers(ctx: SSLContext): Seq[String] = {
-    ctx.createSSLEngine().getSupportedCipherSuites
+    ctx.createSSLEngine().getSupportedCipherSuites.toSeq
 
       // this is not a real cipher, but a hack actually
       .filterNot(_ == "TLS_EMPTY_RENEGOTIATION_INFO_SCSV")

@@ -124,7 +124,7 @@ object Loops extends Matchers with StrictLogging {
     logger.debug("Finalizing reader loop")
   }
 
-  val expectedBytesHash = Memo { (size: Int) =>
+  private def hash(size: Int): Array[Byte] = {
     val digest = MessageDigest.getInstance(hashAlgorithm)
     val random = new SplittableRandom(seed)
     var generated = 0
@@ -138,6 +138,8 @@ object Loops extends Matchers with StrictLogging {
     }
     digest.digest()
   }
+
+  val expectedBytesHash: Int => Array[Byte] = new Memo(hash).apply
 
   private def multiWrap(buffer: ByteBuffer) = {
     Array(ByteBuffer.allocate(0), buffer, ByteBuffer.allocate(0))

@@ -12,7 +12,6 @@ import java.util.concurrent.Executors
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
 
-import tlschannel.helpers.TestUtil.IterableWithForany
 import org.scalatest.Matchers
 import java.security.MessageDigest
 import java.util.SplittableRandom
@@ -87,7 +86,7 @@ object NonBlockingLoops extends Matchers {
 
     val dataHash = Loops.expectedBytesHash(dataSize)
 
-    while (allEndpoints.forany(_.remaining > 0)) {
+    while (allEndpoints.exists(_.remaining > 0)) {
       selectorCycles += 1
       selector.select() // block
 

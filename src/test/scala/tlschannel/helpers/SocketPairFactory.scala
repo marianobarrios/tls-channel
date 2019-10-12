@@ -23,7 +23,7 @@ import tlschannel.async.AsynchronousTlsChannel
 import tlschannel.async.AsynchronousTlsChannelGroup
 import tlschannel.async.ExtendedAsynchronousByteChannel
 
-import scala.collection.JavaConverters.seqAsJavaList
+import scala.jdk.CollectionConverters._
 import scala.util.Random
 
 case class SocketPair(client: SocketGroup, server: SocketGroup)
@@ -86,7 +86,7 @@ class SocketPairFactory(
     engine.setEnabledCipherSuites(Array(cipher))
     val sslParams = engine.getSSLParameters() // returns a value object
     sslParams.setEndpointIdentificationAlgorithm("HTTPS")
-    sslParams.setServerNames(seqAsJavaList(Seq(clientSniHostName)))
+    sslParams.setServerNames(Seq[SNIServerName](clientSniHostName).asJava)
     engine.setSSLParameters(sslParams)
     engine
   }
@@ -109,7 +109,7 @@ class SocketPairFactory(
     val chosenPort = serverSocket.getLocalPort
     val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
     val sslParameters = client.getSSLParameters // returns a value object
-    sslParameters.setServerNames(seqAsJavaList(Seq(clientSniHostName)))
+    sslParameters.setServerNames(Seq[SNIServerName](clientSniHostName).asJava)
     client.setSSLParameters(sslParameters)
     val server = serverSocket.accept().asInstanceOf[SSLSocket]
     serverSocket.close()
@@ -122,7 +122,7 @@ class SocketPairFactory(
     val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
     val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
     val sslParameters = client.getSSLParameters // returns a value object
-    sslParameters.setServerNames(seqAsJavaList(Seq(clientSniHostName)))
+    sslParameters.setServerNames(Seq[SNIServerName](clientSniHostName).asJava)
     client.setSSLParameters(sslParameters)
     val rawServer = serverSocket.accept()
     serverSocket.close()
