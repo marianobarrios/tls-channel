@@ -43,9 +43,7 @@ libraryDependencies ++=
 crossPaths := false
 
 javacOptions in (Compile,doc) ++= Seq(
-  "-link", "https://docs.oracle.com/javase/8/docs/api/",
   "-subpackages", "tlschannel",
-  "-exclude", "tlschannel.impl:tlschannel.util",
   "-sourcepath", "src/main/java"
 )
 
