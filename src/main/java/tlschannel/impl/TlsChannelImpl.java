@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import tlschannel.*;
-import tlschannel.util.TlsChannelCallbackException;
+import tlschannel.TlsChannelCallbackException;
 import tlschannel.util.Util;
 
 import java.nio.channels.ReadableByteChannel;

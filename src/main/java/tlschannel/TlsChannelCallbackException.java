@@ -1,6 +1,4 @@
-package tlschannel.util;
-
-import tlschannel.TlsChannel;
+package tlschannel;
 
 import javax.net.ssl.SSLException;
 

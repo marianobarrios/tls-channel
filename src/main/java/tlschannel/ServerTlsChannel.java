@@ -22,10 +22,12 @@ import javax.net.ssl.StandardConstants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tlschannel.impl.*;
+
+import tlschannel.impl.BufferHolder;
+import tlschannel.impl.ByteBufferSet;
+import tlschannel.impl.TlsChannelImpl;
 import tlschannel.impl.TlsChannelImpl.EofException;
-import tlschannel.util.TlsChannelCallbackException;
-import tlschannel.util.Util;
+import tlschannel.impl.TlsExplorer;
 
 /**
  * A server-side {@link TlsChannel}.
