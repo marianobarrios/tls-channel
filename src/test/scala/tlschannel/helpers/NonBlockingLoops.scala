@@ -153,7 +153,7 @@ object NonBlockingLoops extends Assertions {
     }
 
     for (reader <- readers) {
-      assert(dataHash == reader.digest.digest())
+      assert(dataHash sameElements reader.digest.digest())
     }
 
     Report(selectorCycles, needReadCount, needWriteCount, renegotiationCount, taskCount, Duration.fromNanos(totalTaskTimeNanos.longValue()))

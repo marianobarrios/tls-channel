@@ -2,9 +2,10 @@ package tlschannel.util
 
 import java.nio.ByteBuffer
 
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.Assertions
 
-class DirectBufferDeallocatorTest extends FunSuite with Matchers {
+class DirectBufferDeallocatorTest extends AnyFunSuite with Assertions {
 
   test("test direct buffer deallocator") {
     val deallocator = new DirectBufferDeallocator

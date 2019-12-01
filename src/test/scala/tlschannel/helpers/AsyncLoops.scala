@@ -123,7 +123,7 @@ object AsyncLoops extends Assertions {
       SocketPairFactory.checkDeallocation(socketPair)
     }
     for (reader <- readers) {
-      assert(dataHash == reader.digest.digest())
+      assert(dataHash sameElements reader.digest.digest())
     }
     Report(
       dequeueCycles,

@@ -118,7 +118,7 @@ object Loops extends Assertions with StrictLogging {
     if (readEof)
       assert(socketGroup.external.read(ByteBuffer.wrap(readArray)) == -1)
     val actual = digest.digest()
-    assert(actual == expectedBytesHash(size))
+    assert(actual sameElements  expectedBytesHash(size))
     if (close)
       socketGroup.external.close()
     logger.debug("Finalizing reader loop")
