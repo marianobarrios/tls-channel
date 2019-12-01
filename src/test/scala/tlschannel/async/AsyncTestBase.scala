@@ -2,11 +2,10 @@ package tlschannel.async
 
 import java.util.concurrent.TimeUnit
 
-import org.scalatest.Informing
-import org.scalatest.Matchers
+import org.scalatest.{Assertions, Informing}
 import tlschannel.helpers.AsyncLoops
 
-trait AsyncTestBase extends Informing with Matchers {
+trait AsyncTestBase extends Informing with Assertions {
 
   def printReport(report: AsyncLoops.Report) = {
     info(f"test loop:")
@@ -37,10 +36,10 @@ trait AsyncTestBase extends Informing with Matchers {
   }
 
   def assertChannelGroupConsistency(group: AsynchronousTlsChannelGroup) = {
-    assert(group.getCurrentRegistrationCount === 0)
-    assert(group.getCurrentReadCount === 0)
-    assert(group.getCurrentWriteCount === 0)
-    assert(group.getStartedReadCount === group.getCancelledReadCount + group.getSuccessfulReadCount + group.getFailedReadCount)
-    assert(group.getStartedWriteCount === group.getCancelledWriteCount + group.getSuccessfulWriteCount + group.getFailedWriteCount)
+    assert(group.getCurrentRegistrationCount == 0)
+    assert(group.getCurrentReadCount == 0)
+    assert(group.getCurrentWriteCount == 0)
+    assert(group.getStartedReadCount == group.getCancelledReadCount + group.getSuccessfulReadCount + group.getFailedReadCount)
+    assert(group.getStartedWriteCount == group.getCancelledWriteCount + group.getSuccessfulWriteCount + group.getFailedWriteCount)
   }
 }

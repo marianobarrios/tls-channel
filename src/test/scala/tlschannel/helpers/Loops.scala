@@ -4,11 +4,11 @@ import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.SplittableRandom
 
-import org.scalatest.Matchers
+import org.scalatest.Assertions
 import com.typesafe.scalalogging.StrictLogging
 import tlschannel.helpers.TestUtil.Memo
 
-object Loops extends Matchers with StrictLogging {
+object Loops extends Assertions with StrictLogging {
 
   val seed = 143000953L
 
@@ -116,9 +116,9 @@ object Loops extends Matchers with StrictLogging {
       assert(bytesRemaining >= 0)
     }
     if (readEof)
-      assert(socketGroup.external.read(ByteBuffer.wrap(readArray)) === -1)
+      assert(socketGroup.external.read(ByteBuffer.wrap(readArray)) == -1)
     val actual = digest.digest()
-    assert(actual === expectedBytesHash(size))
+    assert(actual == expectedBytesHash(size))
     if (close)
       socketGroup.external.close()
     logger.debug("Finalizing reader loop")

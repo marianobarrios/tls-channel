@@ -1,7 +1,8 @@
 package tlschannel
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
+import org.scalatest.{Assertions, BeforeAndAfterAll}
 import com.typesafe.scalalogging.StrictLogging
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SocketPairFactory
@@ -13,7 +14,7 @@ import tlschannel.helpers.SslContextFactory
  * the overhead of the real [[javax.net.ssl.SSLEngine]] to be able to test the overhead of the
  * [[TlsChannel]].
  */
-class NullEngineTest extends FunSuite with Matchers with StrictLogging with BeforeAndAfterAll {
+class NullEngineTest extends AnyFunSuite with Assertions with StrictLogging with BeforeAndAfterAll {
 
   val sslContextFactory = new SslContextFactory
   val (cipher, sslContext) = sslContextFactory.standardCipher

@@ -1,15 +1,15 @@
 package tlschannel
 
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
 import com.typesafe.scalalogging.StrictLogging
 import javax.net.ssl.SSLContext
+import org.scalatest.Assertions
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.Loops
 
-class CipherTest extends FunSuite with Matchers with StrictLogging {
+class CipherTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val protocols = {
     val allProtocols = SSLContext.getDefault.getSupportedSSLParameters.getProtocols.toSeq

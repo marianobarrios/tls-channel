@@ -3,12 +3,13 @@ package tlschannel.async
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 
-import org.scalatest.FunSuite
+import org.scalatest.Assertions
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.AsyncSocketPair
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 
-class AsyncShutdownTest extends FunSuite with AsyncTestBase {
+class AsyncShutdownTest extends AnyFunSuite with Assertions with AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.anonContext)
@@ -40,8 +41,8 @@ class AsyncShutdownTest extends FunSuite with AsyncTestBase {
 
     assertChannelGroupConsistency(channelGroup)
 
-    assert(channelGroup.getFailedReadCount === 0)
-    assert(channelGroup.getFailedWriteCount === 0)
+    assert(channelGroup.getFailedReadCount == 0)
+    assert(channelGroup.getFailedWriteCount == 0)
 
     printChannelGroupStatus(channelGroup)
   }
@@ -82,10 +83,10 @@ class AsyncShutdownTest extends FunSuite with AsyncTestBase {
 
     assertChannelGroupConsistency(channelGroup)
 
-    assert(channelGroup.getCancelledReadCount === 0)
-    assert(channelGroup.getCancelledWriteCount === 0)
-    assert(channelGroup.getFailedReadCount === 0)
-    assert(channelGroup.getFailedWriteCount === 0)
+    assert(channelGroup.getCancelledReadCount == 0)
+    assert(channelGroup.getCancelledWriteCount == 0)
+    assert(channelGroup.getFailedReadCount == 0)
+    assert(channelGroup.getFailedWriteCount == 0)
 
     printChannelGroupStatus(channelGroup)
   }

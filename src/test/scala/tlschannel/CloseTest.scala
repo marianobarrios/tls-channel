@@ -3,13 +3,14 @@ package tlschannel
 import java.nio.ByteBuffer
 import java.nio.channels.ClosedChannelException
 
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
 import com.typesafe.scalalogging.StrictLogging
-import tlschannel.helpers._
 import java.nio.channels.AsynchronousCloseException
 
-class CloseTest extends FunSuite with Matchers with StrictLogging {
+import org.scalatest.Assertions
+import org.scalatest.funsuite.AnyFunSuite
+import tlschannel.helpers.{SocketPairFactory, SslContextFactory, TestUtil}
+
+class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val sslContextFactory = new SslContextFactory
 
@@ -39,11 +40,11 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     }
     def serverFn(): Unit = TestUtil.cannotFail {
       val buffer = ByteBuffer.allocate(1)
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       assert(!serverGroup.tls.shutdownReceived())
       assert(!serverGroup.tls.shutdownSent())
       // repeated
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
     }
     val clientThread = new Thread(() => clientFn(), "client-thread")
     val serverThread = new Thread(() => serverFn(), "server-thread")
@@ -74,15 +75,15 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     }
     def serverFn(): Unit = TestUtil.cannotFail {
       val buffer = ByteBuffer.allocate(1)
-      assert(server.read(buffer) === 1)
+      assert(server.read(buffer) == 1)
       buffer.flip()
-      assert(buffer === ByteBuffer.wrap(data))
+      assert(buffer == ByteBuffer.wrap(data))
       buffer.clear()
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       assert(!serverGroup.tls.shutdownReceived())
       assert(!serverGroup.tls.shutdownSent())
       // repeated
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
     }
     val clientThread = new Thread(() => clientFn(), "client-thread")
     val serverThread = new Thread(() => serverFn(), "server-thread")
@@ -113,15 +114,15 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     }
     def serverFn(): Unit = TestUtil.cannotFail {
       val buffer = ByteBuffer.allocate(1)
-      assert(server.read(buffer) === 1)
+      assert(server.read(buffer) == 1)
       buffer.flip()
-      assert(buffer === ByteBuffer.wrap(data))
+      assert(buffer == ByteBuffer.wrap(data))
       buffer.clear()
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       assert(serverGroup.tls.shutdownReceived())
       assert(!serverGroup.tls.shutdownSent())
       // repeated
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       server.close()
       intercept[ClosedChannelException] {
         server.read(buffer)
@@ -157,13 +158,13 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     }
     def serverFn(): Unit = TestUtil.cannotFail {
       val buffer = ByteBuffer.allocate(1)
-      assert(server.read(buffer) === 1)
+      assert(server.read(buffer) == 1)
       buffer.flip()
-      assert(buffer === ByteBuffer.wrap(data))
+      assert(buffer == ByteBuffer.wrap(data))
       buffer.clear()
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       // repeated
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       server.close()
       assert(serverGroup.tls.shutdownReceived())
       assert(serverGroup.tls.shutdownSent())
@@ -196,15 +197,15 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     }
     def serverFn(): Unit = TestUtil.cannotFail {
       val buffer = ByteBuffer.allocate(1)
-      assert(server.read(buffer) === 1)
+      assert(server.read(buffer) == 1)
       buffer.flip()
-      assert(buffer === ByteBuffer.wrap(data))
+      assert(buffer == ByteBuffer.wrap(data))
       buffer.clear()
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       assert(serverGroup.tls.shutdownReceived())
       assert(!serverGroup.tls.shutdownSent())
       // repeated
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
     }
     val clientThread = new Thread(() => clientFn(), "client-thread")
     val serverThread = new Thread(() => serverFn(), "server-thread")
@@ -236,11 +237,11 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     }
     def serverFn(): Unit = TestUtil.cannotFail {
       val buffer = ByteBuffer.allocate(1)
-      assert(server.read(buffer) === 1)
+      assert(server.read(buffer) == 1)
       buffer.flip()
-      assert(buffer === ByteBuffer.wrap(data))
+      assert(buffer == ByteBuffer.wrap(data))
       buffer.clear()
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       assert(serverGroup.tls.shutdownReceived())
       assert(!serverGroup.tls.shutdownSent())
     }
@@ -278,14 +279,14 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     }
     def serverFn(): Unit = TestUtil.cannotFail {
       val buffer = ByteBuffer.allocate(1)
-      assert(server.read(buffer) === 1)
+      assert(server.read(buffer) == 1)
       buffer.flip()
-      assert(buffer === ByteBuffer.wrap(data))
+      assert(buffer == ByteBuffer.wrap(data))
       buffer.clear()
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       assert(serverGroup.tls.shutdownReceived())
       assert(!serverGroup.tls.shutdownSent())
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       // send second close_notify
       assert(serverGroup.tls.shutdown())
       assert(serverGroup.tls.shutdownReceived())
@@ -325,14 +326,14 @@ class CloseTest extends FunSuite with Matchers with StrictLogging {
     }
     def serverFn(): Unit = TestUtil.cannotFail {
       val buffer = ByteBuffer.allocate(1)
-      assert(server.read(buffer) === 1)
+      assert(server.read(buffer) == 1)
       buffer.flip()
-      assert(buffer === ByteBuffer.wrap(data))
+      assert(buffer == ByteBuffer.wrap(data))
       buffer.clear()
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       assert(serverGroup.tls.shutdownReceived())
       assert(!serverGroup.tls.shutdownSent())
-      assert(server.read(buffer) === -1)
+      assert(server.read(buffer) == -1)
       // do not send second close_notify
     }
     val clientThread = new Thread(() => clientFn(), "client-thread")

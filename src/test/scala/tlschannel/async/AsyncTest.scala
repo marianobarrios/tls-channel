@@ -1,12 +1,13 @@
 package tlschannel.async
 
-import org.scalatest.FunSuite
+import org.scalatest.Assertions
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.AsyncLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 
-class AsyncTest extends FunSuite with AsyncTestBase {
+class AsyncTest extends AnyFunSuite with Assertions with AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
   val (cipher, sslContext) = sslContextFactory.standardCipher
@@ -24,8 +25,8 @@ class AsyncTest extends FunSuite with AsyncTestBase {
 
     shutdownChannelGroup(channelGroup)
     assertChannelGroupConsistency(channelGroup)
-    assert(channelGroup.getFailedReadCount === 0)
-    assert(channelGroup.getFailedWriteCount === 0)
+    assert(channelGroup.getFailedReadCount == 0)
+    assert(channelGroup.getFailedWriteCount == 0)
 
     info(f"elapsed:            ${elapsed.toMillis}%8d ms")
     printReport(report)
@@ -44,10 +45,10 @@ class AsyncTest extends FunSuite with AsyncTestBase {
     shutdownChannelGroup(channelGroup)
     assertChannelGroupConsistency(channelGroup)
 
-    assert(channelGroup.getFailedReadCount === 0)
-    assert(channelGroup.getFailedWriteCount === 0)
-    assert(channelGroup.getCancelledReadCount === 0)
-    assert(channelGroup.getCancelledWriteCount === 0)
+    assert(channelGroup.getFailedReadCount == 0)
+    assert(channelGroup.getFailedWriteCount == 0)
+    assert(channelGroup.getCancelledReadCount == 0)
+    assert(channelGroup.getCancelledWriteCount == 0)
 
     info(f"elapsed:            ${elapsed.toMillis}%8d ms")
     printReport(report)
@@ -66,10 +67,10 @@ class AsyncTest extends FunSuite with AsyncTestBase {
     shutdownChannelGroup(channelGroup)
     assertChannelGroupConsistency(channelGroup)
 
-    assert(channelGroup.getFailedReadCount === 0)
-    assert(channelGroup.getFailedWriteCount === 0)
-    assert(channelGroup.getCancelledReadCount === 0)
-    assert(channelGroup.getCancelledWriteCount === 0)
+    assert(channelGroup.getFailedReadCount == 0)
+    assert(channelGroup.getFailedWriteCount == 0)
+    assert(channelGroup.getCancelledReadCount == 0)
+    assert(channelGroup.getCancelledWriteCount == 0)
 
     info(f"elapsed:            ${elapsed.toMillis}%8d ms")
     printReport(report)

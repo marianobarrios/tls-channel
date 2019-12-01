@@ -1,18 +1,18 @@
 package tlschannel
 
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
 import java.nio.channels.Channels
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSession
 
+import javax.net.ssl.SSLContext
 import tlschannel.impl.{BufferHolder, ByteBufferSet, TlsChannelImpl}
 import java.util.Optional
 
-class ApiTest extends FunSuite with Matchers {
+import org.scalatest.Assertions
+import org.scalatest.funsuite.AnyFunSuite
+
+class ApiTest extends AnyFunSuite with Assertions {
 
   val arraySize = 1024
 
@@ -26,7 +26,7 @@ class ApiTest extends FunSuite with Matchers {
       writeChannel,
       sslEngine,
       Optional.empty[BufferHolder],
-      (_: SSLSession) => (),
+      _ => (),
       true,
       new TrackingAllocator(new HeapBufferAllocator),
       new TrackingAllocator(new HeapBufferAllocator),
@@ -43,7 +43,7 @@ class ApiTest extends FunSuite with Matchers {
 
   test("reading into a buffer without remaining capacity") {
     val socket = newSocket()
-    assert(socket.read(new ByteBufferSet(ByteBuffer.allocate(0))) === 0, "read must return zero when the buffer was empty")
+    assert(socket.read(new ByteBufferSet(ByteBuffer.allocate(0))) == 0, "read must return zero when the buffer was empty")
   }
 
 }

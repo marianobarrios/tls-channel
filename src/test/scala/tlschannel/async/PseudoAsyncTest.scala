@@ -1,14 +1,15 @@
 package tlschannel.async
 
 import com.typesafe.scalalogging.StrictLogging
-import org.scalatest._
+import org.scalatest.Assertions
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.Loops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 
-class PseudoAsyncTest extends FunSuite with Matchers with StrictLogging {
+class PseudoAsyncTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val sslContextFactory = new SslContextFactory
 
@@ -25,7 +26,7 @@ class PseudoAsyncTest extends FunSuite with Matchers with StrictLogging {
     logger.debug(s"Testing half duplex")
     val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val (cipher, _) = sslContextFactory.standardCipher
-    for ((size1, size2) <- (sizes zip sizes.reverse)) {
+    for ((size1, size2) <- sizes zip sizes.reverse) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
       val socketPair = factory.nioNio(
         cipher,

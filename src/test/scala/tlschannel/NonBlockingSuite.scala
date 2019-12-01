@@ -2,10 +2,10 @@ package tlschannel
 
 import java.time.Duration
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.NonBlockingLoops
 
-trait NonBlockingSuite extends FunSuite {
+trait NonBlockingSuite extends AnyFunSuite {
 
   def printReport(report: NonBlockingLoops.Report, elapsed: Duration) = {
     info(s"Selector cycles: ${report.selectorCycles}")

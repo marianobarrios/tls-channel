@@ -1,15 +1,15 @@
 package tlschannel
 
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
+import org.scalatest.Assertions
 import com.typesafe.scalalogging.StrictLogging
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 
-class NonBlockingTest extends FunSuite with Matchers with StrictLogging with NonBlockingSuite {
+class NonBlockingTest extends AnyFunSuite with Assertions with StrictLogging with NonBlockingSuite {
 
   val sslContextFactory = new SslContextFactory
   val (cipher, sslContext) = sslContextFactory.standardCipher

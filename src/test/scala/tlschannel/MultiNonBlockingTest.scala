@@ -1,13 +1,14 @@
 package tlschannel
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
+import org.scalatest.{Assertions, BeforeAndAfterAll}
 import com.typesafe.scalalogging.StrictLogging
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 
-class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging with NonBlockingSuite with BeforeAndAfterAll {
+class MultiNonBlockingTest extends AnyFunSuite with Assertions with StrictLogging with NonBlockingSuite with BeforeAndAfterAll {
 
   val sslContextFactory = new SslContextFactory
   val (cipher, sslContext) = sslContextFactory.standardCipher
@@ -20,7 +21,7 @@ class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging wit
     val (report, elapsed) = TestUtil.time {
       NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
     }
-    assert(report.asyncTasksRun === 0)
+    assert(report.asyncTasksRun == 0)
     printReport(report, elapsed)
   }
 
@@ -37,7 +38,7 @@ class MultiNonBlockingTest extends FunSuite with Matchers with StrictLogging wit
     val (report, elapsed) = TestUtil.time {
       NonBlockingLoops.loop(pairs, dataSize, renegotiate = true)
     }
-    assert(report.asyncTasksRun === 0)
+    assert(report.asyncTasksRun == 0)
     printReport(report, elapsed)
   }
 

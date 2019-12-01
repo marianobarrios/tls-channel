@@ -8,11 +8,11 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.LongAdder
 
-import org.scalatest.Matchers
+import org.scalatest.Assertions
 
 import scala.util.control.Breaks
 
-object AsyncLoops extends Matchers {
+object AsyncLoops extends Assertions {
 
   trait Endpoint {
     def remaining: Int
@@ -123,7 +123,7 @@ object AsyncLoops extends Matchers {
       SocketPairFactory.checkDeallocation(socketPair)
     }
     for (reader <- readers) {
-      assert(dataHash === reader.digest.digest())
+      assert(dataHash == reader.digest.digest())
     }
     Report(
       dequeueCycles,

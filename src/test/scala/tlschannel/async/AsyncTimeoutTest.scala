@@ -7,12 +7,13 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.LongAdder
 
-import org.scalatest.FunSuite
+import org.scalatest.Assertions
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.AsyncSocketPair
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 
-class AsyncTimeoutTest extends FunSuite with AsyncTestBase {
+class AsyncTimeoutTest extends AnyFunSuite with AsyncTestBase with Assertions {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.anonContext)
@@ -71,11 +72,11 @@ class AsyncTimeoutTest extends FunSuite with AsyncTestBase {
     shutdownChannelGroup(channelGroup)
     assertChannelGroupConsistency(channelGroup)
 
-    assert(channelGroup.getFailedReadCount === 0)
-    assert(channelGroup.getFailedWriteCount === 0)
+    assert(channelGroup.getFailedReadCount == 0)
+    assert(channelGroup.getFailedWriteCount == 0)
 
-    assert(successWrites.longValue === channelGroup.getSuccessfulWriteCount)
-    assert(successReads.longValue === channelGroup.getSuccessfulReadCount)
+    assert(successWrites.longValue == channelGroup.getSuccessfulWriteCount)
+    assert(successReads.longValue == channelGroup.getSuccessfulReadCount)
 
     info(f"success writes:     ${successWrites.longValue}%8d")
     info(f"success reads:      ${successReads.longValue}%8d")
@@ -111,11 +112,11 @@ class AsyncTimeoutTest extends FunSuite with AsyncTestBase {
     shutdownChannelGroup(channelGroup)
     assertChannelGroupConsistency(channelGroup)
 
-    assert(channelGroup.getFailedReadCount === 0)
-    assert(channelGroup.getFailedWriteCount === 0)
+    assert(channelGroup.getFailedReadCount == 0)
+    assert(channelGroup.getFailedWriteCount == 0)
 
-    assert(successfulWriteCancellations === channelGroup.getCancelledWriteCount)
-    assert(successfulReadCancellations === channelGroup.getCancelledReadCount)
+    assert(successfulWriteCancellations == channelGroup.getCancelledWriteCount)
+    assert(successfulReadCancellations == channelGroup.getCancelledReadCount)
 
     info(f"success writes:     ${channelGroup.getSuccessfulWriteCount}%8d")
     info(f"success reads:      ${channelGroup.getSuccessfulReadCount}%8d")

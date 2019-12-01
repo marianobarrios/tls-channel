@@ -1,14 +1,14 @@
 package tlschannel
 
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
+import org.scalatest.Assertions
 import com.typesafe.scalalogging.StrictLogging
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.Loops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 
-class ScatteringTest extends FunSuite with Matchers with StrictLogging {
+class ScatteringTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val sslContextFactory = new SslContextFactory
   val (cipher, sslContext) = sslContextFactory.standardCipher

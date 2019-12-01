@@ -1,18 +1,20 @@
 package tlschannel
 
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
 import scala.util.Random
 import java.net.Socket
 import java.nio.channels.ByteChannel
+
 import javax.net.ssl.SSLSocket
 import java.nio.ByteBuffer
+
 import com.typesafe.scalalogging.StrictLogging
+import org.scalatest.Assertions
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 
-class InteroperabilityTest extends FunSuite with Matchers with StrictLogging {
+class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLogging {
 
   import InteroperabilityTest._
 
@@ -165,7 +167,7 @@ object InteroperabilityTest {
     def close() = socket.close()
   }
 
-  class ByteChannelReader(socket: ByteChannel) extends Reader with Matchers {
+  class ByteChannelReader(socket: ByteChannel) extends Reader {
     def read(array: Array[Byte], offset: Int, length: Int) = socket.read(ByteBuffer.wrap(array, offset, length))
     def close() = socket.close()
   }
@@ -183,7 +185,7 @@ object InteroperabilityTest {
     def close() = socket.close()
   }
 
-  class TlsSocketChannelWriter(val socket: TlsChannel) extends Writer with Matchers {
+  class TlsSocketChannelWriter(val socket: TlsChannel) extends Writer {
 
     def write(array: Array[Byte], offset: Int, length: Int) = {
       val buffer = ByteBuffer.wrap(array, offset, length)

@@ -12,13 +12,13 @@ import java.util.concurrent.Executors
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
 
-import org.scalatest.Matchers
+import org.scalatest.Assertions
 import java.security.MessageDigest
 import java.util.SplittableRandom
 
 import scala.concurrent.duration.Duration
 
-object NonBlockingLoops extends Matchers {
+object NonBlockingLoops extends Assertions {
 
   trait Endpoint {
     def key: SelectionKey
@@ -153,7 +153,7 @@ object NonBlockingLoops extends Matchers {
     }
 
     for (reader <- readers) {
-      assert(dataHash === reader.digest.digest())
+      assert(dataHash == reader.digest.digest())
     }
 
     Report(selectorCycles, needReadCount, needWriteCount, renegotiationCount, taskCount, Duration.fromNanos(totalTaskTimeNanos.longValue()))

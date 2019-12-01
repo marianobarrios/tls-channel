@@ -1,8 +1,7 @@
 package tlschannel
 
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
+import org.scalatest.{Assertions, BeforeAndAfterAll}
+import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
@@ -12,7 +11,7 @@ import tlschannel.helpers.TestUtil
   * Test using concurrent, non-blocking connections, and a "null" [[javax.net.ssl.SSLEngine]] that just passes
   * all byte as they are.
   */
-class NullMultiNonBlockingTest extends FunSuite with Matchers with NonBlockingSuite with BeforeAndAfterAll {
+class NullMultiNonBlockingTest extends AnyFunSuite with Assertions with NonBlockingSuite with BeforeAndAfterAll {
 
   val sslContextFactory = new SslContextFactory
   val (cipher, sslContext) = sslContextFactory.standardCipher
@@ -25,7 +24,7 @@ class NullMultiNonBlockingTest extends FunSuite with Matchers with NonBlockingSu
     val (report, elapsed) = TestUtil.time {
       NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
     }
-    assert(report.asyncTasksRun === 0)
+    assert(report.asyncTasksRun == 0)
     printReport(report, elapsed)
   }
 
