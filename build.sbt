@@ -43,17 +43,11 @@ libraryDependencies ++=
 crossPaths := false
 
 javacOptions in (Compile,doc) ++= Seq(
-  "-link", "http://docs.oracle.com/javase/8/docs/api/", 
-  "-source", "1.8", 
-  "-target", "1.8"
+  "-link", "https://docs.oracle.com/javase/8/docs/api/",
+  "-subpackages", "tlschannel",
+  "-exclude", "tlschannel.impl:tlschannel.util",
+  "-sourcepath", "src/main/java"
 )
-
-//javaOptions in Test += "-Xrunhprof:heap=sites"
-
-sources in (Compile, doc) ~= (_ filter { file =>
-	val parent = file.getParent
-	!parent.endsWith("/engine/misc") && !parent.endsWith("/tlschannel/impl") && !parent.endsWith("/tlschannel/util")  
-})
 
 publishMavenStyle := true
 
