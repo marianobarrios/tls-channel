@@ -269,7 +269,7 @@ TLS Channel requires Java 8 or newer.
 
 ### Size and Dependencies
 
-The library has only one dependency: [SLF4J](https://www.slf4j.org/). The main jar file size is below 70 KB.
+The library has only one dependency: [SLF4J](https://www.slf4j.org/). The main jar file size is below 60 KB.
 
 ### Logging
 
