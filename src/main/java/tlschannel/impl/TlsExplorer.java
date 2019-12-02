@@ -27,12 +27,14 @@ public final class TlsExplorer {
 	/**
 	 * Returns the required number of bytesProduced in the {@code source}
 	 * {@link ByteBuffer} necessary to explore SSL/TLS connection.
-	 * <P>
+	 * <p>
 	 * This method tries to parse as few bytesProduced as possible from {@code source}
 	 * byte buffer to get the length of an SSL/TLS record.
-	 * <P>
+	 *
+	 * @param source source buffer
+	 * @return the required size
 	 */
-	public final static int getRequiredSize(ByteBuffer source) {
+	public static int getRequiredSize(ByteBuffer source) {
 		if (source.remaining() < RECORD_HEADER_SIZE)
 			throw new BufferUnderflowException();
 		source.mark();
@@ -51,7 +53,7 @@ public final class TlsExplorer {
 		}
 	}
 
-	public final static Map<Integer, SNIServerName> explore(ByteBuffer source) throws SSLProtocolException {
+	public static Map<Integer, SNIServerName> explore(ByteBuffer source) throws SSLProtocolException {
 		if (source.remaining() < RECORD_HEADER_SIZE)
 			throw new BufferUnderflowException();
 		source.mark();

@@ -598,6 +598,8 @@ public class AsynchronousTlsChannelGroup {
 
     /**
      * Whether this channel group was shut down, and all pending tasks have drained.
+     *
+     * @return whether the channel is terminated
      */
     public boolean isTerminated() {
         return executor.isTerminated();

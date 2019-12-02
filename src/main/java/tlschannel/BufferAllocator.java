@@ -11,6 +11,9 @@ public interface BufferAllocator {
 
 	/**
 	 * Allocate a {@link ByteBuffer} with the given initial capacity.
+	 *
+	 * @param size the size to allocate
+	 * @return the newly created buffer
 	 */
 	ByteBuffer allocate(int size);
 

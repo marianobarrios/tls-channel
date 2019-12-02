@@ -37,6 +37,8 @@ public interface ExtendedAsynchronousByteChannel extends AsynchronousByteChannel
      * AsynchronousByteChannel#read(ByteBuffer,Object,CompletionHandler)}
      * method.
      *
+     * @param   <A>
+     *          The type for the object to the attached to the operation
      * @param   dst
      *          The buffer into which bytes are to be transferred
      * @param   timeout
@@ -105,6 +107,8 @@ public interface ExtendedAsynchronousByteChannel extends AsynchronousByteChannel
      * read from the channel will cause an unspecific runtime exception to be
      * thrown.
      *
+     * @param   <A>
+     *          The type for the object to the attached to the operation
      * @param   dsts
      *          The buffers into which bytes are to be transferred
      * @param   offset
@@ -159,6 +163,8 @@ public interface ExtendedAsynchronousByteChannel extends AsynchronousByteChannel
      * AsynchronousByteChannel#write(ByteBuffer,Object,CompletionHandler)}
      * method.
      *
+     * @param   <A>
+     *          The type for the object to the attached to the operation
      * @param   src
      *          The buffer from which bytes are to be retrieved
      * @param   timeout
@@ -222,6 +228,8 @@ public interface ExtendedAsynchronousByteChannel extends AsynchronousByteChannel
      * to write to the channel will cause an unspecific runtime exception to be
      * thrown.
      *
+     * @param   <A>
+     *          The type for the object to the attached to the operation
      * @param   srcs
      *          The buffers from which bytes are to be retrieved
      * @param   offset

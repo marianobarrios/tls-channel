@@ -450,7 +450,9 @@ public class TlsChannelImpl implements ByteChannel {
 	// handshake and close
 
 	/**
-	 * Force new negotiation
+	 * Force a new negotiation.
+	 *
+	 * @throws IOException if the underlying channel throws an IOException
 	 */
 	public void renegotiate() throws IOException {
 		/*
@@ -471,6 +473,8 @@ public class TlsChannelImpl implements ByteChannel {
 	/**
 	 * Do a negotiation if this connection is new and it hasn't been done
 	 * already.
+	 *
+	 * @throws IOException if the underlying channel throws an IOException
 	 */
 	public void handshake() throws IOException {
 		try {

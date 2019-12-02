@@ -32,7 +32,10 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 	/**
 	 * Whether CPU-intensive tasks are run or not. Default is to do run them. If
 	 * setting this <code>false</code>, the calling code should be prepared to handle
-	 * {@link NeedsTaskException}}
+	 * {@link NeedsTaskException}
+	 *
+	 * @param runTasks whether to run tasks
+	 * @return this object
 	 */
 	public T withRunTasks(boolean runTasks) {
 		this.runTasks = runTasks;
@@ -44,6 +47,9 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 	 * {@link HeapBufferAllocator} is used, as this buffers are used to
 	 * supplement user-supplied ones when dealing with too big a TLS record,
 	 * that is, they operate entirely inside the JVM.
+	 *
+	 * @param bufferAllocator the buffer allocator
+	 * @return this object
 	 */
 	public T withPlainBufferAllocator(BufferAllocator bufferAllocator) {
 		this.plainBufferAllocator = bufferAllocator;
@@ -54,6 +60,9 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 	 * Set the {@link BufferAllocator} to use for encrypted data. By default a
 	 * {@link DirectBufferAllocator} is used, as this data is usually read from or
 	 * written to native sockets.
+	 *
+	 * @param bufferAllocator the buffer allocator
+	 * @return this object
 	 */
 	public T withEncryptedBufferAllocator(BufferAllocator bufferAllocator) {
 		this.encryptedBufferAllocator = bufferAllocator;
@@ -65,6 +74,9 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 	 * established (or re-established). The supplied function will run in the
 	 * same thread as the rest of the handshake, so it should ideally run as
 	 * fast as possible.
+	 *
+	 * @param sessionInitCallback the session initialization callback
+	 * @return this object
 	 */
 	public T withSessionInitCallback(Consumer<SSLSession> sessionInitCallback) {
 		this.sessionInitCallback = sessionInitCallback;
@@ -81,6 +93,9 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 	 * to <code>false</code> is performance, since more releases means more
 	 * allocations, which have a cost. This is effectively a memory-time trade-off.
 	 * However, in most cases the default behavior makes sense.
+	 *
+	 * @param releaseBuffers whether to release buffers
+	 * @return this object
 	 */
 	public T withReleaseBuffers(boolean releaseBuffers) {
 		this.releaseBuffers = releaseBuffers;
@@ -103,6 +118,8 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
      * <p> Default is to not wait and close immediately. The proper closing procedure can be initiated at any moment
      * using {@link TlsChannel#shutdown()}.</p>
      *
+	 * @param waitForCloseConfirmation whether to wait for close confirmation
+	 * @return this object
      * @see TlsChannel#shutdown()
      */
     public T withWaitForCloseConfirmation(boolean waitForCloseConfirmation) {
