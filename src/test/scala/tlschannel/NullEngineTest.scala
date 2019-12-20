@@ -10,10 +10,10 @@ import tlschannel.helpers.Loops
 import tlschannel.helpers.SslContextFactory
 
 /**
- * Test using a null engine (pass-through).	The purpose of the test is to remove
- * the overhead of the real [[javax.net.ssl.SSLEngine]] to be able to test the overhead of the
- * [[TlsChannel]].
- */
+  * Test using a null engine (pass-through).	The purpose of the test is to remove
+  * the overhead of the real [[javax.net.ssl.SSLEngine]] to be able to test the overhead of the
+  * [[TlsChannel]].
+  */
 class NullEngineTest extends AnyFunSuite with Assertions with StrictLogging with BeforeAndAfterAll {
 
   val sslContextFactory = new SslContextFactory
@@ -29,10 +29,8 @@ class NullEngineTest extends AnyFunSuite with Assertions with StrictLogging with
     val elapsedTotal = TestUtil.time {
       for (size1 <- sizes) {
         logger.debug(s"Testing sizes: size1=$size1")
-        val socketPair = factory.nioNio(
-          cipher = null,
-          internalClientChunkSize = Some(size1),
-          internalServerChunkSize = Some(size1))
+        val socketPair =
+          factory.nioNio(cipher = null, internalClientChunkSize = Some(size1), internalServerChunkSize = Some(size1))
         val elapsed = TestUtil.time {
           Loops.halfDuplex(socketPair, dataSize)
         }
@@ -47,10 +45,8 @@ class NullEngineTest extends AnyFunSuite with Assertions with StrictLogging with
     val elapsedTotal = TestUtil.time {
       for (size1 <- sizes) {
         logger.debug(s"Testing sizes: size1=$size1")
-        val socketPair = factory.nioNio(
-          cipher = null,
-          internalClientChunkSize = Some(size1),
-          internalServerChunkSize = Some(size1))
+        val socketPair =
+          factory.nioNio(cipher = null, internalClientChunkSize = Some(size1), internalServerChunkSize = Some(size1))
         val elapsed = TestUtil.time {
           Loops.halfDuplex(socketPair, dataSize)
         }
@@ -65,4 +61,3 @@ class NullEngineTest extends AnyFunSuite with Assertions with StrictLogging with
   }
 
 }
-

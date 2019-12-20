@@ -8,7 +8,12 @@ import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 
-class MultiNonBlockingTest extends AnyFunSuite with Assertions with StrictLogging with NonBlockingSuite with BeforeAndAfterAll {
+class MultiNonBlockingTest
+    extends AnyFunSuite
+    with Assertions
+    with StrictLogging
+    with NonBlockingSuite
+    with BeforeAndAfterAll {
 
   val sslContextFactory = new SslContextFactory
   val (cipher, sslContext) = sslContextFactory.standardCipher

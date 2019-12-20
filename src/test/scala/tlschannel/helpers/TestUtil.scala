@@ -14,10 +14,11 @@ object TestUtil extends StrictLogging {
     try thunk
     catch {
       case e: Throwable =>
-        val lastMessage = s"An essential thread (${Thread.currentThread().getName}) failed unexpectedly, terminating process"
+        val lastMessage =
+          s"An essential thread (${Thread.currentThread().getName}) failed unexpectedly, terminating process"
         logger.error(lastMessage, e)
         System.err.println(lastMessage)
-        e.printStackTrace() // we are committing suicide, assure the reason gets through  
+        e.printStackTrace() // we are committing suicide, assure the reason gets through
         Thread.sleep(1000) // give the process some time for flushing logs
         System.exit(1)
     }
@@ -60,10 +61,10 @@ object TestUtil extends StrictLogging {
   }
 
   /**
-   * @param f the function to memoize
-   * @tparam I input to f
-   * @tparam O output of f
-   */
+    * @param f the function to memoize
+    * @tparam I input to f
+    * @tparam O output of f
+    */
   class Memo[I, O](f: I => O) extends (I => O) {
     val cache = new ConcurrentHashMap[I, O]
     override def apply(x: I) = cache.asScala.getOrElseUpdate(x, f(x))

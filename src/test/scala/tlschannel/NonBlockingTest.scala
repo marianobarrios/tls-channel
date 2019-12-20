@@ -25,7 +25,8 @@ class NonBlockingTest extends AnyFunSuite with Assertions with StrictLogging wit
         internalClientChunkSize = Some(size1),
         externalClientChunkSize = Some(size2),
         internalServerChunkSize = Some(size1),
-        externalServerChunkSize = Some(size2))
+        externalServerChunkSize = Some(size2)
+      )
       val (report, elapsed) = TestUtil.time {
         NonBlockingLoops.loop(Seq(socketPair), dataSize, renegotiate = true)
       }

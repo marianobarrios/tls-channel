@@ -13,9 +13,9 @@ object Loops extends Assertions with StrictLogging {
   val seed = 143000953L
 
   /*
-   * Note that it is necessary to use a multiple of 4 as buffer size for writing. 
+   * Note that it is necessary to use a multiple of 4 as buffer size for writing.
    * This is because the bytesProduced to write are generated using Random.nextBytes, that
-   * always consumes full (4 byte) integers. A multiple of 4 then prevents "holes" 
+   * always consumes full (4 byte) integers. A multiple of 4 then prevents "holes"
    * in the random sequence.
    */
   val bufferSize = 4 * 5000
@@ -24,18 +24,22 @@ object Loops extends Assertions with StrictLogging {
   val hashAlgorithm = "MD5" // for speed
 
   /**
-   * Test a half-duplex interaction, with (optional) renegotiation
-   * before reversing the direction of the flow (as in HTTP)
-   */
+    * Test a half-duplex interaction, with (optional) renegotiation
+    * before reversing the direction of the flow (as in HTTP)
+    */
   def halfDuplex(socketPair: SocketPair, dataSize: Int, renegotiation: Boolean = false, scattering: Boolean = false) = {
-    val clientWriterThread = new Thread(
-        () => Loops.writerLoop(dataSize, socketPair.client, renegotiation, scattering), "client-writer")
-    val serverReaderThread = new Thread(
-        () => Loops.readerLoop(dataSize, socketPair.server, scattering), "server-reader")
+    val clientWriterThread =
+      new Thread(() => Loops.writerLoop(dataSize, socketPair.client, renegotiation, scattering), "client-writer")
+    val serverReaderThread =
+      new Thread(() => Loops.readerLoop(dataSize, socketPair.server, scattering), "server-reader")
     val serverWriterThread = new Thread(
-        () => Loops.writerLoop(dataSize, socketPair.server, renegotiation, scattering, shutdown = true, close = true), "server-writer")
+      () => Loops.writerLoop(dataSize, socketPair.server, renegotiation, scattering, shutdown = true, close = true),
+      "server-writer"
+    )
     val clientReaderThread = new Thread(
-        () => Loops.readerLoop(dataSize, socketPair.client, scattering, close = true, readEof = true), "client-reader")
+      () => Loops.readerLoop(dataSize, socketPair.client, scattering, close = true, readEof = true),
+      "client-reader"
+    )
     Seq(serverReaderThread, clientWriterThread).foreach(_.start())
     Seq(serverReaderThread, clientWriterThread).foreach(_.join())
     Seq(clientReaderThread, serverWriterThread).foreach(_.start())
@@ -56,12 +60,13 @@ object Loops extends Assertions with StrictLogging {
   }
 
   def writerLoop(
-    size: Int,
-    socketGroup: SocketGroup,
-    renegotiate: Boolean = false,
-    scattering: Boolean = false,
-    shutdown: Boolean = false,
-    close: Boolean = false): Unit = TestUtil.cannotFail {
+      size: Int,
+      socketGroup: SocketGroup,
+      renegotiate: Boolean = false,
+      scattering: Boolean = false,
+      shutdown: Boolean = false,
+      close: Boolean = false
+  ): Unit = TestUtil.cannotFail {
 
     logger.debug(s"Starting writer loop, size: $size, scattering: $scattering, renegotiate:$renegotiate")
     val random = new SplittableRandom(seed)
@@ -76,10 +81,11 @@ object Loops extends Assertions with StrictLogging {
           socketGroup.tls.renegotiate()
           bytesSinceRenegotiation = 0
         }
-        val c = if (scattering)
-          socketGroup.tls.write(multiWrap(buffer)).toInt
-        else
-          socketGroup.external.write(buffer)
+        val c =
+          if (scattering)
+            socketGroup.tls.write(multiWrap(buffer)).toInt
+          else
+            socketGroup.external.write(buffer)
         assert(c > 0, "blocking write must return a positive number")
         bytesSinceRenegotiation += c
         bytesRemaining -= c.toInt
@@ -94,11 +100,12 @@ object Loops extends Assertions with StrictLogging {
   }
 
   def readerLoop(
-    size: Int,
-    socketGroup: SocketGroup,
-    gathering: Boolean = false,
-    readEof: Boolean = false,
-    close: Boolean = false): Unit = TestUtil.cannotFail {
+      size: Int,
+      socketGroup: SocketGroup,
+      gathering: Boolean = false,
+      readEof: Boolean = false,
+      close: Boolean = false
+  ): Unit = TestUtil.cannotFail {
 
     logger.debug(s"Starting reader loop. Size: $size, gathering: $gathering")
     val readArray = Array.ofDim[Byte](bufferSize)
@@ -106,10 +113,11 @@ object Loops extends Assertions with StrictLogging {
     val digest = MessageDigest.getInstance(hashAlgorithm)
     while (bytesRemaining > 0) {
       val readBuffer = ByteBuffer.wrap(readArray, 0, math.min(bufferSize, bytesRemaining))
-      val c = if (gathering)
-        socketGroup.tls.read(multiWrap(readBuffer)).toInt
-      else
-        socketGroup.external.read(readBuffer)
+      val c =
+        if (gathering)
+          socketGroup.tls.read(multiWrap(readBuffer)).toInt
+        else
+          socketGroup.external.read(readBuffer)
       assert(c > 0, "blocking read must return a positive number")
       digest.update(readBuffer.array(), 0, readBuffer.position())
       bytesRemaining -= c
@@ -118,7 +126,7 @@ object Loops extends Assertions with StrictLogging {
     if (readEof)
       assert(socketGroup.external.read(ByteBuffer.wrap(readArray)) == -1)
     val actual = digest.digest()
-    assert(actual sameElements  expectedBytesHash(size))
+    assert(actual sameElements expectedBytesHash(size))
     if (close)
       socketGroup.external.close()
     logger.debug("Finalizing reader loop")

@@ -20,8 +20,8 @@ class PseudoAsyncTest extends AnyFunSuite with Assertions with StrictLogging {
   val dataSize = 60 * 1000
 
   /**
-   * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
-   */
+    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+    */
   test("half duplex") {
     logger.debug(s"Testing half duplex")
     val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
@@ -34,7 +34,8 @@ class PseudoAsyncTest extends AnyFunSuite with Assertions with StrictLogging {
         externalClientChunkSize = Some(size2),
         internalServerChunkSize = Some(size1),
         externalServerChunkSize = Some(size2),
-        pseudoAsyncGroup = Some(channelGroup))
+        pseudoAsyncGroup = Some(channelGroup)
+      )
       val elapsed = TestUtil.time {
         Loops.halfDuplex(socketPair, dataSize)
       }
@@ -43,19 +44,21 @@ class PseudoAsyncTest extends AnyFunSuite with Assertions with StrictLogging {
   }
 
   /**
-   * Test a full-duplex interaction, without any renegotiation
-   */
+    * Test a full-duplex interaction, without any renegotiation
+    */
   test("full duplex") {
     logger.debug(s"Testing full duplex")
     val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     for ((size1, size2) <- sizes zip sizes.reverse) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
-      val socketPair = factory.nioNio(cipher,
+      val socketPair = factory.nioNio(
+        cipher,
         internalClientChunkSize = Some(size1),
         externalClientChunkSize = Some(size2),
         internalServerChunkSize = Some(size1),
         externalServerChunkSize = Some(size2),
-        pseudoAsyncGroup = Some(channelGroup))
+        pseudoAsyncGroup = Some(channelGroup)
+      )
       val elapsed = TestUtil.time {
         Loops.fullDuplex(socketPair, dataSize)
       }

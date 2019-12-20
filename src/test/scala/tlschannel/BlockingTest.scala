@@ -18,8 +18,8 @@ class BlockingTest extends AnyFunSuite with Assertions with StrictLogging {
   val dataSize = 60 * 1000
 
   /**
-   * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
-   */
+    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+    */
   test("half duplex (with renegotiations)") {
     val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val (cipher, _) = sslContextFactory.standardCipher
@@ -30,7 +30,8 @@ class BlockingTest extends AnyFunSuite with Assertions with StrictLogging {
         internalClientChunkSize = Some(size1),
         externalClientChunkSize = Some(size2),
         internalServerChunkSize = Some(size1),
-        externalServerChunkSize = Some(size2))
+        externalServerChunkSize = Some(size2)
+      )
       val elapsed = TestUtil.time {
         Loops.halfDuplex(socketPair, dataSize, renegotiation = true)
       }
@@ -39,17 +40,19 @@ class BlockingTest extends AnyFunSuite with Assertions with StrictLogging {
   }
 
   /**
-   * Test a full-duplex interaction, without any renegotiation
-   */
+    * Test a full-duplex interaction, without any renegotiation
+    */
   test("full duplex") {
     val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     for ((size1, size2) <- sizes zip sizes.reverse) {
       logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
-      val socketPair = factory.nioNio(cipher,
+      val socketPair = factory.nioNio(
+        cipher,
         internalClientChunkSize = Some(size1),
         externalClientChunkSize = Some(size2),
         internalServerChunkSize = Some(size1),
-        externalServerChunkSize = Some(size2))
+        externalServerChunkSize = Some(size2)
+      )
       val elapsed = TestUtil.time {
         Loops.fullDuplex(socketPair, dataSize)
       }
@@ -58,4 +61,3 @@ class BlockingTest extends AnyFunSuite with Assertions with StrictLogging {
   }
 
 }
-

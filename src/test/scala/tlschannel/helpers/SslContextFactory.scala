@@ -30,13 +30,13 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
     }
     sslContext
   }
-  
+
   val anonContext = {
     val ctx = SSLContext.getInstance(protocol)
     ctx.init(null, null, null)
     ctx
   }
-  
+
   val authenticatedCiphers = ciphers(authenticatedContext).filterNot(_.contains("_anon_"))
   val anonCiphers = ciphers(anonContext).filter(_.contains("_anon_"))
 
@@ -44,17 +44,18 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
     val ret = authenticatedCiphers.map((_, authenticatedContext)) ++ anonCiphers.map((_, anonContext))
     ret.sortBy(_._1)
   }
-  
-  val standardCipher = ("TLS_DH_anon_WITH_AES_128_CBC_SHA", anonContext)
-  
-  private def ciphers(ctx: SSLContext): Seq[String] = {
-    ctx.createSSLEngine().getSupportedCipherSuites.toSeq
 
+  val standardCipher = ("TLS_DH_anon_WITH_AES_128_CBC_SHA", anonContext)
+
+  private def ciphers(ctx: SSLContext): Seq[String] = {
+    ctx
+      .createSSLEngine()
+      .getSupportedCipherSuites
+      .toSeq
       // this is not a real cipher, but a hack actually
       .filterNot(_ == "TLS_EMPTY_RENEGOTIATION_INFO_SCSV")
-
       // disable problematic ciphers
-      .filterNot{c =>
+      .filterNot { c =>
         Seq(
           "TLS_KRB5_EXPORT_WITH_DES_CBC_40_MD5",
           "TLS_KRB5_EXPORT_WITH_DES_CBC_40_SHA",
@@ -67,28 +68,25 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
           "TLS_KRB5_WITH_RC4_128_MD5",
           "TLS_KRB5_WITH_RC4_128_SHA",
           "SSL_RSA_EXPORT_WITH_DES40_CBC_SHA",
-          "SSL_RSA_EXPORT_WITH_RC4_40_MD5",
+          "SSL_RSA_EXPORT_WITH_RC4_40_MD5"
         ).contains(c)
       }
-
       // No SHA-2 with TLS < 1.2
       .filterNot { c =>
         !Set("TLSv1.2", "TLSv1.3").contains(protocol) && (c.endsWith("_SHA256") || c.endsWith("_SHA384"))
       }
-
       // Disable cipher only supported in TLS >= 1.3
       .filterNot { c =>
         protocol < "TLSv1.3" &&
-          Set(
-            "TLS_AES_128_GCM_SHA256",
-            "TLS_AES_256_GCM_SHA384",
-          ).contains(c)
+        Set(
+          "TLS_AES_128_GCM_SHA256",
+          "TLS_AES_256_GCM_SHA384"
+        ).contains(c)
       }
-
       // https://bugs.openjdk.java.net/browse/JDK-8224997
       .filterNot(_.endsWith("_CHACHA20_POLY1305_SHA256"))
   }
-  
+
 }
 
 object SslContextFactory {

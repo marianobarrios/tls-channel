@@ -16,11 +16,11 @@ import tlschannel.impl.{ByteBufferSet, ByteBufferUtil}
 class NullSslEngine extends SSLEngine with StrictLogging with Assertions {
 
   /**
-   * Internal buffers are still used to prevent any underlying optimization of
-   * the wrap/unwrap.
-   */
+    * Internal buffers are still used to prevent any underlying optimization of
+    * the wrap/unwrap.
+    */
   val bufferSize = 16000
-  
+
   def beginHandshake() = {}
   def closeInbound() = {}
   def closeOutbound() = {}

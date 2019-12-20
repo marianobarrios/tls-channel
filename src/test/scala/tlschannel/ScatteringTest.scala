@@ -13,7 +13,7 @@ class ScatteringTest extends AnyFunSuite with Assertions with StrictLogging {
   val sslContextFactory = new SslContextFactory
   val (cipher, sslContext) = sslContextFactory.standardCipher
   val factory = new SocketPairFactory(sslContext)
- 
+
   val dataSize = 150 * 1000
 
   test("half duplex") {
@@ -26,4 +26,3 @@ class ScatteringTest extends AnyFunSuite with Assertions with StrictLogging {
   }
 
 }
-

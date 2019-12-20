@@ -39,7 +39,11 @@ trait AsyncTestBase extends Informing with Assertions {
     assert(group.getCurrentRegistrationCount == 0)
     assert(group.getCurrentReadCount == 0)
     assert(group.getCurrentWriteCount == 0)
-    assert(group.getStartedReadCount == group.getCancelledReadCount + group.getSuccessfulReadCount + group.getFailedReadCount)
-    assert(group.getStartedWriteCount == group.getCancelledWriteCount + group.getSuccessfulWriteCount + group.getFailedWriteCount)
+    assert(
+      group.getStartedReadCount == group.getCancelledReadCount + group.getSuccessfulReadCount + group.getFailedReadCount
+    )
+    assert(
+      group.getStartedWriteCount == group.getCancelledWriteCount + group.getSuccessfulWriteCount + group.getFailedWriteCount
+    )
   }
 }

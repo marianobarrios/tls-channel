@@ -19,8 +19,8 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
   val data = Array[Byte](15)
 
   /**
-   * Less than a TLS message, to force read/write loops
-   */
+    * Less than a TLS message, to force read/write loops
+    */
   val internalBufferSize = Some(10)
 
   test("TlsChannel - TCP immediate close") {
@@ -142,7 +142,8 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
       cipher,
       internalClientChunkSize = internalBufferSize,
       internalServerChunkSize = internalBufferSize,
-      waitForCloseConfirmation = true)
+      waitForCloseConfirmation = true
+    )
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external
@@ -186,7 +187,8 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
       cipher,
       internalClientChunkSize = internalBufferSize,
       internalServerChunkSize = internalBufferSize,
-      waitForCloseConfirmation = true)
+      waitForCloseConfirmation = true
+    )
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external

@@ -31,7 +31,8 @@ class ApiTest extends AnyFunSuite with Assertions {
       new TrackingAllocator(new HeapBufferAllocator),
       new TrackingAllocator(new HeapBufferAllocator),
       true /* releaseBuffers */,
-      false /* waitForCloseConfirmation */)
+      false /* waitForCloseConfirmation */
+    )
   }
 
   test("reading into a read-only buffer") {
@@ -43,7 +44,10 @@ class ApiTest extends AnyFunSuite with Assertions {
 
   test("reading into a buffer without remaining capacity") {
     val socket = newSocket()
-    assert(socket.read(new ByteBufferSet(ByteBuffer.allocate(0))) == 0, "read must return zero when the buffer was empty")
+    assert(
+      socket.read(new ByteBufferSet(ByteBuffer.allocate(0))) == 0,
+      "read must return zero when the buffer was empty"
+    )
   }
 
 }

@@ -76,9 +76,15 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
   }
 
   /**
-   * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
-   */
-  def halfDuplexStream(cipher: String, serverWriter: Writer, clientReader: Reader, clientWriter: Writer, serverReader: Reader): Unit = {
+    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+    */
+  def halfDuplexStream(
+      cipher: String,
+      serverWriter: Writer,
+      clientReader: Reader,
+      clientWriter: Writer,
+      serverReader: Reader
+  ): Unit = {
     val elapsed = TestUtil.time {
       val clientWriterThread = new Thread(() => writerLoop(clientWriter, renegotiate = true), "client-writer")
       val serverWriterThread = new Thread(() => writerLoop(serverWriter, renegotiate = true), "server-writer")
@@ -100,9 +106,15 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
   }
 
   /**
-   * Test a full-duplex interaction, without any renegotiation
-   */
-  def fullDuplexStream(cipher: String, serverWriter: Writer, clientReader: Reader, clientWriter: Writer, serverReader: Reader): Unit = {
+    * Test a full-duplex interaction, without any renegotiation
+    */
+  def fullDuplexStream(
+      cipher: String,
+      serverWriter: Writer,
+      clientReader: Reader,
+      clientWriter: Writer,
+      serverReader: Reader
+  ): Unit = {
     val elapsed = TestUtil.time {
       val clientWriterThread = new Thread(() => writerLoop(clientWriter), "client-writer")
       val serverWriterThread = new Thread(() => writerLoop(serverWriter), "server-writer")
@@ -116,7 +128,7 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
     info(s"elapsed: ${elapsed.toMillis} ms")
   }
 
-  // OLD IO -> OLD IO    
+  // OLD IO -> OLD IO
 
   test("old-io -> old-io (half duplex)") {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldOld(cipher)
@@ -128,7 +140,7 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
     fullDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)
   }
 
-  // NIO -> OLD IO    
+  // NIO -> OLD IO
 
   test("nio -> old-io (half duplex)") {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = nioOld(cipher)
@@ -140,7 +152,7 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
     fullDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)
   }
 
-  // OLD IO -> NIO    
+  // OLD IO -> NIO
 
   test("old-io -> nio (half duplex)") {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldNio(cipher)

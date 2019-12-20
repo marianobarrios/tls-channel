@@ -25,30 +25,25 @@ object NonBlockingLoops extends Assertions {
     def remaining: Int
   }
 
-  case class WriterEndpoint(
-      socketGroup: SocketGroup,
-      var key: SelectionKey,
-      var remaining: Int) extends Endpoint {
+  case class WriterEndpoint(socketGroup: SocketGroup, var key: SelectionKey, var remaining: Int) extends Endpoint {
     val random = new SplittableRandom(Loops.seed)
     val buffer = ByteBuffer.allocate(Loops.bufferSize)
     buffer.flip()
   }
 
-  case class ReaderEndpoint(
-      socketGroup: SocketGroup,
-      var key: SelectionKey,
-      var remaining: Int) extends Endpoint {
+  case class ReaderEndpoint(socketGroup: SocketGroup, var key: SelectionKey, var remaining: Int) extends Endpoint {
     val buffer = ByteBuffer.allocate(Loops.bufferSize)
     val digest = MessageDigest.getInstance(Loops.hashAlgorithm)
   }
 
   case class Report(
-    selectorCycles: Int,
-    needReadCount: Int,
-    needWriteCount: Int,
-    renegotiationCount: Int,
-    asyncTasksRun: Int,
-    totalAsyncTaskRunningTime: Duration)
+      selectorCycles: Int,
+      needReadCount: Int,
+      needWriteCount: Int,
+      renegotiationCount: Int,
+      asyncTasksRun: Int,
+      totalAsyncTaskRunningTime: Duration
+  )
 
   def loop(socketPairs: Seq[SocketPair], dataSize: Int, renegotiate: Boolean): Report = {
 
@@ -156,7 +151,14 @@ object NonBlockingLoops extends Assertions {
       assert(dataHash sameElements reader.digest.digest())
     }
 
-    Report(selectorCycles, needReadCount, needWriteCount, renegotiationCount, taskCount, Duration.fromNanos(totalTaskTimeNanos.longValue()))
+    Report(
+      selectorCycles,
+      needReadCount,
+      needWriteCount,
+      renegotiationCount,
+      taskCount,
+      Duration.fromNanos(totalTaskTimeNanos.longValue())
+    )
   }
 
   def getSelectedEndpoints(selector: Selector): Seq[Endpoint] = {

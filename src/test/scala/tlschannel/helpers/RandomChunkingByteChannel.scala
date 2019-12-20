@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.ByteChannel
 
 class RandomChunkingByteChannel(val wrapped: ByteChannel, chunkSizeSupplier: () => Int) extends ByteChannel {
-  
+
   def close() = wrapped.close()
   def isOpen() = wrapped.isOpen()
 
@@ -33,5 +33,5 @@ class RandomChunkingByteChannel(val wrapped: ByteChannel, chunkSizeSupplier: () 
       out.limit(oldLimit)
     }
   }
-  
+
 }

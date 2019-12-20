@@ -30,38 +30,50 @@ class AsyncTimeoutTest extends AnyFunSuite with AsyncTestBase with Assertions {
     for (AsyncSocketPair(client, server) <- socketPairs) {
       val writeBuffer = ByteBuffer.allocate(bufferSize)
       val clientDone = new AtomicBoolean
-      client.external.write(writeBuffer, 50, TimeUnit.MILLISECONDS, null, new CompletionHandler[Integer, Null] {
-        override def failed(exc: Throwable, attachment: Null) = {
-          if (!clientDone.compareAndSet(false, true)) {
-            fail()
+      client.external.write(
+        writeBuffer,
+        50,
+        TimeUnit.MILLISECONDS,
+        null,
+        new CompletionHandler[Integer, Null] {
+          override def failed(exc: Throwable, attachment: Null) = {
+            if (!clientDone.compareAndSet(false, true)) {
+              fail()
+            }
+            latch.countDown()
           }
-          latch.countDown()
-        }
-        override def completed(result: Integer, attachment: Null) = {
-          if (!clientDone.compareAndSet(false, true)) {
-            fail()
+          override def completed(result: Integer, attachment: Null) = {
+            if (!clientDone.compareAndSet(false, true)) {
+              fail()
+            }
+            latch.countDown()
+            successWrites.increment()
           }
-          latch.countDown()
-          successWrites.increment()
         }
-      })
+      )
       val readBuffer = ByteBuffer.allocate(bufferSize)
       val serverDone = new AtomicBoolean
-      server.external.read(readBuffer, 100, TimeUnit.MILLISECONDS, null, new CompletionHandler[Integer, Null] {
-        override def failed(exc: Throwable, attachment: Null) = {
-          if (!serverDone.compareAndSet(false, true)) {
-            fail()
+      server.external.read(
+        readBuffer,
+        100,
+        TimeUnit.MILLISECONDS,
+        null,
+        new CompletionHandler[Integer, Null] {
+          override def failed(exc: Throwable, attachment: Null) = {
+            if (!serverDone.compareAndSet(false, true)) {
+              fail()
+            }
+            latch.countDown()
           }
-          latch.countDown()
-        }
-        override def completed(result: Integer, attachment: Null) = {
-          if (!serverDone.compareAndSet(false, true)) {
-            fail()
+          override def completed(result: Integer, attachment: Null) = {
+            if (!serverDone.compareAndSet(false, true)) {
+              fail()
+            }
+            latch.countDown()
+            successReads.increment()
           }
-          latch.countDown()
-          successReads.increment()
         }
-      })
+      )
     }
     latch.await()
     for (AsyncSocketPair(client, server) <- socketPairs) {

@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.ByteChannel
 
 class ChunkingByteChannel(val wrapped: ByteChannel, chunkSize: Int) extends ByteChannel {
-  
+
   def close() = wrapped.close()
   def isOpen() = wrapped.isOpen()
 
@@ -33,5 +33,5 @@ class ChunkingByteChannel(val wrapped: ByteChannel, chunkSize: Int) extends Byte
       out.limit(oldLimit)
     }
   }
-  
+
 }

@@ -13,7 +13,8 @@ class NullSslContextSpi extends SSLContextSpi {
   def engineGetServerSessionContext() = throw new UnsupportedOperationException
   def engineGetServerSocketFactory() = throw new UnsupportedOperationException
   def engineGetSocketFactory() = throw new UnsupportedOperationException
-  def engineInit(x$1: Array[KeyManager], x$2: Array[TrustManager], x$3: SecureRandom): Unit = throw new UnsupportedOperationException
+  def engineInit(x$1: Array[KeyManager], x$2: Array[TrustManager], x$3: SecureRandom): Unit =
+    throw new UnsupportedOperationException
 }
 
 class NullSslContext extends SSLContext(new NullSslContextSpi, null, null)

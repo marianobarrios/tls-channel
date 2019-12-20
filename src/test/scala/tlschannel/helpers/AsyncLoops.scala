@@ -33,12 +33,12 @@ object AsyncLoops extends Assertions {
   }
 
   case class Report(
-    dequeueCycles: Long,
-    completedReads: Long,
-    failedReads: Long,
-    completedWrites: Long,
-    failedWrites: Long,
-   )
+      dequeueCycles: Long,
+      completedReads: Long,
+      failedReads: Long,
+      completedWrites: Long,
+      failedWrites: Long
+  )
 
   def loop(socketPairs: Seq[AsyncSocketPair], dataSize: Int): Report = {
 
@@ -83,36 +83,48 @@ object AsyncLoops extends Assertions {
                 writer.buffer.position(0)
                 writer.buffer.limit(math.min(writer.buffer.capacity, writer.remaining))
               }
-              writer.socketGroup.external.write(writer.buffer, 1, TimeUnit.DAYS, null, new CompletionHandler[Integer, Null] {
-                override def completed(c: Integer, attach: Null) = {
-                  assert(c > 0)
-                  writer.remaining -= c
-                  endpointQueue.put(writer)
-                  completedWrites.increment()
-                }
+              writer.socketGroup.external.write(
+                writer.buffer,
+                1,
+                TimeUnit.DAYS,
+                null,
+                new CompletionHandler[Integer, Null] {
+                  override def completed(c: Integer, attach: Null) = {
+                    assert(c > 0)
+                    writer.remaining -= c
+                    endpointQueue.put(writer)
+                    completedWrites.increment()
+                  }
 
-                override def failed(e: Throwable, attach: Null) = {
-                  writer.exception = Some(e)
-                  endpointQueue.put(writer)
-                  failedWrites.increment()
+                  override def failed(e: Throwable, attach: Null) = {
+                    writer.exception = Some(e)
+                    endpointQueue.put(writer)
+                    failedWrites.increment()
+                  }
                 }
-              })
+              )
             case reader: ReaderEndpoint =>
               reader.buffer.clear()
-              reader.socketGroup.external.read(reader.buffer, 1, TimeUnit.DAYS, null, new CompletionHandler[Integer, Null] {
-                override def completed(c: Integer, attach: Null) = {
-                  assert(c > 0)
-                  reader.digest.update(reader.buffer.array, 0, c)
-                  reader.remaining -= c
-                  endpointQueue.put(reader)
-                  completedReads.increment()
+              reader.socketGroup.external.read(
+                reader.buffer,
+                1,
+                TimeUnit.DAYS,
+                null,
+                new CompletionHandler[Integer, Null] {
+                  override def completed(c: Integer, attach: Null) = {
+                    assert(c > 0)
+                    reader.digest.update(reader.buffer.array, 0, c)
+                    reader.remaining -= c
+                    endpointQueue.put(reader)
+                    completedReads.increment()
+                  }
+                  override def failed(e: Throwable, attach: Null) = {
+                    reader.exception = Some(e)
+                    endpointQueue.put(reader)
+                    failedReads.increment()
+                  }
                 }
-                override def failed(e: Throwable, attach: Null) = {
-                  reader.exception = Some(e)
-                  endpointQueue.put(reader)
-                  failedReads.increment()
-                }
-              })
+              )
           }
         }
       }
@@ -130,7 +142,7 @@ object AsyncLoops extends Assertions {
       completedReads.longValue(),
       failedReads.longValue(),
       completedWrites.longValue(),
-      failedWrites.longValue(),
+      failedWrites.longValue()
     )
   }
 
