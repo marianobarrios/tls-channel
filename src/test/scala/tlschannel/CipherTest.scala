@@ -2,13 +2,16 @@ package tlschannel
 
 import com.typesafe.scalalogging.StrictLogging
 import javax.net.ssl.SSLContext
+import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.Loops
 
+@RunWith(classOf[JUnitRunner])
 class CipherTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val protocols = {
@@ -25,11 +28,11 @@ class CipherTest extends AnyFunSuite with Assertions with StrictLogging {
     for (protocol <- protocols) {
       logger.debug(s"Testing protocol: $protocol")
       val ctxFactory = new SslContextFactory(protocol)
-      for ((cipher, sslContext) <- ctxFactory.allCiphers) {
+      for (cipher <- ctxFactory.allCiphers) {
         withClue(cipher + ": ") {
           logger.debug(s"Testing cipher: $cipher")
-          val socketFactory = new SocketPairFactory(sslContext)
-          val socketPair = socketFactory.nioNio(cipher)
+          val socketFactory = new SocketPairFactory(ctxFactory.defaultContext)
+          val socketPair = socketFactory.nioNio(Some(cipher))
           val elapsed = TestUtil.time {
             Loops.halfDuplex(socketPair, dataSize, renegotiation = protocol <= "TLSv1.2")
           }
@@ -48,11 +51,11 @@ class CipherTest extends AnyFunSuite with Assertions with StrictLogging {
     for (protocol <- protocols) {
       logger.debug(s"Testing protocol: $protocol")
       val ctxFactory = new SslContextFactory(protocol)
-      for ((cipher, sslContext) <- ctxFactory.allCiphers) {
+      for (cipher <- ctxFactory.allCiphers) {
         withClue(cipher + ": ") {
           logger.debug(s"Testing cipher: $cipher")
-          val socketFactory = new SocketPairFactory(sslContext)
-          val socketPair = socketFactory.nioNio(cipher)
+          val socketFactory = new SocketPairFactory(ctxFactory.defaultContext)
+          val socketPair = socketFactory.nioNio(Some(cipher))
           val elapsed = TestUtil.time {
             Loops.fullDuplex(socketPair, dataSize)
           }

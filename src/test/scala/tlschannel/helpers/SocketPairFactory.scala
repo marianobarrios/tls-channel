@@ -49,10 +49,10 @@ class SocketPairFactory(
   private val clientSniHostName = new SNIHostName(serverName)
   private val expectedSniHostName = SNIHostName.createSNIMatcher(serverName /* regex! */ )
 
-  def fixedCipherServerSslEngineFactory(cipher: String)(sslContext: SSLContext): SSLEngine = {
+  def fixedCipherServerSslEngineFactory(cipher: Option[String])(sslContext: SSLContext): SSLEngine = {
     val engine = sslContext.createSSLEngine()
     engine.setUseClientMode(false)
-    engine.setEnabledCipherSuites(Array(cipher))
+    cipher.foreach(c => engine.setEnabledCipherSuites(Array(c)))
     engine
   }
 
@@ -81,10 +81,10 @@ class SocketPairFactory(
   val globalPlainTrackingAllocator = new TrackingAllocator(TlsChannel.defaultPlainBufferAllocator)
   val globalEncryptedTrackingAllocator = new TrackingAllocator(TlsChannel.defaultEncryptedBufferAllocator)
 
-  private def createClientSslEngine(cipher: String, peerPort: Integer): SSLEngine = {
+  private def createClientSslEngine(cipher: Option[String], peerPort: Integer): SSLEngine = {
     val engine = sslContext.createSSLEngine(serverName, peerPort)
     engine.setUseClientMode(true)
-    engine.setEnabledCipherSuites(Array(cipher))
+    cipher.foreach(c => engine.setEnabledCipherSuites(Array(c)))
     val sslParams = engine.getSSLParameters() // returns a value object
     sslParams.setEndpointIdentificationAlgorithm("HTTPS")
     sslParams.setServerNames(Seq[SNIServerName](clientSniHostName).asJava)
@@ -92,20 +92,20 @@ class SocketPairFactory(
     engine
   }
 
-  private def createSslServerSocket(cipher: String): SSLServerSocket = {
+  private def createSslServerSocket(cipher: Option[String]): SSLServerSocket = {
     val serverSocket = sslServerSocketFactory.createServerSocket(0 /* find free port */ ).asInstanceOf[SSLServerSocket]
-    serverSocket.setEnabledCipherSuites(Array(cipher))
+    cipher.foreach(c => serverSocket.setEnabledCipherSuites(Array(c)))
     serverSocket
   }
 
-  private def createSslSocket(cipher: String, host: InetAddress, port: Int, requestedHost: String): SSLSocket = {
+  private def createSslSocket(cipher: Option[String], host: InetAddress, port: Int, requestedHost: String): SSLSocket = {
     val socket = sslSocketFactory.createSocket(host, port).asInstanceOf[SSLSocketImpl]
-    socket.setEnabledCipherSuites(Array(cipher))
+    cipher.foreach(c => socket.setEnabledCipherSuites(Array(c)))
     socket.setHost(requestedHost)
     socket
   }
 
-  def oldOld(cipher: String): (SSLSocket, SSLSocket) = {
+  def oldOld(cipher: Option[String] = None): (SSLSocket, SSLSocket) = {
     val serverSocket = createSslServerSocket(cipher)
     val chosenPort = serverSocket.getLocalPort
     val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
@@ -117,7 +117,7 @@ class SocketPairFactory(
     (client, server)
   }
 
-  def oldNio(cipher: String): (SSLSocket, SocketGroup) = {
+  def oldNio(cipher: Option[String] = None): (SSLSocket, SocketGroup) = {
     val serverSocket = ServerSocketChannel.open()
     serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
     val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
@@ -134,7 +134,7 @@ class SocketPairFactory(
     (client, SocketGroup(server, server, rawServer))
   }
 
-  def nioOld(cipher: String): (SocketGroup, SSLSocket) = {
+  def nioOld(cipher: Option[String] = None): (SocketGroup, SSLSocket) = {
     val serverSocket = createSslServerSocket(cipher)
     val chosenPort = serverSocket.getLocalPort
     val address = new InetSocketAddress(localhost, chosenPort)
@@ -148,7 +148,7 @@ class SocketPairFactory(
   }
 
   def nioNio(
-      cipher: String,
+      cipher: Option[String] = None,
       externalClientChunkSize: Option[Int] = None,
       internalClientChunkSize: Option[Int] = None,
       externalServerChunkSize: Option[Int] = None,
@@ -171,7 +171,7 @@ class SocketPairFactory(
   }
 
   def nioNioN(
-      cipher: String,
+      cipher: Option[String] = None,
       qtty: Int,
       externalClientChunkSize: Option[Int] = None,
       internalClientChunkSize: Option[Int] = None,
@@ -186,7 +186,7 @@ class SocketPairFactory(
       serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
       val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
       val address = new InetSocketAddress(localhost, chosenPort)
-      for (i <- 0 until qtty) yield {
+      for (_ <- 0 until qtty) yield {
         val rawClient = SocketChannel.open(address)
         val rawServer = serverSocket.accept()
 
@@ -271,7 +271,7 @@ class SocketPairFactory(
   }
 
   def asyncN(
-      cipher: String,
+      cipher: Option[String] = None,
       channelGroup: AsynchronousTlsChannelGroup,
       qtty: Int,
       runTasks: Boolean,
@@ -283,7 +283,7 @@ class SocketPairFactory(
       serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
       val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
       val address = new InetSocketAddress(localhost, chosenPort)
-      for (i <- 0 until qtty) yield {
+      for (_ <- 0 until qtty) yield {
         val rawClient = SocketChannel.open(address)
         val rawServer = serverSocket.accept()
 

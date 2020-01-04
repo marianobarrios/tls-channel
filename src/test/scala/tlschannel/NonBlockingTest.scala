@@ -2,18 +2,20 @@ package tlschannel
 
 import org.scalatest.Assertions
 import com.typesafe.scalalogging.StrictLogging
+import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 
+@RunWith(classOf[JUnitRunner])
 class NonBlockingTest extends AnyFunSuite with Assertions with StrictLogging with NonBlockingSuite {
 
   val sslContextFactory = new SslContextFactory
-  val (cipher, sslContext) = sslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext)
+  val factory = new SocketPairFactory(sslContextFactory.defaultContext)
   val dataSize = 200 * 1024
 
   test("selector loop") {
@@ -21,7 +23,6 @@ class NonBlockingTest extends AnyFunSuite with Assertions with StrictLogging wit
     for ((size1, size2) <- sizes zip sizes.reverse) {
       logger.debug(s"Sizes: size1=$size1,size2=$size2")
       val socketPair = factory.nioNio(
-        cipher,
         internalClientChunkSize = Some(size1),
         externalClientChunkSize = Some(size2),
         internalServerChunkSize = Some(size1),

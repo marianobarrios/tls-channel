@@ -1,7 +1,9 @@
 package tlschannel
 
+import org.junit.runner.RunWith
 import org.scalatest.{Assertions, BeforeAndAfterAll}
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
@@ -11,11 +13,11 @@ import tlschannel.helpers.TestUtil
   * Test using concurrent, non-blocking connections, and a "null" [[javax.net.ssl.SSLEngine]] that just passes
   * all byte as they are.
   */
+@RunWith(classOf[JUnitRunner])
 class NullMultiNonBlockingTest extends AnyFunSuite with Assertions with NonBlockingSuite with BeforeAndAfterAll {
 
   val sslContextFactory = new SslContextFactory
-  val (cipher, sslContext) = sslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext)
+  val factory = new SocketPairFactory(sslContextFactory.defaultContext)
   val dataSize = 10 * 1024 * 1024
   val totalConnections = 150
 

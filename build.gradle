@@ -1,0 +1,91 @@
+plugins {
+    id 'java'
+    id 'scala'
+    id 'signing'
+    id 'maven-publish'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.slf4j:slf4j-api:1.7.29'
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.scala-lang:scala-library:2.13.1'
+    testImplementation 'org.scalatest:scalatest_2.13:3.1.0'
+    testImplementation 'org.scalatestplus:scalatestplus-junit_2.13:1.0.0-M2'
+    testImplementation 'ch.qos.logback:logback-classic:1.2.3'
+    testImplementation 'com.typesafe.scala-logging:scala-logging_2.13:3.9.2'
+}
+
+compileScala {
+    options.compilerArgs = [
+            "-language:implicitConversions",
+            "-Xlint",
+            "-deprecation",
+            "-Xfatal-warnings"
+    ]
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+        events = ["failed", "skipped", "passed"]
+    }
+}
+
+javadoc {
+    exclude "tlschannel/impl"
+    exclude "tlschannel/util"
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+publishing {
+    publications {
+        tlschannel(MavenPublication) {
+            groupId = 'com.github.marianobarrios'
+            artifactId = 'tls-channel'
+            version = '0.3.0-SNAPSHOT'
+            from components.java
+            pom {
+                name = 'TLS Channel'
+                licenses {
+                    license {
+                        name = 'BSD-style'
+                        url = 'http://www.opensource.org/licenses/bsd-license.php'
+                    }
+                }
+                developers {
+                    developer {
+                        name = 'Mariano Barrios'
+                        email = 'marbar@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git@github.com:marianobarrios/tlschannel.git'
+                    developerConnection = 'scm:git:ssh://example.com/my-library.git'
+                    url = 'scm:git@github.com:marianobarrios/tlschannel.git'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+            credentials {
+                username = project.findProperty('sonatypeUsername')
+                password = project.findProperty('sonatypePassword')
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.tlschannel
+}

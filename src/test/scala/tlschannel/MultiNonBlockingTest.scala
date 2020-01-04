@@ -2,12 +2,15 @@ package tlschannel
 
 import org.scalatest.{Assertions, BeforeAndAfterAll}
 import com.typesafe.scalalogging.StrictLogging
+import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 
+@RunWith(classOf[JUnitRunner])
 class MultiNonBlockingTest
     extends AnyFunSuite
     with Assertions
@@ -16,13 +19,12 @@ class MultiNonBlockingTest
     with BeforeAndAfterAll {
 
   val sslContextFactory = new SslContextFactory
-  val (cipher, sslContext) = sslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext)
+  val factory = new SocketPairFactory(sslContextFactory.defaultContext)
   val dataSize = 100 * 1024
   val totalConnections = 200
 
   test("running tasks in non-blocking loop - no renegotiation") {
-    val pairs = factory.nioNioN(cipher, totalConnections, None, None, None, None, runTasks = true)
+    val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = true)
     val (report, elapsed) = TestUtil.time {
       NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
     }
@@ -31,7 +33,7 @@ class MultiNonBlockingTest
   }
 
   test("running tasks in executor - no renegotiation") {
-    val pairs = factory.nioNioN(cipher, totalConnections, None, None, None, None, runTasks = false)
+    val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = false)
     val (report, elapsed) = TestUtil.time {
       NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
     }
@@ -39,7 +41,7 @@ class MultiNonBlockingTest
   }
 
   test("running tasks in non-blocking loop - with renegotiation") {
-    val pairs = factory.nioNioN(cipher, totalConnections, None, None, None, None, runTasks = true)
+    val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = true)
     val (report, elapsed) = TestUtil.time {
       NonBlockingLoops.loop(pairs, dataSize, renegotiate = true)
     }
@@ -48,7 +50,7 @@ class MultiNonBlockingTest
   }
 
   test("running tasks in executor - with renegotiation") {
-    val pairs = factory.nioNioN(cipher, totalConnections, None, None, None, None, runTasks = false)
+    val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = false)
     val (report, elapsed) = TestUtil.time {
       NonBlockingLoops.loop(pairs, dataSize, renegotiate = true)
     }

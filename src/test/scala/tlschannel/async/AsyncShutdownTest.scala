@@ -3,16 +3,20 @@ package tlschannel.async
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 
+import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
+
 import tlschannel.helpers.AsyncSocketPair
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 
+@RunWith(classOf[JUnitRunner])
 class AsyncShutdownTest extends AnyFunSuite with Assertions with AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
-  val factory = new SocketPairFactory(sslContextFactory.anonContext)
+  val factory = new SocketPairFactory(sslContextFactory.defaultContext)
 
   val bufferSize = 10
 

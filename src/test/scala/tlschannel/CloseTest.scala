@@ -6,16 +6,18 @@ import java.nio.channels.ClosedChannelException
 import com.typesafe.scalalogging.StrictLogging
 import java.nio.channels.AsynchronousCloseException
 
+import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.{SocketPairFactory, SslContextFactory, TestUtil}
 
+@RunWith(classOf[JUnitRunner])
 class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val sslContextFactory = new SslContextFactory
 
-  val (cipher, sslContext) = sslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext)
+  val factory = new SocketPairFactory(sslContextFactory.defaultContext)
   val data = Array[Byte](15)
 
   /**
@@ -25,7 +27,7 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
 
   test("TlsChannel - TCP immediate close") {
     val socketPair =
-      factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external
@@ -59,7 +61,7 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
 
   test("TlsChannel - TCP close") {
     val socketPair =
-      factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external
@@ -98,7 +100,7 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
 
   test("TlsChannel - close") {
     val socketPair =
-      factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external
@@ -139,7 +141,6 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
 
   test("TlsChannel - close and wait") {
     val socketPair = factory.nioNio(
-      cipher,
       internalClientChunkSize = internalBufferSize,
       internalServerChunkSize = internalBufferSize,
       waitForCloseConfirmation = true
@@ -184,7 +185,6 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
 
   test("TlsChannel - close and wait (forever)") {
     val socketPair = factory.nioNio(
-      cipher,
       internalClientChunkSize = internalBufferSize,
       internalServerChunkSize = internalBufferSize,
       waitForCloseConfirmation = true
@@ -223,7 +223,7 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
 
   test("TlsChannel - shutdown and forget") {
     val socketPair =
-      factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external
@@ -260,7 +260,7 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
 
   test("TlsChannel - shutdown and wait") {
     val socketPair =
-      factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external
@@ -307,7 +307,7 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
 
   test("TlsChannel - shutdown and wait (forever)") {
     val socketPair =
-      factory.nioNio(cipher, internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external

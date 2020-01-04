@@ -8,11 +8,12 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.LongAdder
 
+import com.typesafe.scalalogging.StrictLogging
 import org.scalatest.Assertions
 
 import scala.util.control.Breaks
 
-object AsyncLoops extends Assertions {
+object AsyncLoops extends Assertions with StrictLogging {
 
   trait Endpoint {
     def remaining: Int
@@ -41,6 +42,8 @@ object AsyncLoops extends Assertions {
   )
 
   def loop(socketPairs: Seq[AsyncSocketPair], dataSize: Int): Report = {
+
+    logger.debug(s"starting async loop - pair count: ${socketPairs.size}")
 
     var dequeueCycles = 0
     val completedReads = new LongAdder

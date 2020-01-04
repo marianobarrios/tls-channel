@@ -1,24 +1,26 @@
 package tlschannel.async
 
+import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.AsyncLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 
+@RunWith(classOf[JUnitRunner])
 class AsyncTest extends AnyFunSuite with Assertions with AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
-  val (cipher, sslContext) = sslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext)
+  val factory = new SocketPairFactory(sslContextFactory.defaultContext)
   val socketPairCount = 120
 
   test("real engine - run tasks") {
     val channelGroup = new AsynchronousTlsChannelGroup()
     val dataSize = 5 * 1024 * 1024
     info(s"data size: $dataSize")
-    val socketPairs = factory.asyncN(cipher, channelGroup, socketPairCount, runTasks = true)
+    val socketPairs = factory.asyncN(None, channelGroup, socketPairCount, runTasks = true)
     val (report, elapsed) = TestUtil.time {
       AsyncLoops.loop(socketPairs, dataSize)
     }
@@ -37,7 +39,7 @@ class AsyncTest extends AnyFunSuite with Assertions with AsyncTestBase {
     val channelGroup = new AsynchronousTlsChannelGroup()
     val dataSize = 2 * 1024 * 1024
     info(s"data size: $dataSize")
-    val socketPairs = factory.asyncN(cipher, channelGroup, socketPairCount, runTasks = false)
+    val socketPairs = factory.asyncN(None, channelGroup, socketPairCount, runTasks = false)
     val (report, elapsed) = TestUtil.time {
       AsyncLoops.loop(socketPairs, dataSize)
     }

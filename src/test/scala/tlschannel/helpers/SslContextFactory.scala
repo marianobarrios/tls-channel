@@ -12,14 +12,9 @@ import scala.util.Using
 
 class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging {
 
-  /*
-   * Overrule paternalistic JVM behavior of forbidding ciphers even if allowed in code.
-   */
-  Security.setProperty("jdk.tls.disabledAlgorithms", "")
-
-  val authenticatedContext = {
+  val defaultContext = {
     val sslContext = SSLContext.getInstance(protocol)
-    val ks = KeyStore.getInstance("JKS");
+    val ks = KeyStore.getInstance("JKS")
     Using(getClass.getClassLoader.getResourceAsStream("keystore.jks")) { keystoreFile =>
       ks.load(keystoreFile, "password".toCharArray())
       val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
@@ -31,21 +26,9 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
     sslContext
   }
 
-  val anonContext = {
-    val ctx = SSLContext.getInstance(protocol)
-    ctx.init(null, null, null)
-    ctx
-  }
-
-  val authenticatedCiphers = ciphers(authenticatedContext).filterNot(_.contains("_anon_"))
-  val anonCiphers = ciphers(anonContext).filter(_.contains("_anon_"))
-
   val allCiphers = {
-    val ret = authenticatedCiphers.map((_, authenticatedContext)) ++ anonCiphers.map((_, anonContext))
-    ret.sortBy(_._1)
+    ciphers(defaultContext).sorted
   }
-
-  val standardCipher = ("TLS_DH_anon_WITH_AES_128_CBC_SHA", anonContext)
 
   private def ciphers(ctx: SSLContext): Seq[String] = {
     ctx
@@ -85,11 +68,19 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
       }
       // https://bugs.openjdk.java.net/browse/JDK-8224997
       .filterNot(_.endsWith("_CHACHA20_POLY1305_SHA256"))
+      // Anonymous ciphers are problematic because the are disabled in some VMs
+      .filterNot(_.contains("_anon_"))
   }
 
 }
 
-object SslContextFactory {
+object SslContextFactory extends StrictLogging  {
+
+  /*
+   * Overrule paternalistic JVM behavior of forbidding ciphers even if allowed in code.
+   */
+  Security.setProperty("jdk.tls.disabledAlgorithms", "")
+  Security.setProperty("jdk.certpath.disabledAlgorithms", "")
 
   val tlsMaxDataSize = math.pow(2, 14).toInt
   val certificateCommonName = "name" // must match what's in the certificates

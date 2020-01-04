@@ -8,36 +8,38 @@ import javax.net.ssl.SSLSocket
 import java.nio.ByteBuffer
 
 import com.typesafe.scalalogging.StrictLogging
+import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 
+@RunWith(classOf[JUnitRunner])
 class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLogging {
 
   import InteroperabilityTest._
 
   val sslContextFactory = new SslContextFactory
-  val (cipher, sslContext) = sslContextFactory.standardCipher
-  val factory = new SocketPairFactory(sslContext, SslContextFactory.certificateCommonName)
+  val factory = new SocketPairFactory(sslContextFactory.defaultContext, SslContextFactory.certificateCommonName)
 
-  def oldNio(cipher: String) = {
-    val (client, server) = factory.oldNio(cipher)
+  def oldNio() = {
+    val (client, server) = factory.oldNio(None)
     val clientPair = (new SSLSocketWriter(client), new SocketReader(client))
     val serverPair = (new TlsSocketChannelWriter(server.tls), new ByteChannelReader(server.tls))
     (clientPair, serverPair)
   }
 
-  def nioOld(cipher: String) = {
-    val (client, server) = factory.nioOld(cipher)
+  def nioOld() = {
+    val (client, server) = factory.nioOld()
     val clientPair = (new TlsSocketChannelWriter(client.tls), new ByteChannelReader(client.tls))
     val serverPair = (new SSLSocketWriter(server), new SocketReader(server))
     (clientPair, serverPair)
   }
 
-  def oldOld(cipher: String) = {
-    val (client, server) = factory.oldOld(cipher)
+  def oldOld() = {
+    val (client, server) = factory.oldOld(None)
     val clientPair = (new SSLSocketWriter(client), new SocketReader(client))
     val serverPair = (new SSLSocketWriter(server), new SocketReader(server))
     (clientPair, serverPair)
@@ -79,7 +81,6 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
     * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
     */
   def halfDuplexStream(
-      cipher: String,
       serverWriter: Writer,
       clientReader: Reader,
       clientWriter: Writer,
@@ -109,7 +110,6 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
     * Test a full-duplex interaction, without any renegotiation
     */
   def fullDuplexStream(
-      cipher: String,
       serverWriter: Writer,
       clientReader: Reader,
       clientWriter: Writer,
@@ -131,37 +131,37 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
   // OLD IO -> OLD IO
 
   test("old-io -> old-io (half duplex)") {
-    val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldOld(cipher)
-    halfDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)
+    val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldOld()
+    halfDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
 
   test("old-io -> old-io (full duplex)") {
-    val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldOld(cipher)
-    fullDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)
+    val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldOld()
+    fullDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
 
   // NIO -> OLD IO
 
   test("nio -> old-io (half duplex)") {
-    val ((clientWriter, clientReader), (serverWriter, serverReader)) = nioOld(cipher)
-    halfDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)
+    val ((clientWriter, clientReader), (serverWriter, serverReader)) = nioOld()
+    halfDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
 
   test("nio -> old-io (full duplex)") {
-    val ((clientWriter, clientReader), (serverWriter, serverReader)) = nioOld(cipher)
-    fullDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)
+    val ((clientWriter, clientReader), (serverWriter, serverReader)) = nioOld()
+    fullDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
 
   // OLD IO -> NIO
 
   test("old-io -> nio (half duplex)") {
-    val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldNio(cipher)
-    halfDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)
+    val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldNio()
+    halfDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
 
   test("old-io -> nio (full duplex)") {
-    val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldNio(cipher)
-    fullDuplexStream(cipher, serverWriter, clientReader, clientWriter, serverReader)
+    val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldNio()
+    fullDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
 
 }

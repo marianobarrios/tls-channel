@@ -1,6 +1,3 @@
-/target
-project/target/
-project/project/
-.cache-main
-.cache-tests
+/.gradle/
+/build/
 /log/
