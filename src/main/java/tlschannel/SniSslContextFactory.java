@@ -1,8 +1,8 @@
 package tlschannel;
 
+import java.util.Optional;
 import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLContext;
-import java.util.Optional;
 
 /**
  * Factory for {@link SSLContext}s, based in an optional {@link SNIServerName}. Implementations of

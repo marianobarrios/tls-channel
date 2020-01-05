@@ -74,7 +74,7 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
 
 }
 
-object SslContextFactory extends StrictLogging  {
+object SslContextFactory extends StrictLogging {
 
   /*
    * Overrule paternalistic JVM behavior of forbidding ciphers even if allowed in code.

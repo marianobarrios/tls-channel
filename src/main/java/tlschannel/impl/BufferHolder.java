@@ -1,11 +1,10 @@
 package tlschannel.impl;
 
+import java.nio.ByteBuffer;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tlschannel.BufferAllocator;
-
-import java.nio.ByteBuffer;
-import java.util.Optional;
 
 public class BufferHolder {
 

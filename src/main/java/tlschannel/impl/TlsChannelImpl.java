@@ -1,33 +1,28 @@
 package tlschannel.impl;
 
-import javax.net.ssl.SSLEngineResult.HandshakeStatus;
+import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import javax.net.ssl.SSLEngineResult;
-import javax.net.ssl.SSLEngineResult.Status;
 import javax.net.ssl.SSLEngine;
-
-import java.nio.channels.ByteChannel;
-import java.nio.channels.ClosedChannelException;
-
-import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
+import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLEngineResult.HandshakeStatus;
+import javax.net.ssl.SSLEngineResult.Status;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import tlschannel.*;
 import tlschannel.TlsChannelCallbackException;
 import tlschannel.util.Util;
-
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
 
 public class TlsChannelImpl implements ByteChannel {
 

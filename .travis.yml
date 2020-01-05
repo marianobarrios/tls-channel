@@ -4,4 +4,4 @@ jdk:
   - openjdk11
   - openjdk12
 after_failure: "cat log/test.log"
-script: ./gradlew --scan check
+

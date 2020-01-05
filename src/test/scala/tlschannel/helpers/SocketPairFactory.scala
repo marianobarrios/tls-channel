@@ -98,7 +98,12 @@ class SocketPairFactory(
     serverSocket
   }
 
-  private def createSslSocket(cipher: Option[String], host: InetAddress, port: Int, requestedHost: String): SSLSocket = {
+  private def createSslSocket(
+      cipher: Option[String],
+      host: InetAddress,
+      port: Int,
+      requestedHost: String
+  ): SSLSocket = {
     val socket = sslSocketFactory.createSocket(host, port).asInstanceOf[SSLSocketImpl]
     cipher.foreach(c => socket.setEnabledCipherSuites(Array(c)))
     socket.setHost(requestedHost)

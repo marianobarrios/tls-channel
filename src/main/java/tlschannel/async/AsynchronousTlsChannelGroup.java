@@ -1,14 +1,5 @@
 package tlschannel.async;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import tlschannel.NeedsReadException;
-import tlschannel.NeedsTaskException;
-import tlschannel.NeedsWriteException;
-import tlschannel.TlsChannel;
-import tlschannel.impl.ByteBufferSet;
-import tlschannel.util.Util;
-
 import java.io.IOException;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedChannelException;
@@ -35,6 +26,14 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tlschannel.NeedsReadException;
+import tlschannel.NeedsTaskException;
+import tlschannel.NeedsWriteException;
+import tlschannel.TlsChannel;
+import tlschannel.impl.ByteBufferSet;
+import tlschannel.util.Util;
 
 /**
  * This class encapsulates the infrastructure for running {@link AsynchronousTlsChannel}s. Each

@@ -1,8 +1,7 @@
 package tlschannel.async;
 
-import tlschannel.TlsChannel;
-import tlschannel.async.AsynchronousTlsChannelGroup.RegisteredSocket;
-import tlschannel.impl.ByteBufferSet;
+import static tlschannel.async.AsynchronousTlsChannelGroup.ReadOperation;
+import static tlschannel.async.AsynchronousTlsChannelGroup.WriteOperation;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -13,9 +12,9 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
-import static tlschannel.async.AsynchronousTlsChannelGroup.ReadOperation;
-import static tlschannel.async.AsynchronousTlsChannelGroup.WriteOperation;
+import tlschannel.TlsChannel;
+import tlschannel.async.AsynchronousTlsChannelGroup.RegisteredSocket;
+import tlschannel.impl.ByteBufferSet;
 
 /** An {@link AsynchronousByteChannel} that works using {@link TlsChannel}s. */
 public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {

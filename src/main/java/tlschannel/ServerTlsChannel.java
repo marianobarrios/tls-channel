@@ -11,7 +11,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
 import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLContext;
@@ -19,10 +18,8 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.StandardConstants;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import tlschannel.impl.BufferHolder;
 import tlschannel.impl.ByteBufferSet;
 import tlschannel.impl.TlsChannelImpl;

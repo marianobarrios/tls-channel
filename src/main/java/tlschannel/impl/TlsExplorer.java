@@ -1,10 +1,9 @@
 package tlschannel.impl;
 
-import java.nio.ByteBuffer;
 import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLProtocolException;

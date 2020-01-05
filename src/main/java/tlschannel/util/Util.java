@@ -1,7 +1,6 @@
 package tlschannel.util;
 
 import javax.net.ssl.SSLEngineResult;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

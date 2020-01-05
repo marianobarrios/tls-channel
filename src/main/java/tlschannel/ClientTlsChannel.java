@@ -2,19 +2,16 @@ package tlschannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
 import java.nio.channels.ByteChannel;
-import javax.net.ssl.SSLSession;
-
-import tlschannel.impl.ByteBufferSet;
-import tlschannel.impl.TlsChannelImpl;
-
 import java.nio.channels.Channel;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSession;
+import tlschannel.impl.ByteBufferSet;
+import tlschannel.impl.TlsChannelImpl;
 
 /** A client-side {@link TlsChannel}. */
 public class ClientTlsChannel implements TlsChannel {

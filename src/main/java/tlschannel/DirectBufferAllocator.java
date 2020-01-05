@@ -1,8 +1,7 @@
 package tlschannel;
 
-import tlschannel.util.DirectBufferDeallocator;
-
 import java.nio.ByteBuffer;
+import tlschannel.util.DirectBufferDeallocator;
 
 /**
  * Allocator that creates direct buffers. The {@link #free(ByteBuffer)} method, if called,
