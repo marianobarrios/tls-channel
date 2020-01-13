@@ -65,6 +65,9 @@ publishing {
             from components.java
             pom {
                 name = 'TLS Channel'
+                description = 'A Java library that implements a ByteChannel interface over SSLEngine, ' +
+                        'enabling easy-to-use (socket-like) TLS for Java applications. '
+                url = 'https://github.com/marianobarrios/tls-channel'
                 licenses {
                     license {
                         name = 'BSD-style'
