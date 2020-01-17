@@ -6,6 +6,9 @@ plugins {
     id "com.diffplug.gradle.spotless" version "3.27.0"
 }
 
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
 repositories {
     mavenLocal()
     mavenCentral()
