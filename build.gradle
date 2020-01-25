@@ -6,8 +6,11 @@ plugins {
     id "com.diffplug.gradle.spotless" version "3.27.0"
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+compileJava {
+    if (JavaVersion.current().ordinal() > JavaVersion.VERSION_1_8.ordinal()) {
+        options.compilerArgs.addAll(['--release', '8'])
+    }
+}
 
 repositories {
     mavenLocal()
