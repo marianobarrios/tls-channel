@@ -1,5 +1,6 @@
 package tlschannel.impl;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ public class BufferHolder {
   }
 
   public boolean release() {
-    if (opportunisticDispose && buffer.position() == 0) {
+    if (opportunisticDispose && ((Buffer)buffer).position() == 0) {
       return dispose();
     } else {
       return false;
@@ -91,7 +92,7 @@ public class BufferHolder {
 
   private void resizeImpl(int newCapacity) {
     ByteBuffer newBuffer = allocator.allocate(newCapacity);
-    buffer.flip();
+    ((Buffer)buffer).flip();
     newBuffer.put(buffer);
     if (plainData) {
       zero();
@@ -120,12 +121,12 @@ public class BufferHolder {
    */
   public void zero() {
     buffer.mark();
-    buffer.position(0);
+    ((Buffer)buffer).position(0);
     buffer.put(zeros, 0, buffer.remaining());
     buffer.reset();
   }
 
   public boolean nullOrEmpty() {
-    return buffer == null || buffer.position() == 0;
+    return buffer == null || ((Buffer)buffer).position() == 0;
   }
 }

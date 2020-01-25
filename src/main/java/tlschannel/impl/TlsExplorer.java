@@ -1,5 +1,6 @@
 package tlschannel.impl;
 
+import java.nio.Buffer;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -115,7 +116,7 @@ public final class TlsExplorer {
     // records, but in practice this does not occur.
     if (handshakeLength > recordLength - 4) // 4: handshake header size
     throw new SSLProtocolException("Handshake message spans multiple records");
-    input.limit(handshakeLength + input.position());
+    input.limit(handshakeLength + ((Buffer)input).position());
     return exploreClientHello(input);
   }
 
@@ -238,7 +239,7 @@ public final class TlsExplorer {
   }
 
   private static void ignore(ByteBuffer input, int length) {
-    if (length != 0) input.position(input.position() + length);
+    if (length != 0) ((Buffer)input).position(((Buffer)input).position() + length);
   }
 
   // For some reason, SNIServerName is abstract

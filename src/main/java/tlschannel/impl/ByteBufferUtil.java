@@ -1,5 +1,6 @@
 package tlschannel.impl;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 public class ByteBufferUtil {
@@ -24,8 +25,8 @@ public class ByteBufferUtil {
       return;
     }
     ByteBuffer tmp = src.duplicate();
-    tmp.limit(src.position() + length);
+    tmp.limit(((Buffer)src).position() + length);
     dst.put(tmp);
-    src.position(src.position() + length);
+    ((Buffer)src).position(((Buffer)src).position() + length);
   }
 }
