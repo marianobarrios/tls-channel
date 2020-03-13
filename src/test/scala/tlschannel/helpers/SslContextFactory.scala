@@ -15,7 +15,7 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
   val defaultContext = {
     val sslContext = SSLContext.getInstance(protocol)
     val ks = KeyStore.getInstance("JKS")
-    Using(getClass.getClassLoader.getResourceAsStream("keystore.jks")) { keystoreFile =>
+    Using.resource(getClass.getClassLoader.getResourceAsStream("keystore.jks")) { keystoreFile =>
       ks.load(keystoreFile, "password".toCharArray())
       val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
       tmf.init(ks)
