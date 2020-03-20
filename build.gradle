@@ -25,6 +25,11 @@ dependencies {
     testImplementation 'org.scalatestplus:scalatestplus-junit_2.13:1.0.0-M2'
     testImplementation 'ch.qos.logback:logback-classic:1.2.3'
     testImplementation 'com.typesafe.scala-logging:scala-logging_2.13:3.9.2'
+	
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
+	testImplementation 'io.netty:netty-buffer:4.1.45.Final'
+	testImplementation 'io.netty:netty-handler:4.1.45.Final'
+	testRuntime 'io.netty:netty-tcnative-boringssl-static:2.0.25.Final'
 }
 
 spotless {
@@ -50,6 +55,7 @@ test {
         showStandardStreams = true
         events = ["failed", "skipped", "passed"]
     }
+	useJUnitPlatform()
 }
 
 javadoc {

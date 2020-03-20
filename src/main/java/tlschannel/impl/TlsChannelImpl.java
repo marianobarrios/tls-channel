@@ -153,7 +153,8 @@ public class TlsChannelImpl implements ByteChannel {
 
   // handshake wrap() method calls need a buffer to read from, even when they
   // actually do not read anything
-  private final ByteBufferSet dummyOut = new ByteBufferSet(new ByteBuffer[] { ByteBuffer.allocate(1) });
+  private final ByteBufferSet dummyOut =
+      new ByteBufferSet(new ByteBuffer[] {ByteBuffer.allocate(1)});
 
   public Consumer<SSLSession> getSessionInitCallback() {
     return initSessionCallback;
