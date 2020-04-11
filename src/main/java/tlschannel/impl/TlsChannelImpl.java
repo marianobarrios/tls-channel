@@ -151,9 +151,15 @@ public class TlsChannelImpl implements ByteChannel {
   // contains data encrypted to send to the underlying channel
   private BufferHolder outEncrypted;
 
-  // handshake wrap() method calls need a buffer to read from, even when they
-  // actually do not read anything
-  private final ByteBufferSet dummyOut = new ByteBufferSet(new ByteBuffer[] {});
+  /**
+   * Handshake wrap() method calls need a buffer to read from, even when they actually do not read
+   * anything.
+   *
+   * <p>Note: standard SSLEngine is happy with no buffers, the empty buffer is here to make this
+   * work with Netty's OpenSSL's wrapper.
+   */
+  private final ByteBufferSet dummyOut =
+      new ByteBufferSet(new ByteBuffer[] {ByteBuffer.allocate(0)});
 
   public Consumer<SSLSession> getSessionInitCallback() {
     return initSessionCallback;
