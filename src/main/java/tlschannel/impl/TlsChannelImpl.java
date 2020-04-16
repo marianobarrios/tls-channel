@@ -158,8 +158,8 @@ public class TlsChannelImpl implements ByteChannel {
    * <p>Note: standard SSLEngine is happy with no buffers, the empty buffer is here to make this
    * work with Netty's OpenSSL's wrapper.
    */
-  private final ByteBufferSet dummyOut =
-      new ByteBufferSet(new ByteBuffer[] {ByteBuffer.allocate(0)});
+  private final ImmutableByteBufferSet dummyOut =
+      new ImmutableByteBufferSet(new ByteBuffer[] {ByteBuffer.allocate(0)});
 
   public Consumer<SSLSession> getSessionInitCallback() {
     return initSessionCallback;
@@ -251,7 +251,7 @@ public class TlsChannelImpl implements ByteChannel {
         dest.orElseGet(
             () -> {
               inPlain.prepare();
-              return new ByteBufferSet(inPlain.buffer);
+              return new ImmutableByteBufferSet(inPlain.buffer);
             });
     while (true) {
       Util.assertTrue(inPlain.nullOrEmpty());
@@ -280,7 +280,7 @@ public class TlsChannelImpl implements ByteChannel {
           inPlain.enlarge();
         }
         // inPlain changed, re-create the wrapper
-        effDest = new ByteBufferSet(inPlain.buffer);
+        effDest = new ImmutableByteBufferSet(inPlain.buffer);
       }
     }
   }
@@ -289,7 +289,7 @@ public class TlsChannelImpl implements ByteChannel {
     inEncrypted.buffer.flip();
     try {
       SSLEngineResult result =
-          engine.unwrap(inEncrypted.buffer, dest.array, dest.offset, dest.length);
+          engine.unwrap(inEncrypted.buffer, dest.getBuffers(), dest.getOffset(), dest.getLength());
       if (logger.isTraceEnabled()) {
         logger.trace(
             "engine.unwrap() result [{}]. Engine status: {}; inEncrypted {}; inPlain: {}",
@@ -337,7 +337,7 @@ public class TlsChannelImpl implements ByteChannel {
 
   // write
 
-  public long write(ByteBufferSet source) throws IOException {
+  public long write(ImmutableByteBufferSet source) throws IOException {
     /*
      * Note that we should enter the write loop even in the case that the source buffer has no remaining bytes,
      * as it could be the case, in non-blocking usage, that the user is forced to call write again after the
@@ -355,7 +355,7 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private long wrapAndWrite(ByteBufferSet source) throws IOException {
+  private long wrapAndWrite(ImmutableByteBufferSet source) throws IOException {
     long bytesToConsume = source.remaining();
     long bytesConsumed = 0;
     outEncrypted.prepare();
@@ -371,7 +371,7 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private WrapResult wrapLoop(ByteBufferSet source) throws SSLException {
+  private WrapResult wrapLoop(ImmutableByteBufferSet source) throws SSLException {
     while (true) {
       SSLEngineResult result = callEngineWrap(source);
       switch (result.getStatus()) {
@@ -388,10 +388,10 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private SSLEngineResult callEngineWrap(ByteBufferSet source) throws SSLException {
+  private SSLEngineResult callEngineWrap(ImmutableByteBufferSet source) throws SSLException {
     try {
       SSLEngineResult result =
-          engine.wrap(source.array, source.offset, source.length, outEncrypted.buffer);
+          engine.wrap(source.getBuffers(), source.getOffset(), source.getLength(), outEncrypted.buffer);
       if (logger.isTraceEnabled()) {
         logger.trace(
             "engine.wrap() result: [{}]; engine status: {}; srcBuffer: {}, outEncrypted: {}",
@@ -725,12 +725,12 @@ public class TlsChannelImpl implements ByteChannel {
 
   @Override
   public int read(ByteBuffer dst) throws IOException {
-    return (int) read(new ByteBufferSet(dst));
+    return (int) read(new ImmutableByteBufferSet(dst));
   }
 
   @Override
   public int write(ByteBuffer src) throws IOException {
-    return (int) write(new ByteBufferSet(src));
+    return (int) write(new ImmutableByteBufferSet(src));
   }
 
   public boolean shutdownReceived() {

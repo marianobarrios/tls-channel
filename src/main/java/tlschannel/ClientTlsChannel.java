@@ -11,6 +11,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
 import tlschannel.impl.ByteBufferSet;
+import tlschannel.impl.ImmutableByteBufferSet;
 import tlschannel.impl.TlsChannelImpl;
 
 /** A client-side {@link TlsChannel}. */
@@ -143,7 +144,7 @@ public class ClientTlsChannel implements TlsChannel {
 
   @Override
   public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
-    ByteBufferSet dest = new ByteBufferSet(dstBuffers, offset, length);
+    ByteBufferSet dest = new ImmutableByteBufferSet(dstBuffers, offset, length);
     TlsChannelImpl.checkReadBuffer(dest);
     return impl.read(dest);
   }
@@ -160,7 +161,7 @@ public class ClientTlsChannel implements TlsChannel {
 
   @Override
   public long write(ByteBuffer[] srcBuffers, int offset, int length) throws IOException {
-    ByteBufferSet source = new ByteBufferSet(srcBuffers, offset, length);
+    ImmutableByteBufferSet source = new ImmutableByteBufferSet(srcBuffers, offset, length);
     return impl.write(source);
   }
 

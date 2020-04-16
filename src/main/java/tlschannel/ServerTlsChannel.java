@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tlschannel.impl.BufferHolder;
 import tlschannel.impl.ByteBufferSet;
+import tlschannel.impl.ImmutableByteBufferSet;
 import tlschannel.impl.TlsChannelImpl;
 import tlschannel.impl.TlsChannelImpl.EofException;
 import tlschannel.impl.TlsExplorer;
@@ -255,7 +256,7 @@ public class ServerTlsChannel implements TlsChannel {
 
   @Override
   public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
-    ByteBufferSet dest = new ByteBufferSet(dstBuffers, offset, length);
+    ByteBufferSet dest = new ImmutableByteBufferSet(dstBuffers, offset, length);
     TlsChannelImpl.checkReadBuffer(dest);
     if (!sniRead) {
       try {
@@ -279,7 +280,7 @@ public class ServerTlsChannel implements TlsChannel {
 
   @Override
   public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
-    ByteBufferSet source = new ByteBufferSet(srcs, offset, length);
+    ImmutableByteBufferSet source = new ImmutableByteBufferSet(srcs, offset, length);
     if (!sniRead) {
       try {
         initEngine();

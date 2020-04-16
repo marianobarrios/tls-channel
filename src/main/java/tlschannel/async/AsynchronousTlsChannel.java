@@ -14,7 +14,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import tlschannel.TlsChannel;
 import tlschannel.async.AsynchronousTlsChannelGroup.RegisteredSocket;
-import tlschannel.impl.ByteBufferSet;
+import tlschannel.impl.ImmutableByteBufferSet;
 
 /** An {@link AsynchronousByteChannel} that works using {@link TlsChannel}s. */
 public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
@@ -75,7 +75,7 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
     }
     group.startRead(
         registeredSocket,
-        new ByteBufferSet(dst),
+        new ImmutableByteBufferSet(dst),
         0,
         TimeUnit.MILLISECONDS,
         c -> group.executor.submit(() -> handler.completed((int) c, attach)),
@@ -96,7 +96,7 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
     }
     group.startRead(
         registeredSocket,
-        new ByteBufferSet(dst),
+        new ImmutableByteBufferSet(dst),
         timeout,
         unit,
         c -> group.executor.submit(() -> handler.completed((int) c, attach)),
@@ -112,7 +112,7 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
       TimeUnit unit,
       A attach,
       CompletionHandler<Long, ? super A> handler) {
-    ByteBufferSet bufferSet = new ByteBufferSet(dsts, offset, length);
+    ImmutableByteBufferSet bufferSet = new ImmutableByteBufferSet(dsts, offset, length);
     if (bufferSet.isReadOnly()) {
       throw new IllegalArgumentException("buffer is read-only");
     }
@@ -139,7 +139,7 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
     ReadOperation op =
         group.startRead(
             registeredSocket,
-            new ByteBufferSet(dst),
+            new ImmutableByteBufferSet(dst),
             0,
             TimeUnit.MILLISECONDS,
             c -> future.complete((int) c),
@@ -162,7 +162,7 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
     }
     group.startWrite(
         registeredSocket,
-        new ByteBufferSet(src),
+        new ImmutableByteBufferSet(src),
         0,
         TimeUnit.MILLISECONDS,
         c -> group.executor.submit(() -> handler.completed((int) c, attach)),
@@ -182,7 +182,7 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
     }
     group.startWrite(
         registeredSocket,
-        new ByteBufferSet(src),
+        new ImmutableByteBufferSet(src),
         timeout,
         unit,
         c -> group.executor.submit(() -> handler.completed((int) c, attach)),
@@ -198,7 +198,7 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
       TimeUnit unit,
       A attach,
       CompletionHandler<Long, ? super A> handler) {
-    ByteBufferSet bufferSet = new ByteBufferSet(srcs, offset, length);
+    ImmutableByteBufferSet bufferSet = new ImmutableByteBufferSet(srcs, offset, length);
     if (!bufferSet.hasRemaining()) {
       completeWithZeroLong(attach, handler);
       return;
@@ -221,7 +221,7 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
     WriteOperation op =
         group.startWrite(
             registeredSocket,
-            new ByteBufferSet(src),
+            new ImmutableByteBufferSet(src),
             0,
             TimeUnit.MILLISECONDS,
             c -> future.complete((int) c),

@@ -8,7 +8,7 @@ import javax.net.ssl.SSLEngineResult.Status
 
 import com.typesafe.scalalogging.StrictLogging
 import org.scalatest.Assertions
-import tlschannel.impl.{ByteBufferSet, ByteBufferUtil}
+import tlschannel.impl.{ImmutableByteBufferSet, ByteBufferUtil}
 
 /*
  * "Null" {@link SSLEngine} that does nothing to the bytesProduced.
@@ -48,7 +48,7 @@ class NullSslEngine extends SSLEngine with StrictLogging with Assertions {
   val wrapBuffer = ByteBuffer.allocate(bufferSize)
 
   def unwrap(src: ByteBuffer, dsts: Array[ByteBuffer], offset: Int, length: Int): SSLEngineResult = {
-    val dstSet = new ByteBufferSet(dsts, offset, length)
+    val dstSet = new ImmutableByteBufferSet(dsts, offset, length)
     if (!src.hasRemaining)
       return new SSLEngineResult(Status.BUFFER_UNDERFLOW, HandshakeStatus.NOT_HANDSHAKING, 0, 0)
     val unwrapSize = math.min(unwrapBuffer.capacity, src.remaining)
@@ -62,7 +62,7 @@ class NullSslEngine extends SSLEngine with StrictLogging with Assertions {
   }
 
   def wrap(srcs: Array[ByteBuffer], offset: Int, length: Int, dst: ByteBuffer): SSLEngineResult = {
-    val srcSet = new ByteBufferSet(srcs, offset, length)
+    val srcSet = new ImmutableByteBufferSet(srcs, offset, length)
     if (!srcSet.hasRemaining)
       return new SSLEngineResult(Status.OK, HandshakeStatus.NOT_HANDSHAKING, 0, 0)
     val wrapSize = math.min(wrapBuffer.capacity, srcSet.remaining).asInstanceOf[Int]

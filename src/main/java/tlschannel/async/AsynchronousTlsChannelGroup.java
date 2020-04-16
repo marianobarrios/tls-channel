@@ -32,7 +32,7 @@ import tlschannel.NeedsReadException;
 import tlschannel.NeedsTaskException;
 import tlschannel.NeedsWriteException;
 import tlschannel.TlsChannel;
-import tlschannel.impl.ByteBufferSet;
+import tlschannel.impl.ImmutableByteBufferSet;
 import tlschannel.util.Util;
 
 /**
@@ -96,12 +96,12 @@ public class AsynchronousTlsChannelGroup {
   }
 
   private abstract static class Operation {
-    final ByteBufferSet bufferSet;
+    final ImmutableByteBufferSet bufferSet;
     final LongConsumer onSuccess;
     final Consumer<Throwable> onFailure;
     Future<?> timeoutFuture;
 
-    Operation(ByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
+    Operation(ImmutableByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
       this.bufferSet = bufferSet;
       this.onSuccess = onSuccess;
       this.onFailure = onFailure;
@@ -109,7 +109,7 @@ public class AsynchronousTlsChannelGroup {
   }
 
   static final class ReadOperation extends Operation {
-    ReadOperation(ByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
+    ReadOperation(ImmutableByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
       super(bufferSet, onSuccess, onFailure);
     }
   }
@@ -122,7 +122,7 @@ public class AsynchronousTlsChannelGroup {
      */
     long consumesBytes = 0;
 
-    WriteOperation(ByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
+    WriteOperation(ImmutableByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
       super(bufferSet, onSuccess, onFailure);
     }
   }
@@ -256,7 +256,7 @@ public class AsynchronousTlsChannelGroup {
 
   ReadOperation startRead(
       RegisteredSocket socket,
-      ByteBufferSet buffer,
+      ImmutableByteBufferSet buffer,
       long timeout,
       TimeUnit unit,
       LongConsumer onSuccess,
@@ -301,7 +301,7 @@ public class AsynchronousTlsChannelGroup {
 
   WriteOperation startWrite(
       RegisteredSocket socket,
-      ByteBufferSet buffer,
+      ImmutableByteBufferSet buffer,
       long timeout,
       TimeUnit unit,
       LongConsumer onSuccess,
@@ -503,7 +503,7 @@ public class AsynchronousTlsChannelGroup {
   private void writeHandlingTasks(RegisteredSocket socket, WriteOperation op) throws IOException {
     while (true) {
       try {
-        socket.tlsChannel.write(op.bufferSet.array, op.bufferSet.offset, op.bufferSet.length);
+        socket.tlsChannel.write(op.bufferSet.getBuffers(), op.bufferSet.getOffset(), op.bufferSet.getLength());
         return;
       } catch (NeedsTaskException e) {
         warnAboutNeedTask();
@@ -564,7 +564,7 @@ public class AsynchronousTlsChannelGroup {
   private long readHandlingTasks(RegisteredSocket socket, ReadOperation op) throws IOException {
     while (true) {
       try {
-        return socket.tlsChannel.read(op.bufferSet.array, op.bufferSet.offset, op.bufferSet.length);
+        return socket.tlsChannel.read(op.bufferSet.getBuffers(), op.bufferSet.getOffset(), op.bufferSet.getLength());
       } catch (NeedsTaskException e) {
         warnAboutNeedTask();
         e.getTask().run();

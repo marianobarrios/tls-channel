@@ -6,7 +6,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 
 import javax.net.ssl.SSLContext
-import tlschannel.impl.{BufferHolder, ByteBufferSet, TlsChannelImpl}
+import tlschannel.impl.{BufferHolder, ImmutableByteBufferSet, TlsChannelImpl}
 import java.util.Optional
 
 import org.junit.runner.RunWith
@@ -41,14 +41,14 @@ class ApiTest extends AnyFunSuite with Assertions {
   test("reading into a read-only buffer") {
     val socket = newSocket()
     intercept[IllegalArgumentException] {
-      socket.read(new ByteBufferSet(ByteBuffer.allocate(1).asReadOnlyBuffer()))
+      socket.read(new ImmutableByteBufferSet(ByteBuffer.allocate(1).asReadOnlyBuffer()))
     }
   }
 
   test("reading into a buffer without remaining capacity") {
     val socket = newSocket()
     assert(
-      socket.read(new ByteBufferSet(ByteBuffer.allocate(0))) == 0,
+      socket.read(new ImmutableByteBufferSet(ByteBuffer.allocate(0))) == 0,
       "read must return zero when the buffer was empty"
     )
   }
