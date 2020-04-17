@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tlschannel.impl.BufferHolder;
 import tlschannel.impl.ByteBufferSet;
-import tlschannel.impl.ImmutableByteBufferSet;
 import tlschannel.impl.MutableByteBufferSet;
 import tlschannel.impl.MutableSingleBufferSet;
 import tlschannel.impl.TlsChannelImpl;
