@@ -11,7 +11,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
 import tlschannel.impl.ByteBufferSet;
-import tlschannel.impl.ImmutableByteBufferSet;
+import tlschannel.impl.MutableByteBufferSet;
 import tlschannel.impl.MutableSingleBufferSet;
 import tlschannel.impl.TlsChannelImpl;
 
@@ -87,6 +87,8 @@ public class ClientTlsChannel implements TlsChannel {
 
   private final MutableSingleBufferSet mutableSingleBufferSetRead = new MutableSingleBufferSet();
   private final MutableSingleBufferSet mutableSingleBufferSetWrite = new MutableSingleBufferSet();
+  private final MutableByteBufferSet mutableBufferSetRead = new MutableByteBufferSet();
+  private final MutableByteBufferSet mutableBufferSetWrite = new MutableByteBufferSet();
 
   private ClientTlsChannel(
       ByteChannel underlying,
@@ -148,8 +150,7 @@ public class ClientTlsChannel implements TlsChannel {
 
   @Override
   public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
-    ByteBufferSet dest = new ImmutableByteBufferSet(dstBuffers, offset, length);
-    return read(dest);
+    return read(mutableBufferSetRead.wrap(dstBuffers, offset, length));
   }
 
   @Override
@@ -164,8 +165,7 @@ public class ClientTlsChannel implements TlsChannel {
 
   @Override
   public long write(ByteBuffer[] srcBuffers, int offset, int length) throws IOException {
-    ImmutableByteBufferSet source = new ImmutableByteBufferSet(srcBuffers, offset, length);
-    return write(source);
+    return write(mutableBufferSetWrite.wrap(srcBuffers, offset, length));
   }
 
   @Override
