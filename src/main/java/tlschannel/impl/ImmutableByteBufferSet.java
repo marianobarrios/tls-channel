@@ -3,16 +3,12 @@ package tlschannel.impl;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLException;
-
-
 import tlschannel.TlsChannel;
 
-public class ImmutableByteBufferSet implements ByteBufferSet
-{
+public class ImmutableByteBufferSet implements ByteBufferSet {
   private final ByteBuffer[] buffers;
   private final int offset;
   private final int length;
@@ -29,14 +25,12 @@ public class ImmutableByteBufferSet implements ByteBufferSet
     this.length = length;
   }
 
-  public ImmutableByteBufferSet(ByteBuffer[] buffers)
-  {
+  public ImmutableByteBufferSet(ByteBuffer[] buffers) {
     this(buffers, 0, buffers.length);
   }
 
-  public ImmutableByteBufferSet(ByteBuffer buffer)
-  {
-    this(new ByteBuffer[]{buffer});
+  public ImmutableByteBufferSet(ByteBuffer buffer) {
+    this(new ByteBuffer[] {buffer});
   }
 
   @Override
@@ -67,82 +61,64 @@ public class ImmutableByteBufferSet implements ByteBufferSet
   }
 
   @Override
-  public boolean hasRemaining()
-  {
+  public boolean hasRemaining() {
     return remaining() > 0;
   }
 
   @Override
-  public boolean isReadOnly()
-  {
+  public boolean isReadOnly() {
     return ByteBufferSetUtil.isReadOnly(buffers, offset, length);
   }
 
   @Override
-  public SSLEngineResult unwrap(final SSLEngine engine, final ByteBuffer buffer) throws SSLException
-  {
-    if (numberOfBuffersRemaining() == 1)
-    {
+  public SSLEngineResult unwrap(final SSLEngine engine, final ByteBuffer buffer)
+      throws SSLException {
+    if (numberOfBuffersRemaining() == 1) {
       return engine.unwrap(buffer, buffers[offset]);
-    }
-    else
-    {
+    } else {
       return engine.unwrap(buffer, buffers, offset, length);
     }
   }
 
   @Override
-  public SSLEngineResult wrap(final SSLEngine engine, final ByteBuffer buffer) throws SSLException
-  {
-    if (numberOfBuffersRemaining() == 1)
-    {
+  public SSLEngineResult wrap(final SSLEngine engine, final ByteBuffer buffer) throws SSLException {
+    if (numberOfBuffersRemaining() == 1) {
       return engine.wrap(buffers[offset], buffer);
-    }
-    else
-    {
+    } else {
       return engine.wrap(buffers, offset, length, buffer);
     }
   }
 
   @Override
-  public long read(final TlsChannel tlsChannel) throws IOException
-  {
-    if (numberOfBuffersRemaining() == 1)
-    {
+  public long read(final TlsChannel tlsChannel) throws IOException {
+    if (numberOfBuffersRemaining() == 1) {
       return tlsChannel.read(buffers[offset]);
-    }
-    else
-    {
+    } else {
       return tlsChannel.read(buffers, offset, length);
     }
   }
 
-  public void write(final TlsChannel tlsChannel) throws IOException
-  {
-    if (numberOfBuffersRemaining() == 1)
-    {
+  @Override
+  public void write(final TlsChannel tlsChannel) throws IOException {
+    if (numberOfBuffersRemaining() == 1) {
       tlsChannel.write(buffers[offset]);
-    }
-    else
-    {
+    } else {
       tlsChannel.write(buffers, offset, length);
     }
   }
 
-  private int numberOfBuffersRemaining()
-  {
-    return length - offset;
+  @Override
+  public String toString() {
+    return "ImmutableByteBufferSet[buffers="
+        + Arrays.toString(buffers)
+        + ", offset="
+        + offset
+        + ", length="
+        + length
+        + "]";
   }
 
-  @Override
-  public String toString()
-  {
-    return "ImmutableByteBufferSet[array="
-           + Arrays.toString(buffers)
-           + ", offset="
-           + offset
-           + ", length="
-           + length
-           + "]";
+  private int numberOfBuffersRemaining() {
+    return length - offset;
   }
 }

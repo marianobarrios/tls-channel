@@ -26,15 +26,13 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
 import tlschannel.NeedsReadException;
 import tlschannel.NeedsTaskException;
 import tlschannel.NeedsWriteException;
 import tlschannel.TlsChannel;
+import tlschannel.impl.ByteBufferSet;
 import tlschannel.impl.ImmutableByteBufferSet;
 import tlschannel.util.Util;
 
@@ -99,12 +97,12 @@ public class AsynchronousTlsChannelGroup {
   }
 
   private abstract static class Operation {
-    final ImmutableByteBufferSet bufferSet;
+    final ByteBufferSet bufferSet;
     final LongConsumer onSuccess;
     final Consumer<Throwable> onFailure;
     Future<?> timeoutFuture;
 
-    Operation(ImmutableByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
+    Operation(ByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
       this.bufferSet = bufferSet;
       this.onSuccess = onSuccess;
       this.onFailure = onFailure;
@@ -112,7 +110,7 @@ public class AsynchronousTlsChannelGroup {
   }
 
   static final class ReadOperation extends Operation {
-    ReadOperation(ImmutableByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
+    ReadOperation(ByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
       super(bufferSet, onSuccess, onFailure);
     }
   }
@@ -125,7 +123,7 @@ public class AsynchronousTlsChannelGroup {
      */
     long consumesBytes = 0;
 
-    WriteOperation(ImmutableByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
+    WriteOperation(ByteBufferSet bufferSet, LongConsumer onSuccess, Consumer<Throwable> onFailure) {
       super(bufferSet, onSuccess, onFailure);
     }
   }
@@ -505,8 +503,7 @@ public class AsynchronousTlsChannelGroup {
    */
   private void writeHandlingTasks(RegisteredSocket socket, WriteOperation op) throws IOException {
     while (true) {
-      try
-      {
+      try {
         op.bufferSet.write(socket.tlsChannel);
         return;
       } catch (NeedsTaskException e) {
