@@ -297,7 +297,16 @@ public class TlsChannelImpl implements ByteChannel {
     inEncrypted.buffer.flip();
     try
     {
-      SSLEngineResult result = engine.unwrap(inEncrypted.buffer, dest.getBuffers(), dest.getOffset(), dest.getLength());
+      final SSLEngineResult result;
+      if(dest.numberOfBuffersRemaining() == 1)
+      {
+        result = engine.unwrap(inEncrypted.buffer, dest.getBuffer());
+      }
+      else
+      {
+        result = engine.unwrap(inEncrypted.buffer, dest.getBuffers(), dest.getOffset(), dest.getLength());
+      }
+
       if (logger.isTraceEnabled()) {
         logger.trace(
             "engine.unwrap() result [{}]. Engine status: {}; inEncrypted {}; inPlain: {}",
@@ -412,8 +421,15 @@ public class TlsChannelImpl implements ByteChannel {
   {
     try
     {
-      SSLEngineResult result =
-              engine.wrap(source.getBuffers(), source.getOffset(), source.getLength(), outEncrypted.buffer);
+      final SSLEngineResult result;
+      if (source.numberOfBuffersRemaining() == 1)
+      {
+        result = engine.wrap(source.getBuffer(), outEncrypted.buffer);
+      }
+      else
+      {
+        result = engine.wrap(source.getBuffers(), source.getOffset(), source.getLength(), outEncrypted.buffer);
+      }
       if (logger.isTraceEnabled())
       {
         logger.trace(

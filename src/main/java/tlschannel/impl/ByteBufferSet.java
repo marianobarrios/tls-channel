@@ -6,6 +6,13 @@ public interface ByteBufferSet
 {
     ByteBuffer[] getBuffers();
 
+    ByteBuffer getBuffer();
+
+    default int numberOfBuffersRemaining()
+    {
+        return getLength() - getOffset();
+    }
+
     int getOffset();
 
     int getLength();

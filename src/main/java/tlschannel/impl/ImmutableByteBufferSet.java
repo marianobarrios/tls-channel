@@ -25,14 +25,29 @@ public class ImmutableByteBufferSet implements ByteBufferSet
     this(buffers, 0, buffers.length);
   }
 
-  public ImmutableByteBufferSet(ByteBuffer buffer) {
-    this(new ByteBuffer[] {buffer});
+  public ImmutableByteBufferSet(ByteBuffer buffer)
+  {
+    this(new ByteBuffer[]{buffer});
   }
 
   @Override
   public ByteBuffer[] getBuffers()
   {
     return buffers;
+  }
+
+  @Override
+  public ByteBuffer getBuffer()
+  {
+    switch (buffers.length - offset)
+    {
+      case 0:
+        return null;
+      case 1:
+        return buffers[offset];
+      default:
+        throw new IllegalStateException("more than one buffer to return");
+    }
   }
 
   @Override
