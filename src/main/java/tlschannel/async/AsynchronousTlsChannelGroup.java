@@ -33,7 +33,6 @@ import tlschannel.NeedsTaskException;
 import tlschannel.NeedsWriteException;
 import tlschannel.TlsChannel;
 import tlschannel.impl.ByteBufferSet;
-import tlschannel.impl.ImmutableByteBufferSet;
 import tlschannel.util.Util;
 
 /**
@@ -257,7 +256,7 @@ public class AsynchronousTlsChannelGroup {
 
   ReadOperation startRead(
       RegisteredSocket socket,
-      ImmutableByteBufferSet buffer,
+      ByteBufferSet buffer,
       long timeout,
       TimeUnit unit,
       LongConsumer onSuccess,
@@ -302,7 +301,7 @@ public class AsynchronousTlsChannelGroup {
 
   WriteOperation startWrite(
       RegisteredSocket socket,
-      ImmutableByteBufferSet buffer,
+      ByteBufferSet buffer,
       long timeout,
       TimeUnit unit,
       LongConsumer onSuccess,
