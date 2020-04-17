@@ -12,6 +12,7 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
 import tlschannel.impl.ByteBufferSet;
 import tlschannel.impl.ImmutableByteBufferSet;
+import tlschannel.impl.MutableSingleBufferSet;
 import tlschannel.impl.TlsChannelImpl;
 
 /** A client-side {@link TlsChannel}. */
@@ -84,6 +85,9 @@ public class ClientTlsChannel implements TlsChannel {
   private final ByteChannel underlying;
   private final TlsChannelImpl impl;
 
+  private final MutableSingleBufferSet mutableSingleBufferSetRead = new MutableSingleBufferSet();
+  private final MutableSingleBufferSet mutableSingleBufferSetWrite = new MutableSingleBufferSet();
+
   private ClientTlsChannel(
       ByteChannel underlying,
       SSLEngine engine,
@@ -145,8 +149,7 @@ public class ClientTlsChannel implements TlsChannel {
   @Override
   public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
     ByteBufferSet dest = new ImmutableByteBufferSet(dstBuffers, offset, length);
-    TlsChannelImpl.checkReadBuffer(dest);
-    return impl.read(dest);
+    return read(dest);
   }
 
   @Override
@@ -156,13 +159,13 @@ public class ClientTlsChannel implements TlsChannel {
 
   @Override
   public int read(ByteBuffer dstBuffer) throws IOException {
-    return (int) read(new ByteBuffer[] {dstBuffer});
+    return (int) read(mutableSingleBufferSetRead.wrap(dstBuffer));
   }
 
   @Override
   public long write(ByteBuffer[] srcBuffers, int offset, int length) throws IOException {
     ImmutableByteBufferSet source = new ImmutableByteBufferSet(srcBuffers, offset, length);
-    return impl.write(source);
+    return write(source);
   }
 
   @Override
@@ -172,7 +175,7 @@ public class ClientTlsChannel implements TlsChannel {
 
   @Override
   public int write(ByteBuffer srcBuffer) throws IOException {
-    return (int) write(new ByteBuffer[] {srcBuffer});
+    return (int) write(mutableSingleBufferSetWrite.wrap(srcBuffer));
   }
 
   @Override
@@ -208,5 +211,14 @@ public class ClientTlsChannel implements TlsChannel {
   @Override
   public boolean shutdownSent() {
     return impl.shutdownSent();
+  }
+
+  private long read(final ByteBufferSet dest) throws IOException {
+    TlsChannelImpl.checkReadBuffer(dest);
+    return impl.read(dest);
+  }
+
+  private long write(final ByteBufferSet source) throws IOException {
+    return impl.write(source);
   }
 }
