@@ -1,22 +1,17 @@
 package tlschannel.impl;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLException;
+
+
+import tlschannel.TlsChannel;
 
 public interface ByteBufferSet
 {
-    ByteBuffer[] getBuffers();
-
-    ByteBuffer getBuffer();
-
-    default int numberOfBuffersRemaining()
-    {
-        return getLength() - getOffset();
-    }
-
-    int getOffset();
-
-    int getLength();
-
     long remaining();
 
     int putRemaining(ByteBuffer from);
@@ -30,4 +25,10 @@ public interface ByteBufferSet
     boolean hasRemaining();
 
     boolean isReadOnly();
+
+    SSLEngineResult unwrap(SSLEngine engine, ByteBuffer buffer) throws SSLException;
+
+    SSLEngineResult wrap(SSLEngine engine, ByteBuffer buffer) throws SSLException;
+
+    long read(TlsChannel tlsChannel) throws IOException;
 }

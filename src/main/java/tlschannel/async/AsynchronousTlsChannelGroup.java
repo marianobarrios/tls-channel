@@ -507,14 +507,7 @@ public class AsynchronousTlsChannelGroup {
     while (true) {
       try
       {
-        if (op.bufferSet.numberOfBuffersRemaining() == 1)
-        {
-          socket.tlsChannel.write(op.bufferSet.getBuffer());
-        }
-        else
-        {
-          socket.tlsChannel.write(op.bufferSet.getBuffers(), op.bufferSet.getOffset(), op.bufferSet.getLength());
-        }
+        op.bufferSet.write(socket.tlsChannel);
         return;
       } catch (NeedsTaskException e) {
         warnAboutNeedTask();
@@ -575,14 +568,7 @@ public class AsynchronousTlsChannelGroup {
   private long readHandlingTasks(RegisteredSocket socket, ReadOperation op) throws IOException {
     while (true) {
       try {
-        if (op.bufferSet.numberOfBuffersRemaining() == 1)
-        {
-          return socket.tlsChannel.read(op.bufferSet.getBuffer());
-        }
-        else
-        {
-          return socket.tlsChannel.read(op.bufferSet.getBuffers(), op.bufferSet.getOffset(), op.bufferSet.getLength());
-        }
+        return op.bufferSet.read(socket.tlsChannel);
       } catch (NeedsTaskException e) {
         warnAboutNeedTask();
         e.getTask().run();
