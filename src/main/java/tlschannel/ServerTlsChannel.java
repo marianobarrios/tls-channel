@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import tlschannel.impl.BufferHolder;
 import tlschannel.impl.ByteBufferSet;
 import tlschannel.impl.ImmutableByteBufferSet;
+import tlschannel.impl.MutableByteBufferSet;
+import tlschannel.impl.MutableSingleBufferSet;
 import tlschannel.impl.TlsChannelImpl;
 import tlschannel.impl.TlsChannelImpl.EofException;
 import tlschannel.impl.TlsExplorer;
@@ -174,6 +176,10 @@ public class ServerTlsChannel implements TlsChannel {
   private final boolean waitForCloseConfirmation;
 
   private final Lock initLock = new ReentrantLock();
+  private final MutableSingleBufferSet mutableSingleBufferSetRead = new MutableSingleBufferSet();
+  private final MutableSingleBufferSet mutableSingleBufferSetWrite = new MutableSingleBufferSet();
+  private final MutableByteBufferSet mutableBufferSetRead = new MutableByteBufferSet();
+  private final MutableByteBufferSet mutableBufferSetWrite = new MutableByteBufferSet();
 
   private BufferHolder inEncrypted;
 
@@ -256,16 +262,7 @@ public class ServerTlsChannel implements TlsChannel {
 
   @Override
   public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
-    ByteBufferSet dest = new ImmutableByteBufferSet(dstBuffers, offset, length);
-    TlsChannelImpl.checkReadBuffer(dest);
-    if (!sniRead) {
-      try {
-        initEngine();
-      } catch (EofException e) {
-        return -1;
-      }
-    }
-    return impl.read(dest);
+    return read(mutableBufferSetRead.wrap(dstBuffers, offset, length));
   }
 
   @Override
@@ -275,20 +272,12 @@ public class ServerTlsChannel implements TlsChannel {
 
   @Override
   public int read(ByteBuffer dstBuffer) throws IOException {
-    return (int) read(new ByteBuffer[] {dstBuffer});
+    return (int) read(mutableSingleBufferSetRead.wrap(dstBuffer));
   }
 
   @Override
   public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
-    ImmutableByteBufferSet source = new ImmutableByteBufferSet(srcs, offset, length);
-    if (!sniRead) {
-      try {
-        initEngine();
-      } catch (EofException e) {
-        throw new ClosedChannelException();
-      }
-    }
-    return impl.write(source);
+    return write(mutableBufferSetWrite.wrap(srcs, offset, length));
   }
 
   @Override
@@ -298,7 +287,7 @@ public class ServerTlsChannel implements TlsChannel {
 
   @Override
   public int write(ByteBuffer srcBuffer) throws IOException {
-    return (int) write(new ByteBuffer[] {srcBuffer});
+    return (int) write(mutableSingleBufferSetWrite.wrap(srcBuffer));
   }
 
   @Override
@@ -421,5 +410,28 @@ public class ServerTlsChannel implements TlsChannel {
   @Override
   public boolean shutdownSent() {
     return impl != null && impl.shutdownSent();
+  }
+
+  private long read(final ByteBufferSet dest) throws IOException {
+    TlsChannelImpl.checkReadBuffer(dest);
+    if (!sniRead) {
+      try {
+        initEngine();
+      } catch (EofException e) {
+        return -1;
+      }
+    }
+    return impl.read(dest);
+  }
+
+  private long write(final ByteBufferSet source) throws IOException {
+    if (!sniRead) {
+      try {
+        initEngine();
+      } catch (EofException e) {
+        throw new ClosedChannelException();
+      }
+    }
+    return impl.write(source);
   }
 }
