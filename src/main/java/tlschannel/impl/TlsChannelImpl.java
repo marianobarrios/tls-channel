@@ -38,24 +38,27 @@ public class TlsChannelImpl implements ByteChannel {
   public static final int maxTlsPacketSize = 17 * 1024;
 
   private static class UnwrapResult {
-    public final int bytesProduced;
-    public final HandshakeStatus lastHandshakeStatus;
-    public final boolean wasClosed;
+    public int bytesProduced;
+    public HandshakeStatus lastHandshakeStatus;
+    public boolean wasClosed;
 
-    public UnwrapResult(int bytesProduced, HandshakeStatus lastHandshakeStatus, boolean wasClosed) {
+    private UnwrapResult of(
+        int bytesProduced, HandshakeStatus lastHandshakeStatus, boolean wasClosed) {
       this.bytesProduced = bytesProduced;
       this.lastHandshakeStatus = lastHandshakeStatus;
       this.wasClosed = wasClosed;
+      return this;
     }
   }
 
   private static class WrapResult {
-    public final int bytesConsumed;
-    public final HandshakeStatus lastHandshakeStatus;
+    public int bytesConsumed;
+    public HandshakeStatus lastHandshakeStatus;
 
-    public WrapResult(int bytesConsumed, HandshakeStatus lastHandshakeStatus) {
+    private WrapResult of(int bytesConsumed, HandshakeStatus lastHandshakeStatus) {
       this.bytesConsumed = bytesConsumed;
       this.lastHandshakeStatus = lastHandshakeStatus;
+      return this;
     }
   }
 
@@ -135,7 +138,8 @@ public class TlsChannelImpl implements ByteChannel {
   private final Lock initLock = new ReentrantLock();
   private final Lock readLock = new ReentrantLock();
   private final Lock writeLock = new ReentrantLock();
-
+  private final WrapResult wrapResult = new WrapResult();
+  private final UnwrapResult unwrapResult = new UnwrapResult();
   private volatile boolean negotiated = false;
 
   /**
@@ -269,7 +273,7 @@ public class TlsChannelImpl implements ByteChannel {
           || result.getStatus() == Status.CLOSED
           || result.getHandshakeStatus() != originalStatus) {
         boolean wasClosed = result.getStatus() == Status.CLOSED;
-        return new UnwrapResult(result.bytesProduced(), result.getHandshakeStatus(), wasClosed);
+        return unwrapResult.of(result.bytesProduced(), result.getHandshakeStatus(), wasClosed);
       }
       if (result.getStatus() == Status.BUFFER_OVERFLOW) {
         if (dest.isPresent() && effDest == dest.get()) {
@@ -383,7 +387,7 @@ public class TlsChannelImpl implements ByteChannel {
       switch (result.getStatus()) {
         case OK:
         case CLOSED:
-          return new WrapResult(result.bytesConsumed(), result.getHandshakeStatus());
+          return wrapResult.of(result.bytesConsumed(), result.getHandshakeStatus());
         case BUFFER_OVERFLOW:
           Util.assertTrue(result.bytesConsumed() == 0);
           outEncrypted.enlarge();
