@@ -7,12 +7,15 @@ import com.typesafe.scalalogging.StrictLogging
 import java.util.concurrent.ConcurrentHashMap
 
 import scala.jdk.CollectionConverters._
+import scala.util.control.ControlThrowable
 
 object TestUtil extends StrictLogging {
 
   def cannotFail(thunk: => Unit): Unit = {
     try thunk
     catch {
+      case r: ControlThrowable =>
+      // pass
       case e: Throwable =>
         val lastMessage =
           s"An essential thread (${Thread.currentThread().getName}) failed unexpectedly, terminating process"
@@ -31,7 +34,7 @@ object TestUtil extends StrictLogging {
     (res, time)
   }
 
-  def time[A](thunk: => Unit): Duration = {
+  def time(thunk: => Unit): Duration = {
     val start = System.nanoTime()
     thunk
     Duration.ofNanos(System.nanoTime() - start)
@@ -60,16 +63,6 @@ object TestUtil extends StrictLogging {
     builder.result()
   }
 
-  /**
-    * @param f the function to memoize
-    * @tparam I input to f
-    * @tparam O output of f
-    */
-  class Memo[I, O](f: I => O) extends (I => O) {
-    val cache = new ConcurrentHashMap[I, O]
-    override def apply(x: I) = cache.asScala.getOrElseUpdate(x, f(x))
-  }
-
   def nextBytes(random: SplittableRandom, bytes: Array[Byte]): Unit = {
     nextBytes(random, bytes, bytes.length)
   }
@@ -86,5 +79,15 @@ object TestUtil extends StrictLogging {
         i += 1
       }
     }
+  }
+
+  /**
+    * @param f the function to memoize
+    * @tparam I input to f
+    * @tparam O output of f
+    */
+  class Memo[I, O](f: I => O) extends (I => O) {
+    val cache = new ConcurrentHashMap[I, O]
+    override def apply(x: I) = cache.asScala.getOrElseUpdate(x, f(x))
   }
 }
