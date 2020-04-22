@@ -82,6 +82,8 @@ public class TlsChannelImpl implements ByteChannel {
   private final TrackingAllocator encryptedBufAllocator;
   private final TrackingAllocator plainBufAllocator;
   private final boolean waitForCloseConfirmation;
+  private final MutableSingleBufferSet mutableSingleBufferSetRead = new MutableSingleBufferSet();
+  private final MutableByteBufferSet mutableBufferSetRead = new MutableByteBufferSet();
 
   // @formatter:off
   public TlsChannelImpl(
@@ -183,11 +185,45 @@ public class TlsChannelImpl implements ByteChannel {
 
   // read
 
+  public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
+    if (ByteBufferSetUtil.isReadOnly(dstBuffers, offset, length)) {
+      throw new IllegalArgumentException();
+    }
+    if (ByteBufferSetUtil.remaining(dstBuffers, offset, length) <= 0) {
+      return 0L;
+    }
+    handshakeAndReadLock();
+    return readAndUnlock(mutableBufferSetRead.wrap(dstBuffers, offset, length));
+  }
+
+  public long read(ByteBuffer[] dstBuffers) throws IOException {
+    return read(dstBuffers, 0, dstBuffers.length);
+  }
+
+  @Override
+  public int read(ByteBuffer dstBuffer) throws IOException {
+    if (dstBuffer.isReadOnly()) {
+      throw new IllegalArgumentException();
+    }
+    if (dstBuffer.remaining() <= 0) {
+      return 0;
+    }
+    handshakeAndReadLock();
+    return (int) readAndUnlock(mutableSingleBufferSetRead.wrap(dstBuffer));
+  }
+
   public long read(ByteBufferSet dest) throws IOException, NeedsTaskException {
     checkReadBuffer(dest);
     if (!dest.hasRemaining()) return 0;
-    handshake();
-    readLock.lock();
+    return doRead(dest);
+  }
+
+  private long doRead(final ByteBufferSet dest) throws IOException {
+    handshakeAndReadLock();
+    return readAndUnlock(dest);
+  }
+
+  private long readAndUnlock(final ByteBufferSet dest) throws IOException {
     try {
       if (invalid || shutdownSent) {
         throw new ClosedChannelException();
@@ -232,6 +268,11 @@ public class TlsChannelImpl implements ByteChannel {
     } finally {
       readLock.unlock();
     }
+  }
+
+  private void handshakeAndReadLock() throws IOException {
+    handshake();
+    readLock.lock();
   }
 
   private void handleTask() throws NeedsTaskException {
@@ -730,11 +771,6 @@ public class TlsChannelImpl implements ByteChannel {
 
   public boolean getRunTasks() {
     return runTasks;
-  }
-
-  @Override
-  public int read(ByteBuffer dst) throws IOException {
-    return (int) read(new ImmutableByteBufferSet(dst));
   }
 
   @Override

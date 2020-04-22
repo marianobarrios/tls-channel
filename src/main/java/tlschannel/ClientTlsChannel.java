@@ -85,9 +85,7 @@ public class ClientTlsChannel implements TlsChannel {
   private final ByteChannel underlying;
   private final TlsChannelImpl impl;
 
-  private final MutableSingleBufferSet mutableSingleBufferSetRead = new MutableSingleBufferSet();
   private final MutableSingleBufferSet mutableSingleBufferSetWrite = new MutableSingleBufferSet();
-  private final MutableByteBufferSet mutableBufferSetRead = new MutableByteBufferSet();
   private final MutableByteBufferSet mutableBufferSetWrite = new MutableByteBufferSet();
 
   private ClientTlsChannel(
@@ -150,17 +148,17 @@ public class ClientTlsChannel implements TlsChannel {
 
   @Override
   public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
-    return read(mutableBufferSetRead.wrap(dstBuffers, offset, length));
+    return impl.read(dstBuffers, offset, length);
   }
 
   @Override
   public long read(ByteBuffer[] dstBuffers) throws IOException {
-    return read(dstBuffers, 0, dstBuffers.length);
+    return impl.read(dstBuffers);
   }
 
   @Override
   public int read(ByteBuffer dstBuffer) throws IOException {
-    return (int) read(mutableSingleBufferSetRead.wrap(dstBuffer));
+    return impl.read(dstBuffer);
   }
 
   @Override
@@ -211,11 +209,6 @@ public class ClientTlsChannel implements TlsChannel {
   @Override
   public boolean shutdownSent() {
     return impl.shutdownSent();
-  }
-
-  private long read(final ByteBufferSet dest) throws IOException {
-    TlsChannelImpl.checkReadBuffer(dest);
-    return impl.read(dest);
   }
 
   private long write(final ByteBufferSet source) throws IOException {
