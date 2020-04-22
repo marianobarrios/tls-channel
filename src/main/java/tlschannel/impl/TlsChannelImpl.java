@@ -85,6 +85,9 @@ public class TlsChannelImpl implements ByteChannel {
   private final MutableSingleBufferSet mutableSingleBufferSetRead = new MutableSingleBufferSet();
   private final MutableByteBufferSet mutableBufferSetRead = new MutableByteBufferSet();
 
+  private final MutableSingleBufferSet mutableSingleBufferSetWrite = new MutableSingleBufferSet();
+  private final MutableByteBufferSet mutableBufferSetWrite = new MutableByteBufferSet();
+
   // @formatter:off
   public TlsChannelImpl(
       ReadableByteChannel readChannel,
@@ -386,14 +389,32 @@ public class TlsChannelImpl implements ByteChannel {
 
   // write
 
+  public long write(ByteBuffer[] srcBuffers, int offset, int length) throws IOException {
+    handshakeAndWriteLock();
+    return writeAndUnlock(mutableBufferSetWrite.wrap(srcBuffers, offset, length));
+  }
+
+  public long write(ByteBuffer[] outs) throws IOException {
+    return write(outs, 0, outs.length);
+  }
+
+  @Override
+  public int write(ByteBuffer srcBuffer) throws IOException {
+    handshakeAndWriteLock();
+    return (int) writeAndUnlock(mutableSingleBufferSetWrite.wrap(srcBuffer));
+  }
+
   public long write(ByteBufferSet source) throws IOException {
     /*
      * Note that we should enter the write loop even in the case that the source buffer has no remaining bytes,
      * as it could be the case, in non-blocking usage, that the user is forced to call write again after the
      * underlying channel is available for writing, just to write pending encrypted bytes.
      */
-    handshake();
-    writeLock.lock();
+    handshakeAndWriteLock();
+    return writeAndUnlock(source);
+  }
+
+  private long writeAndUnlock(final ByteBufferSet source) throws IOException {
     try {
       if (invalid || shutdownSent) {
         throw new ClosedChannelException();
@@ -402,6 +423,11 @@ public class TlsChannelImpl implements ByteChannel {
     } finally {
       writeLock.unlock();
     }
+  }
+
+  private void handshakeAndWriteLock() throws IOException {
+    handshake();
+    writeLock.lock();
   }
 
   private long wrapAndWrite(ByteBufferSet source) throws IOException {
@@ -771,11 +797,6 @@ public class TlsChannelImpl implements ByteChannel {
 
   public boolean getRunTasks() {
     return runTasks;
-  }
-
-  @Override
-  public int write(ByteBuffer src) throws IOException {
-    return (int) write(new ImmutableByteBufferSet(src));
   }
 
   public boolean shutdownReceived() {
