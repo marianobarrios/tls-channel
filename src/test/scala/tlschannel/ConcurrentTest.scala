@@ -16,8 +16,8 @@ class ConcurrentTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
-  val dataSize = 100000 * 1000
-  val bufferSize = 20000
+  val dataSize = 500_000_000
+  val bufferSize = 2000
 
   /**
     * Test several parties writing concurrently
