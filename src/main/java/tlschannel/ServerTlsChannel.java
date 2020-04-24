@@ -175,6 +175,8 @@ public class ServerTlsChannel implements TlsChannel {
   private final boolean waitForCloseConfirmation;
 
   private final Lock initLock = new ReentrantLock();
+  private final Lock readLock = new ReentrantLock();
+  private final Lock writeLock = new ReentrantLock();
   private final MutableSingleBufferSet mutableSingleBufferSetRead = new MutableSingleBufferSet();
   private final MutableSingleBufferSet mutableSingleBufferSetWrite = new MutableSingleBufferSet();
   private final MutableByteBufferSet mutableBufferSetRead = new MutableByteBufferSet();
@@ -261,7 +263,12 @@ public class ServerTlsChannel implements TlsChannel {
 
   @Override
   public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
-    return read(mutableBufferSetRead.wrap(dstBuffers, offset, length));
+    readLock.lock();
+    try {
+      return read(mutableBufferSetRead.wrap(dstBuffers, offset, length));
+    } finally {
+      readLock.unlock();
+    }
   }
 
   @Override
@@ -271,12 +278,22 @@ public class ServerTlsChannel implements TlsChannel {
 
   @Override
   public int read(ByteBuffer dstBuffer) throws IOException {
-    return (int) read(mutableSingleBufferSetRead.wrap(dstBuffer));
+    readLock.lock();
+    try {
+      return (int) read(mutableSingleBufferSetRead.wrap(dstBuffer));
+    } finally {
+      readLock.unlock();
+    }
   }
 
   @Override
   public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
-    return write(mutableBufferSetWrite.wrap(srcs, offset, length));
+    writeLock.lock();
+    try {
+      return write(mutableBufferSetWrite.wrap(srcs, offset, length));
+    } finally {
+      writeLock.unlock();
+    }
   }
 
   @Override
@@ -286,7 +303,12 @@ public class ServerTlsChannel implements TlsChannel {
 
   @Override
   public int write(ByteBuffer srcBuffer) throws IOException {
-    return (int) write(mutableSingleBufferSetWrite.wrap(srcBuffer));
+    writeLock.lock();
+    try {
+      return (int) write(mutableSingleBufferSetWrite.wrap(srcBuffer));
+    } finally {
+      writeLock.unlock();
+    }
   }
 
   @Override
