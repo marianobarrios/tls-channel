@@ -21,9 +21,6 @@ import javax.net.ssl.StandardConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tlschannel.impl.BufferHolder;
-import tlschannel.impl.ByteBufferSet;
-import tlschannel.impl.MutableByteBufferSet;
-import tlschannel.impl.MutableSingleBufferSet;
 import tlschannel.impl.TlsChannelImpl;
 import tlschannel.impl.TlsChannelImpl.EofException;
 import tlschannel.impl.TlsExplorer;
@@ -175,12 +172,6 @@ public class ServerTlsChannel implements TlsChannel {
   private final boolean waitForCloseConfirmation;
 
   private final Lock initLock = new ReentrantLock();
-  private final Lock readLock = new ReentrantLock();
-  private final Lock writeLock = new ReentrantLock();
-  private final MutableSingleBufferSet mutableSingleBufferSetRead = new MutableSingleBufferSet();
-  private final MutableSingleBufferSet mutableSingleBufferSetWrite = new MutableSingleBufferSet();
-  private final MutableByteBufferSet mutableBufferSetRead = new MutableByteBufferSet();
-  private final MutableByteBufferSet mutableBufferSetWrite = new MutableByteBufferSet();
 
   private BufferHolder inEncrypted;
 
@@ -263,12 +254,15 @@ public class ServerTlsChannel implements TlsChannel {
 
   @Override
   public long read(ByteBuffer[] dstBuffers, int offset, int length) throws IOException {
-    readLock.lock();
-    try {
-      return read(mutableBufferSetRead.wrap(dstBuffers, offset, length));
-    } finally {
-      readLock.unlock();
+    TlsChannelImpl.checkReadBuffers(dstBuffers, offset, length);
+    if (!sniRead) {
+      try {
+        initEngine();
+      } catch (EofException e) {
+        return -1;
+      }
     }
+    return impl.read(dstBuffers, offset, length);
   }
 
   @Override
@@ -278,37 +272,44 @@ public class ServerTlsChannel implements TlsChannel {
 
   @Override
   public int read(ByteBuffer dstBuffer) throws IOException {
-    readLock.lock();
-    try {
-      return (int) read(mutableSingleBufferSetRead.wrap(dstBuffer));
-    } finally {
-      readLock.unlock();
+    TlsChannelImpl.checkReadBuffer(dstBuffer);
+    if (!sniRead) {
+      try {
+        initEngine();
+      } catch (EofException e) {
+        return -1;
+      }
     }
+    return impl.read(dstBuffer);
   }
 
   @Override
-  public long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
-    writeLock.lock();
-    try {
-      return write(mutableBufferSetWrite.wrap(srcs, offset, length));
-    } finally {
-      writeLock.unlock();
+  public long write(ByteBuffer[] srcBuffers, int offset, int length) throws IOException {
+    if (!sniRead) {
+      try {
+        initEngine();
+      } catch (EofException e) {
+        throw new ClosedChannelException();
+      }
     }
+    return impl.write(srcBuffers, offset, length);
   }
 
   @Override
-  public long write(ByteBuffer[] srcs) throws IOException {
-    return write(srcs, 0, srcs.length);
+  public long write(ByteBuffer[] srcBuffers) throws IOException {
+    return write(srcBuffers, 0, srcBuffers.length);
   }
 
   @Override
   public int write(ByteBuffer srcBuffer) throws IOException {
-    writeLock.lock();
-    try {
-      return (int) write(mutableSingleBufferSetWrite.wrap(srcBuffer));
-    } finally {
-      writeLock.unlock();
+    if (!sniRead) {
+      try {
+        initEngine();
+      } catch (EofException e) {
+        throw new ClosedChannelException();
+      }
     }
+    return impl.write(srcBuffer);
   }
 
   @Override
@@ -431,28 +432,5 @@ public class ServerTlsChannel implements TlsChannel {
   @Override
   public boolean shutdownSent() {
     return impl != null && impl.shutdownSent();
-  }
-
-  private long read(final ByteBufferSet dest) throws IOException {
-    TlsChannelImpl.checkReadBuffer(dest);
-    if (!sniRead) {
-      try {
-        initEngine();
-      } catch (EofException e) {
-        return -1;
-      }
-    }
-    return impl.read(dest);
-  }
-
-  private long write(final ByteBufferSet source) throws IOException {
-    if (!sniRead) {
-      try {
-        initEngine();
-      } catch (EofException e) {
-        throw new ClosedChannelException();
-      }
-    }
-    return impl.write(source);
   }
 }

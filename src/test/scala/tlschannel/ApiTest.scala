@@ -41,16 +41,13 @@ class ApiTest extends AnyFunSuite with Assertions {
   test("reading into a read-only buffer") {
     val socket = newSocket()
     intercept[IllegalArgumentException] {
-      socket.read(new ImmutableByteBufferSet(ByteBuffer.allocate(1).asReadOnlyBuffer()))
+      socket.read(ByteBuffer.allocate(1).asReadOnlyBuffer())
     }
   }
 
   test("reading into a buffer without remaining capacity") {
     val socket = newSocket()
-    assert(
-      socket.read(new ImmutableByteBufferSet(ByteBuffer.allocate(0))) == 0,
-      "read must return zero when the buffer was empty"
-    )
+    assert(socket.read(ByteBuffer.allocate(0)) == 0, "read must return zero when the buffer was empty")
   }
 
 }

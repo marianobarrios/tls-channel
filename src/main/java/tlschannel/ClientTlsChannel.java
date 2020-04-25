@@ -10,7 +10,6 @@ import java.util.function.Supplier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSession;
-import tlschannel.impl.ByteBufferSet;
 import tlschannel.impl.TlsChannelImpl;
 
 /** A client-side {@link TlsChannel}. */
@@ -148,7 +147,7 @@ public class ClientTlsChannel implements TlsChannel {
 
   @Override
   public long read(ByteBuffer[] dstBuffers) throws IOException {
-    return impl.read(dstBuffers);
+    return read(dstBuffers, 0, dstBuffers.length);
   }
 
   @Override
@@ -204,9 +203,5 @@ public class ClientTlsChannel implements TlsChannel {
   @Override
   public boolean shutdownSent() {
     return impl.shutdownSent();
-  }
-
-  private long write(final ByteBufferSet source) throws IOException {
-    return impl.write(source);
   }
 }
