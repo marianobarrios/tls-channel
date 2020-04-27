@@ -199,10 +199,6 @@ public class TlsChannelImpl implements ByteChannel {
     return readAndUnlock(mutableBufferSetRead.wrap(dstBuffers, offset, length));
   }
 
-  public long read(ByteBuffer[] dstBuffers) throws IOException {
-    return read(dstBuffers, 0, dstBuffers.length);
-  }
-
   @Override
   public int read(ByteBuffer dstBuffer) throws IOException {
     if (dstBuffer.isReadOnly()) {
@@ -213,17 +209,6 @@ public class TlsChannelImpl implements ByteChannel {
     }
     handshakeAndReadLock();
     return (int) readAndUnlock(mutableSingleBufferSetRead.wrap(dstBuffer));
-  }
-
-  public long read(ByteBufferSet dest) throws IOException, NeedsTaskException {
-    checkReadBuffer(dest);
-    if (!dest.hasRemaining()) return 0;
-    return doRead(dest);
-  }
-
-  private long doRead(final ByteBufferSet dest) throws IOException {
-    handshakeAndReadLock();
-    return readAndUnlock(dest);
   }
 
   private long readAndUnlock(final ByteBufferSet dest) throws IOException {
@@ -787,8 +772,18 @@ public class TlsChannelImpl implements ByteChannel {
     return !invalid && writeChannel.isOpen() && readChannel.isOpen();
   }
 
-  public static void checkReadBuffer(ByteBufferSet dest) {
-    if (dest.isReadOnly()) throw new IllegalArgumentException();
+  public static void checkReadBuffer(ByteBuffer dest) {
+    if (dest.isReadOnly()) {
+      throw new IllegalArgumentException();
+    }
+  }
+
+  public static void checkReadBuffers(ByteBuffer[] dest, int offset, int length) {
+    for (int i = offset; i < length; i++) {
+      if (dest[i].isReadOnly()) {
+        throw new IllegalArgumentException();
+      }
+    }
   }
 
   public SSLEngine engine() {
