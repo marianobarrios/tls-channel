@@ -8,7 +8,7 @@ plugins {
 
 compileJava {
     if (JavaVersion.current().ordinal() > JavaVersion.VERSION_1_8.ordinal()) {
-        options.compilerArgs.addAll(['--release', '8'])
+        options.compilerArgs.addAll(['--release', '8', '-Xlint'])
     }
 }
 

@@ -13,6 +13,7 @@ import java.nio.channels.ByteChannel;
  * throw it while still implementing the {@link ByteChannel} interface.
  */
 public abstract class TlsChannelFlowControlException extends IOException {
+  private static final long serialVersionUID = -2394919487958591959L;
 
   public TlsChannelFlowControlException() {
     super();
