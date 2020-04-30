@@ -22,4 +22,6 @@ import java.nio.channels.SocketChannel;
  * @see <a href="https://www.openssl.org/docs/man1.1.0/ssl/SSL_get_error.html">OpenSSL error
  *     documentation</a>
  */
-public class NeedsWriteException extends WouldBlockException {}
+public class NeedsWriteException extends WouldBlockException {
+  private static final long serialVersionUID = -3737940476382846413L;
+}

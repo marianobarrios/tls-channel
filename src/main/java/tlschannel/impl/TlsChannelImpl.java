@@ -33,6 +33,7 @@ public class TlsChannelImpl implements ByteChannel {
 
   /** Used to signal EOF conditions from the underlying channel */
   public static class EofException extends Exception {
+    private static final long serialVersionUID = -3859156713994602991L;
 
     /** For efficiency, override this method to do nothing. */
     @Override
