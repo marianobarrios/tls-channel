@@ -45,16 +45,6 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private static class WrapResult {
-    public final int bytesConsumed;
-    public final HandshakeStatus lastHandshakeStatus;
-
-    public WrapResult(int bytesConsumed, HandshakeStatus lastHandshakeStatus) {
-      this.bytesConsumed = bytesConsumed;
-      this.lastHandshakeStatus = lastHandshakeStatus;
-    }
-  }
-
   /** Used to signal EOF conditions from the underlying channel */
   public static class EofException extends Exception {
 
@@ -357,27 +347,28 @@ public class TlsChannelImpl implements ByteChannel {
 
   private long wrapAndWrite(ByteBufferSet source) throws IOException {
     long bytesToConsume = source.remaining();
-    long bytesConsumed = 0;
     outEncrypted.prepare();
     try {
       while (true) {
         writeToChannel();
-        if (bytesConsumed == bytesToConsume) return bytesToConsume;
-        WrapResult res = wrapLoop(source);
-        bytesConsumed += res.bytesConsumed;
+        if (source.remaining() == 0) {
+          return bytesToConsume;
+        }
+        wrapLoop(source);
       }
     } finally {
       outEncrypted.release();
     }
   }
 
-  private WrapResult wrapLoop(ByteBufferSet source) throws SSLException {
+  /** Returns last {@link HandshakeStatus} of the loop */
+  private HandshakeStatus wrapLoop(ByteBufferSet source) throws SSLException {
     while (true) {
       SSLEngineResult result = callEngineWrap(source);
       switch (result.getStatus()) {
         case OK:
         case CLOSED:
-          return new WrapResult(result.bytesConsumed(), result.getHandshakeStatus());
+          return result.getHandshakeStatus();
         case BUFFER_OVERFLOW:
           Util.assertTrue(result.bytesConsumed() == 0);
           outEncrypted.enlarge();
@@ -542,8 +533,7 @@ public class TlsChannelImpl implements ByteChannel {
       switch (status) {
         case NEED_WRAP:
           Util.assertTrue(outEncrypted.nullOrEmpty());
-          WrapResult wrapResult = wrapLoop(dummyOut);
-          status = wrapResult.lastHandshakeStatus;
+          status = wrapLoop(dummyOut);
           writeToChannel(); // IO block
           break;
         case NEED_UNWRAP:
