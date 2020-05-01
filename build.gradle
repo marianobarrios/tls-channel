@@ -4,6 +4,7 @@ plugins {
     id 'signing'
     id 'maven-publish'
     id "com.diffplug.gradle.spotless" version "3.27.0"
+    id "com.github.spotbugs" version "4.0.8"
 }
 
 compileJava {
@@ -37,6 +38,31 @@ spotless {
     }
     scala {
         scalafmt().configFile('.scalafmt.conf')
+    }
+}
+
+spotbugs {
+    ignoreFailures = false
+    showProgress = true
+    reportsDir = file("$buildDir/spotbugs")
+}
+
+spotbugsMain {
+    reports {
+        html {
+            enabled = true
+            destination = file("$buildDir/reports/spotbugs/spotbugs.html")
+        }
+    }
+}
+
+spotbugsTest {
+    excludeFilter = file('spotbugs-exclude-tests.xml')
+    reports {
+        html {
+            enabled = true
+            destination = file("$buildDir/reports/spotbugs/spotbugsTest.html")
+        }
     }
 }
 
