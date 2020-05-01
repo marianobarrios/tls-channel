@@ -66,6 +66,17 @@ java {
     withJavadocJar()
 }
 
+// see tlschannel.AllocationTest for comment about this
+task allocationTest(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    main = "tlschannel.AllocationTest"
+    jvmArgs = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseEpsilonGC']
+}
+
+if (JavaVersion.current().ordinal() > JavaVersion.VERSION_1_8.ordinal()) {
+    check.dependsOn allocationTest
+}
+
 publishing {
     publications {
         tlschannel(MavenPublication) {
@@ -112,3 +123,4 @@ publishing {
 signing {
     sign publishing.publications.tlschannel
 }
+

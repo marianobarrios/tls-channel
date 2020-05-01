@@ -79,6 +79,7 @@ class SocketPairFactory(
   val sslServerSocketFactory = sslContext.getServerSocketFactory
 
   val globalPlainTrackingAllocator = new TrackingAllocator(TlsChannel.defaultPlainBufferAllocator)
+  val directPlainAllocator = new DirectBufferAllocator
   val globalEncryptedTrackingAllocator = new TrackingAllocator(TlsChannel.defaultEncryptedBufferAllocator)
 
   private def createClientSslEngine(cipher: Option[String], peerPort: Integer): SSLEngine = {
@@ -160,7 +161,8 @@ class SocketPairFactory(
       internalServerChunkSize: Option[Int] = None,
       runTasks: Boolean = true,
       waitForCloseConfirmation: Boolean = false,
-      pseudoAsyncGroup: Option[AsynchronousTlsChannelGroup] = None
+      pseudoAsyncGroup: Option[AsynchronousTlsChannelGroup] = None,
+      useDirectBuffersOnly: Boolean = false
   ): SocketPair = {
     nioNioN(
       cipher,
@@ -171,7 +173,8 @@ class SocketPairFactory(
       internalServerChunkSize,
       runTasks,
       waitForCloseConfirmation,
-      pseudoAsyncGroup
+      pseudoAsyncGroup,
+      useDirectBuffersOnly
     ).head
   }
 
@@ -184,7 +187,8 @@ class SocketPairFactory(
       internalServerChunkSize: Option[Int] = None,
       runTasks: Boolean = true,
       waitForCloseConfirmation: Boolean = false,
-      pseudoAsyncGroup: Option[AsynchronousTlsChannelGroup] = None
+      pseudoAsyncGroup: Option[AsynchronousTlsChannelGroup] = None,
+      useDirectBuffersOnly: Boolean = false
   ): Seq[SocketPair] = {
     val serverSocket = ServerSocketChannel.open()
     try {
@@ -211,11 +215,13 @@ class SocketPairFactory(
           createClientSslEngine(cipher, chosenPort)
         }
 
+        val plainAllocator = if (useDirectBuffersOnly) directPlainAllocator else globalPlainTrackingAllocator
+
         val clientChannel = ClientTlsChannel
           .newBuilder(plainClient, clientEngine)
           .withRunTasks(runTasks)
           .withWaitForCloseConfirmation(waitForCloseConfirmation)
-          .withPlainBufferAllocator(globalPlainTrackingAllocator)
+          .withPlainBufferAllocator(plainAllocator)
           .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
           .withReleaseBuffers(releaseBuffers)
           .build()
@@ -232,7 +238,7 @@ class SocketPairFactory(
         val serverChannel = serverChannelBuilder
           .withRunTasks(runTasks)
           .withWaitForCloseConfirmation(waitForCloseConfirmation)
-          .withPlainBufferAllocator(globalPlainTrackingAllocator)
+          .withPlainBufferAllocator(plainAllocator)
           .withEncryptedBufferAllocator(globalEncryptedTrackingAllocator)
           .withReleaseBuffers(releaseBuffers)
           .build()
@@ -261,7 +267,7 @@ class SocketPairFactory(
           case Some(size) => new ChunkingByteChannel(clientAsyncChannel, chunkSize = size)
           case None       => clientChannel
         }
-        val externalServer = externalClientChunkSize match {
+        val externalServer = externalServerChunkSize match {
           case Some(size) => new ChunkingByteChannel(serverAsyncChannel, chunkSize = size)
           case None       => serverChannel
         }
