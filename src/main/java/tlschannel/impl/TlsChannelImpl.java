@@ -1,7 +1,5 @@
 package tlschannel.impl;
 
-import static javax.net.ssl.SSLEngineResult.HandshakeStatus.*;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
@@ -139,6 +137,10 @@ public class TlsChannelImpl implements ByteChannel {
   // contains data encrypted to send to the underlying channel
   private BufferHolder outEncrypted;
 
+  // reference to the current read buffer supplied by the client
+  // this field is only valid during a read operation
+  private ByteBufferSet suppliedInPlain;
+
   /**
    * Handshake wrap() method calls need a buffer to read from, even when they actually do not read
    * anything.
@@ -172,6 +174,8 @@ public class TlsChannelImpl implements ByteChannel {
       if (invalid || shutdownSent) {
         throw new ClosedChannelException();
       }
+      suppliedInPlain = dest;
+
       int bytesToReturn = inPlain.nullOrEmpty() ? 0 : inPlain.buffer.position();
       while (true) {
         if (bytesToReturn > 0) {
@@ -188,11 +192,11 @@ public class TlsChannelImpl implements ByteChannel {
         switch (engine.getHandshakeStatus()) {
           case NEED_UNWRAP:
           case NEED_WRAP:
-            bytesToReturn = handshake(Optional.of(dest));
+            bytesToReturn = writeAndHandshake();
             break;
           case NOT_HANDSHAKING:
           case FINISHED:
-            UnwrapResult res = readAndUnwrap(Optional.of(dest));
+            UnwrapResult res = readAndUnwrap();
             if (res.wasClosed) {
               return -1;
             }
@@ -206,6 +210,7 @@ public class TlsChannelImpl implements ByteChannel {
     } catch (EofException e) {
       return -1;
     } finally {
+      suppliedInPlain = null;
       readLock.unlock();
     }
   }
@@ -229,14 +234,16 @@ public class TlsChannelImpl implements ByteChannel {
     return bytes;
   }
 
-  private UnwrapResult unwrapLoop(Optional<ByteBufferSet> dest, HandshakeStatus originalStatus)
-      throws SSLException {
-    ByteBufferSet effDest =
-        dest.orElseGet(
-            () -> {
-              inPlain.prepare();
-              return new ByteBufferSet(inPlain.buffer);
-            });
+  private UnwrapResult unwrapLoop(HandshakeStatus originalStatus) throws SSLException {
+
+    ByteBufferSet effDest;
+    if (suppliedInPlain != null) {
+      effDest = suppliedInPlain;
+    } else {
+      inPlain.prepare();
+      effDest = new ByteBufferSet(inPlain.buffer);
+    }
+
     while (true) {
       Util.assertTrue(inPlain.nullOrEmpty());
       SSLEngineResult result = callEngineUnwrap(effDest);
@@ -252,14 +259,15 @@ public class TlsChannelImpl implements ByteChannel {
         return new UnwrapResult(result.bytesProduced(), wasClosed);
       }
       if (result.getStatus() == Status.BUFFER_OVERFLOW) {
-        if (dest.isPresent() && effDest == dest.get()) {
+        if (suppliedInPlain != null && effDest == suppliedInPlain) {
           /*
            * The client-supplier buffer is not big enough. Use the
            * internal inPlain buffer, also ensure that it is bigger
            * than the too-small supplied one.
            */
           inPlain.prepare();
-          ensureInPlainCapacity(Math.min(((int) dest.get().remaining()) * 2, maxTlsPacketSize));
+          ensureInPlainCapacity(
+              Math.min(((int) suppliedInPlain.remaining()) * 2, maxTlsPacketSize));
         } else {
           inPlain.enlarge();
         }
@@ -482,7 +490,7 @@ public class TlsChannelImpl implements ByteChannel {
       if (force || !negotiated) {
         engine.beginHandshake();
         logger.trace("Called engine.beginHandshake()");
-        handshake(Optional.empty());
+        writeAndHandshake();
         // call client code
         try {
           initSessionCallback.accept(engine.getSession());
@@ -497,7 +505,7 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private int handshake(Optional<ByteBufferSet> dest) throws IOException, EofException {
+  private int writeAndHandshake() throws IOException, EofException {
     readLock.lock();
     try {
       writeLock.lock();
@@ -506,7 +514,7 @@ public class TlsChannelImpl implements ByteChannel {
         outEncrypted.prepare();
         try {
           writeToChannel(); // IO block
-          return handshakeLoop(dest);
+          return handshakeLoop();
         } finally {
           outEncrypted.release();
         }
@@ -518,7 +526,7 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private int handshakeLoop(Optional<ByteBufferSet> dest) throws IOException, EofException {
+  private int handshakeLoop() throws IOException, EofException {
     Util.assertTrue(inPlain.nullOrEmpty());
     while (true) {
       switch (engine.getHandshakeStatus()) {
@@ -528,7 +536,7 @@ public class TlsChannelImpl implements ByteChannel {
           writeToChannel(); // IO block
           break;
         case NEED_UNWRAP:
-          UnwrapResult res = readAndUnwrap(dest);
+          UnwrapResult res = readAndUnwrap();
           if (res.bytesProduced > 0) {
             return res.bytesProduced;
           }
@@ -550,15 +558,14 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private UnwrapResult readAndUnwrap(Optional<ByteBufferSet> dest)
-      throws IOException, EofException {
+  private UnwrapResult readAndUnwrap() throws IOException, EofException {
     // Save status before operation: use it to stop when status changes
     HandshakeStatus orig = engine.getHandshakeStatus();
     inEncrypted.prepare();
     try {
       while (true) {
         Util.assertTrue(inPlain.nullOrEmpty());
-        UnwrapResult res = unwrapLoop(dest, orig);
+        UnwrapResult res = unwrapLoop(orig);
         if (res.bytesProduced > 0 || engine.getHandshakeStatus() != orig || res.wasClosed) {
           if (res.wasClosed) {
             shutdownReceived = true;
@@ -657,7 +664,7 @@ public class TlsChannelImpl implements ByteChannel {
         if (!shutdownReceived) {
           try {
             // IO block
-            readAndUnwrap(Optional.empty());
+            readAndUnwrap();
             Util.assertTrue(shutdownReceived);
           } catch (EofException e) {
             throw new ClosedChannelException();
