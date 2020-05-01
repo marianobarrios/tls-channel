@@ -35,12 +35,10 @@ public class TlsChannelImpl implements ByteChannel {
 
   private static class UnwrapResult {
     public final int bytesProduced;
-    public final HandshakeStatus lastHandshakeStatus;
     public final boolean wasClosed;
 
-    public UnwrapResult(int bytesProduced, HandshakeStatus lastHandshakeStatus, boolean wasClosed) {
+    public UnwrapResult(int bytesProduced, boolean wasClosed) {
       this.bytesProduced = bytesProduced;
-      this.lastHandshakeStatus = lastHandshakeStatus;
       this.wasClosed = wasClosed;
     }
   }
@@ -174,7 +172,6 @@ public class TlsChannelImpl implements ByteChannel {
       if (invalid || shutdownSent) {
         throw new ClosedChannelException();
       }
-      HandshakeStatus handshakeStatus = engine.getHandshakeStatus();
       int bytesToReturn = inPlain.nullOrEmpty() ? 0 : inPlain.buffer.position();
       while (true) {
         if (bytesToReturn > 0) {
@@ -188,11 +185,10 @@ public class TlsChannelImpl implements ByteChannel {
           return -1;
         }
         Util.assertTrue(inPlain.nullOrEmpty());
-        switch (handshakeStatus) {
+        switch (engine.getHandshakeStatus()) {
           case NEED_UNWRAP:
           case NEED_WRAP:
-            bytesToReturn = handshake(Optional.of(dest), Optional.of(handshakeStatus));
-            handshakeStatus = NOT_HANDSHAKING;
+            bytesToReturn = handshake(Optional.of(dest));
             break;
           case NOT_HANDSHAKING:
           case FINISHED:
@@ -201,11 +197,9 @@ public class TlsChannelImpl implements ByteChannel {
               return -1;
             }
             bytesToReturn = res.bytesProduced;
-            handshakeStatus = res.lastHandshakeStatus;
             break;
           case NEED_TASK:
             handleTask();
-            handshakeStatus = engine.getHandshakeStatus();
             break;
         }
       }
@@ -255,7 +249,7 @@ public class TlsChannelImpl implements ByteChannel {
           || result.getStatus() == Status.CLOSED
           || result.getHandshakeStatus() != originalStatus) {
         boolean wasClosed = result.getStatus() == Status.CLOSED;
-        return new UnwrapResult(result.bytesProduced(), result.getHandshakeStatus(), wasClosed);
+        return new UnwrapResult(result.bytesProduced(), wasClosed);
       }
       if (result.getStatus() == Status.BUFFER_OVERFLOW) {
         if (dest.isPresent() && effDest == dest.get()) {
@@ -362,13 +356,13 @@ public class TlsChannelImpl implements ByteChannel {
   }
 
   /** Returns last {@link HandshakeStatus} of the loop */
-  private HandshakeStatus wrapLoop(ByteBufferSet source) throws SSLException {
+  private void wrapLoop(ByteBufferSet source) throws SSLException {
     while (true) {
       SSLEngineResult result = callEngineWrap(source);
       switch (result.getStatus()) {
         case OK:
         case CLOSED:
-          return result.getHandshakeStatus();
+          return;
         case BUFFER_OVERFLOW:
           Util.assertTrue(result.bytesConsumed() == 0);
           outEncrypted.enlarge();
@@ -488,7 +482,7 @@ public class TlsChannelImpl implements ByteChannel {
       if (force || !negotiated) {
         engine.beginHandshake();
         logger.trace("Called engine.beginHandshake()");
-        handshake(Optional.empty(), Optional.empty());
+        handshake(Optional.empty());
         // call client code
         try {
           initSessionCallback.accept(engine.getSession());
@@ -503,8 +497,7 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private int handshake(Optional<ByteBufferSet> dest, Optional<HandshakeStatus> handshakeStatus)
-      throws IOException, EofException {
+  private int handshake(Optional<ByteBufferSet> dest) throws IOException, EofException {
     readLock.lock();
     try {
       writeLock.lock();
@@ -513,7 +506,7 @@ public class TlsChannelImpl implements ByteChannel {
         outEncrypted.prepare();
         try {
           writeToChannel(); // IO block
-          return handshakeLoop(dest, handshakeStatus);
+          return handshakeLoop(dest);
         } finally {
           outEncrypted.release();
         }
@@ -525,21 +518,20 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private int handshakeLoop(Optional<ByteBufferSet> dest, Optional<HandshakeStatus> handshakeStatus)
-      throws IOException, EofException {
+  private int handshakeLoop(Optional<ByteBufferSet> dest) throws IOException, EofException {
     Util.assertTrue(inPlain.nullOrEmpty());
-    HandshakeStatus status = handshakeStatus.orElseGet(() -> engine.getHandshakeStatus());
     while (true) {
-      switch (status) {
+      switch (engine.getHandshakeStatus()) {
         case NEED_WRAP:
           Util.assertTrue(outEncrypted.nullOrEmpty());
-          status = wrapLoop(dummyOut);
+          wrapLoop(dummyOut);
           writeToChannel(); // IO block
           break;
         case NEED_UNWRAP:
           UnwrapResult res = readAndUnwrap(dest);
-          status = res.lastHandshakeStatus;
-          if (res.bytesProduced > 0) return res.bytesProduced;
+          if (res.bytesProduced > 0) {
+            return res.bytesProduced;
+          }
           break;
         case NOT_HANDSHAKING:
           /*
@@ -551,7 +543,6 @@ public class TlsChannelImpl implements ByteChannel {
           return 0;
         case NEED_TASK:
           handleTask();
-          status = engine.getHandshakeStatus();
           break;
         case FINISHED:
           return 0;
@@ -568,7 +559,7 @@ public class TlsChannelImpl implements ByteChannel {
       while (true) {
         Util.assertTrue(inPlain.nullOrEmpty());
         UnwrapResult res = unwrapLoop(dest, orig);
-        if (res.bytesProduced > 0 || res.lastHandshakeStatus != orig || res.wasClosed) {
+        if (res.bytesProduced > 0 || engine.getHandshakeStatus() != orig || res.wasClosed) {
           if (res.wasClosed) {
             shutdownReceived = true;
           }
