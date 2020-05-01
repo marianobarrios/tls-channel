@@ -201,6 +201,9 @@ public class TlsChannelImpl implements ByteChannel {
           case NEED_TASK:
             handleTask();
             break;
+          default:
+            // Unsupported stage eg: NEED_UNWRAP_AGAIN
+            return -1;
         }
       }
     } catch (EofException e) {
@@ -485,8 +488,8 @@ public class TlsChannelImpl implements ByteChannel {
   private void doHandshake(boolean force) throws IOException, EofException {
     if (!force && negotiated) return;
     initLock.lock();
-    if (invalid || shutdownSent) throw new ClosedChannelException();
     try {
+      if (invalid || shutdownSent) throw new ClosedChannelException();
       if (force || !negotiated) {
         engine.beginHandshake();
         logger.trace("Called engine.beginHandshake()");
@@ -553,6 +556,9 @@ public class TlsChannelImpl implements ByteChannel {
           handleTask();
           break;
         case FINISHED:
+          return 0;
+        default:
+          // Unsupported stage eg: NEED_UNWRAP_AGAIN
           return 0;
       }
     }
