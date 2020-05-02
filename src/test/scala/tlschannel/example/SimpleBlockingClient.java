@@ -37,7 +37,7 @@ public class SimpleBlockingClient {
       try (TlsChannel tlsChannel = builder.build()) {
 
         // do HTTP interaction and print result
-        tlsChannel.write(ByteBuffer.wrap(httpLine.getBytes()));
+        tlsChannel.write(ByteBuffer.wrap(httpLine.getBytes(StandardCharsets.US_ASCII)));
         ByteBuffer res = ByteBuffer.allocate(10000);
         // being HTTP 1.0, the server will just close the connection at the end
         while (tlsChannel.read(res) != -1) ;
