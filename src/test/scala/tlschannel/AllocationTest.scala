@@ -18,15 +18,22 @@ object AllocationTest extends StrictLogging {
     * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
     */
   def main(args: Array[String]): Unit = {
-    val socketPair1 = factory.nioNio(useDirectBuffersOnly = true)
-    Loops.halfDuplex(socketPair1, dataSize)
-
-    val socketPair2 = factory.nioNio(useDirectBuffersOnly = true)
-    Loops.halfDuplex(socketPair2, dataSize, scattering = true)
 
     val memoryBean = ManagementFactory.getMemoryMXBean
-    val heap = memoryBean.getHeapMemoryUsage.getUsed
-    println(f"memory allocation test finished - used heap: ${heap.toDouble / 1024}%.0f KB")
+
+    val socketPair1 = factory.nioNio()
+    val socketPair2 = factory.nioNio()
+    val socketPair3 = factory.nioNio()
+
+    // do a "warm-up" loop, in order to not count anything statically allocated
+    Loops.halfDuplex(socketPair1, 10000)
+
+    val before = memoryBean.getHeapMemoryUsage().getUsed
+    Loops.halfDuplex(socketPair2, dataSize)
+    Loops.halfDuplex(socketPair3, dataSize, scattering = true)
+    val after = memoryBean.getHeapMemoryUsage().getUsed
+
+    println(f"memory allocation test finished - used heap: ${(after - before).toDouble / 1024}%.0f KB")
   }
 
 }
