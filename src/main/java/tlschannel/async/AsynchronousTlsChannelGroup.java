@@ -159,22 +159,22 @@ public class AsynchronousTlsChannelGroup {
 
   private volatile Shutdown shutdown = Shutdown.No;
 
-  private LongAdder selectionCount = new LongAdder();
+  private final LongAdder selectionCount = new LongAdder();
 
-  private LongAdder startedReads = new LongAdder();
-  private LongAdder startedWrites = new LongAdder();
-  private LongAdder successfulReads = new LongAdder();
-  private LongAdder successfulWrites = new LongAdder();
-  private LongAdder failedReads = new LongAdder();
-  private LongAdder failedWrites = new LongAdder();
-  private LongAdder cancelledReads = new LongAdder();
-  private LongAdder cancelledWrites = new LongAdder();
+  private final LongAdder startedReads = new LongAdder();
+  private final LongAdder startedWrites = new LongAdder();
+  private final LongAdder successfulReads = new LongAdder();
+  private final LongAdder successfulWrites = new LongAdder();
+  private final LongAdder failedReads = new LongAdder();
+  private final LongAdder failedWrites = new LongAdder();
+  private final LongAdder cancelledReads = new LongAdder();
+  private final LongAdder cancelledWrites = new LongAdder();
 
   // used for synchronization
-  private AtomicInteger currentRegistrations = new AtomicInteger();
+  private final AtomicInteger currentRegistrations = new AtomicInteger();
 
-  private LongAdder currentReads = new LongAdder();
-  private LongAdder currentWrites = new LongAdder();
+  private final LongAdder currentReads = new LongAdder();
+  private final LongAdder currentWrites = new LongAdder();
 
   /**
    * Creates an instance of this class.
