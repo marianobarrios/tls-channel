@@ -86,7 +86,7 @@ public class AsynchronousTlsChannelGroup {
     public void close() {
       doCancelRead(this, null);
       doCancelWrite(this, null);
-      key.cancel();
+      if (key != null) key.cancel();
       currentRegistrations.getAndDecrement();
       /*
        * Actual de-registration from the selector will happen asynchronously.
