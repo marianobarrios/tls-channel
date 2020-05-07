@@ -21,7 +21,7 @@ public class Util {
    */
   public static String resultToString(SSLEngineResult result) {
     return String.format(
-        "status=%s,handshakeStatus=%s,bytesConsumed=%d,bytesConsumed=%d",
+        "status=%s,handshakeStatus=%s,bytesProduced=%d,bytesConsumed=%d",
         result.getStatus(),
         result.getHandshakeStatus(),
         result.bytesProduced(),
