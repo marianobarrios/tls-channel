@@ -11,6 +11,7 @@ import java.nio.channels.ShutdownChannelGroupException;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritePendingException;
 import java.util.Iterator;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -224,6 +225,9 @@ public class AsynchronousTlsChannelGroup {
     try {
       // a null op means cancel any operation
       if (op != null && socket.readOperation == op || op == null && socket.readOperation != null) {
+        if (op == null) {
+          socket.readOperation.onFailure.accept(new CancellationException());
+        }
         socket.readOperation = null;
         cancelledReads.increment();
         currentReads.decrement();
@@ -242,6 +246,9 @@ public class AsynchronousTlsChannelGroup {
       // a null op means cancel any operation
       if (op != null && socket.writeOperation == op
           || op == null && socket.writeOperation != null) {
+        if (op == null) {
+          socket.writeOperation.onFailure.accept(new CancellationException());
+        }
         socket.writeOperation = null;
         cancelledWrites.increment();
         currentWrites.decrement();

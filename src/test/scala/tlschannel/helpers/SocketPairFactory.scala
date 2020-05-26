@@ -275,6 +275,15 @@ class SocketPairFactory(
     }
   }
 
+  def async(
+      cipher: Option[String] = None,
+      channelGroup: AsynchronousTlsChannelGroup,
+      runTasks: Boolean,
+      waitForCloseConfirmation: Boolean = false
+  ): AsyncSocketPair = {
+    asyncN(cipher, channelGroup, 1, runTasks, waitForCloseConfirmation).head
+  }
+
   def asyncN(
       cipher: Option[String] = None,
       channelGroup: AsynchronousTlsChannelGroup,
