@@ -494,6 +494,11 @@ public class TlsChannelImpl implements ByteChannel {
         engine.beginHandshake();
         logger.trace("Called engine.beginHandshake()");
         writeAndHandshake();
+
+        if (engine.getSession().getProtocol().startsWith("DTLS")) {
+          throw new IllegalArgumentException("DTLS not supported");
+        }
+
         // call client code
         try {
           initSessionCallback.accept(engine.getSession());

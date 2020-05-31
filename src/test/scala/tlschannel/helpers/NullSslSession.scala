@@ -17,7 +17,7 @@ class NullSslSession(bufferSize: Int) extends SSLSession {
   def getPeerHost() = null
   def getPeerPort() = 0
   def getPeerPrincipal() = null
-  def getProtocol() = null
+  def getProtocol() = ""
   def getSessionContext() = null
   def getValue(s: String) = null
   def getValueNames() = Array()
