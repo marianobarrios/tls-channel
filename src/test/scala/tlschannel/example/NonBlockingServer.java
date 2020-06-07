@@ -73,9 +73,9 @@ public class NonBlockingServer {
             // wrap raw channel in TlsChannel
             TlsChannel tlsChannel = ServerTlsChannel.newBuilder(rawChannel, sslContext).build();
 
-            // Note that the raw channel is registered in the selector (and now the wrapped ont), the TlsChannel is put
-            // as an attachment. Additionally, the channel is registered for reading, because TLS connections are
-            // initiated by clients.
+            // Note that the raw channel is registered in the selector (and now the wrapped ont),
+            // the TlsChannel is put as an attachment. Additionally, the channel is registered for
+            // reading, because TLS connections are initiated by clients.
             SelectionKey newKey = rawChannel.register(selector, SelectionKey.OP_READ);
             newKey.attach(tlsChannel);
 

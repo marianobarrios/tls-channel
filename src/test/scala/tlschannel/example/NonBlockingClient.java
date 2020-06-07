@@ -1,11 +1,5 @@
 package tlschannel.example;
 
-import tlschannel.ClientTlsChannel;
-import tlschannel.NeedsReadException;
-import tlschannel.NeedsWriteException;
-import tlschannel.TlsChannel;
-
-import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -16,18 +10,23 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Iterator;
+import javax.net.ssl.SSLContext;
+import tlschannel.ClientTlsChannel;
+import tlschannel.NeedsReadException;
+import tlschannel.NeedsWriteException;
+import tlschannel.TlsChannel;
 
-/**
- * Client non-blocking example. Connects to a public TLS reporting service.
- */
+/** Client non-blocking example. Connects to a public TLS reporting service. */
 public class NonBlockingClient {
 
   private static final Charset utf8 = StandardCharsets.UTF_8;
 
   public static void main(String[] args) throws IOException, GeneralSecurityException {
 
-    ByteBuffer requestBuffer = ByteBuffer.wrap(SimpleBlockingClient.httpLine.getBytes(StandardCharsets.US_ASCII));
-    ByteBuffer responseBuffer = ByteBuffer.allocate(1000); // use small buffer to cause selector loops
+    ByteBuffer requestBuffer =
+        ByteBuffer.wrap(SimpleBlockingClient.httpLine.getBytes(StandardCharsets.US_ASCII));
+    ByteBuffer responseBuffer =
+        ByteBuffer.allocate(1000); // use small buffer to cause selector loops
     boolean requestSent = false;
 
     // initialize the SSLContext, a configuration holder, reusable object
@@ -65,7 +64,8 @@ public class NonBlockingClient {
             if (key.isConnectable()) {
 
               if (rawChannel.finishConnect()) {
-                // the channel is registered for writing, because TLS connections are initiated by clients.
+                // the channel is registered for writing, because TLS connections are initiated by
+                // clients.
                 rawChannel.register(selector, SelectionKey.OP_WRITE);
               }
 
@@ -101,12 +101,9 @@ public class NonBlockingClient {
             } else {
               throw new IllegalStateException();
             }
-
           }
         }
-
       }
     }
-
   }
 }
