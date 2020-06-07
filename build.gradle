@@ -99,7 +99,7 @@ task allocationTest(type: JavaExec) {
     jvmArgs = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseEpsilonGC']
 }
 
-if (JavaVersion.current().ordinal() > JavaVersion.VERSION_1_8.ordinal()) {
+if (JavaVersion.current().ordinal() >= JavaVersion.VERSION_11.ordinal()) {
     check.dependsOn allocationTest
 }
 
