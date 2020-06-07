@@ -146,7 +146,10 @@ try {
 }
 ```
 
-Complete example: [non-blocking server](src/test/scala/tlschannel/example/NonBlockingServer.java)
+Complete examples: 
+
+- [Non-blocking client](src/test/scala/tlschannel/example/NonBlockingClient.java)
+- [Non-blocking server](src/test/scala/tlschannel/example/NonBlockingServer.java)
 
 ### Off-loop tasks
 

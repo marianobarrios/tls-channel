@@ -40,7 +40,7 @@ public class NonBlockingServer {
   public static void main(String[] args) throws IOException, GeneralSecurityException {
 
     // initialize the SSLContext, a configuration holder, reusable object
-    SSLContext sslContext = SimpleBlockingServer.authenticatedContext("TLSv1.2");
+    SSLContext sslContext = ContextFactory.authenticatedContext("TLSv1.2");
 
     // connect server socket channel and register it in the selector
     try (ServerSocketChannel serverSocket = ServerSocketChannel.open()) {
@@ -73,11 +73,9 @@ public class NonBlockingServer {
             // wrap raw channel in TlsChannel
             TlsChannel tlsChannel = ServerTlsChannel.newBuilder(rawChannel, sslContext).build();
 
-            /*
-             * Wrap raw channel with a TlsChannel. Note that the raw channel is registered in the selector
-             * and the TlsChannel put as an attachment register the channel for reading, because TLS
-             * connections are initiated by clients.
-             */
+            // Note that the raw channel is registered in the selector (and now the wrapped ont), the TlsChannel is put
+            // as an attachment. Additionally, the channel is registered for reading, because TLS connections are
+            // initiated by clients.
             SelectionKey newKey = rawChannel.register(selector, SelectionKey.OP_READ);
             newKey.attach(tlsChannel);
 

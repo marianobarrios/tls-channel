@@ -32,7 +32,7 @@ public class AsynchronousChannelServer {
   public static void main(String[] args) throws IOException, GeneralSecurityException {
 
     // initialize the SSLContext, a configuration holder, reusable object
-    SSLContext sslContext = SimpleBlockingServer.authenticatedContext("TLSv1.2");
+    SSLContext sslContext = ContextFactory.authenticatedContext("TLSv1.2");
 
     AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
 

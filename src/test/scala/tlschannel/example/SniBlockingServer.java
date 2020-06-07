@@ -30,7 +30,7 @@ public class SniBlockingServer {
   public static void main(String[] args) throws IOException, GeneralSecurityException {
 
     // initialize the SSLContext, a configuration holder, reusable object
-    SSLContext sslContext = SimpleBlockingServer.authenticatedContext("TLSv1.2");
+    SSLContext sslContext = ContextFactory.authenticatedContext("TLSv1.2");
 
     /*
      * Set the SSLContext factory with a lambda expression. In this case we reject the connection in all cases
