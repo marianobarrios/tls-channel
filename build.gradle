@@ -29,7 +29,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
     testImplementation 'io.netty:netty-buffer:4.1.45.Final'
     testImplementation 'io.netty:netty-handler:4.1.45.Final'
-    testRuntime 'io.netty:netty-tcnative-boringssl-static:2.0.25.Final'
+    testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.25.Final'
 }
 
 spotless {
