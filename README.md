@@ -28,6 +28,7 @@ Being an API layer, TLS Channel *delegates all cryptographic operations to SSLEn
 
 - Except for a few bytes of parsing at the beginning of server-side connections, to implement SNI, **the whole protocol implementation is done by the SSLEngine**. Note that **this parsing is not done at all if SNI support is disabled**.
 - Both the SSLContext and SSLEngine are supplied by the API user; these classes are the ones responsible for protocol configuration, including hostname validation, client-side authentication, encryption, protocol implementation, etc. This means that **no cryptographic operation whatsoever is done in this library**.
+- Application-Layer Protocol Negotiation (ALPN), supported by SSLEngine since Java 9, also works independently of this library, as the negotiation strategy is configured directly using SSLEngine.
 
 ## Rationale
 
