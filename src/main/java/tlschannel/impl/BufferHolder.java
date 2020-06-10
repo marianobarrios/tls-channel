@@ -108,9 +108,7 @@ public class BufferHolder {
    * <p>Typically used for security reasons, with buffers that contains now-unused plaintext.
    */
   public void zeroRemaining() {
-    buffer.mark();
-    buffer.put(zeros, 0, buffer.remaining());
-    buffer.reset();
+    zero(buffer.position());
   }
 
   /**
@@ -119,9 +117,20 @@ public class BufferHolder {
    * <p>Typically used for security reasons, with buffers that contains now-unused plaintext.
    */
   public void zero() {
+    zero(0);
+  }
+
+  private void zero(final int position) {
     buffer.mark();
-    buffer.position(0);
-    buffer.put(zeros, 0, buffer.remaining());
+    buffer.position(position);
+    int size = buffer.remaining();
+    int length = Math.min(size, zeros.length);
+    int offset = 0;
+    while (length > 0) {
+      buffer.put(zeros, 0, length);
+      offset = offset + length;
+      length = Math.min(size - offset, zeros.length);
+    }
     buffer.reset();
   }
 
