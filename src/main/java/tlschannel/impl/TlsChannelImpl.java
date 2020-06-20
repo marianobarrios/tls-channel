@@ -171,17 +171,26 @@ public class TlsChannelImpl implements ByteChannel {
       if (invalid || shutdownSent) {
         throw new ClosedChannelException();
       }
+
+      long originalDestPosition = dest.position();
       suppliedInPlain = dest;
       bytesToReturn = inPlain.nullOrEmpty() ? 0 : inPlain.buffer.position();
 
       while (true) {
+
+        // return bytes are soon as we have them
         if (bytesToReturn > 0) {
           if (inPlain.nullOrEmpty()) {
+            // if there is not in internal buffer, that means that the bytes must be in the supplied
+            // buffer
+            Util.assertTrue(dest.position() == originalDestPosition + bytesToReturn);
             return bytesToReturn;
           } else {
+            Util.assertTrue(inPlain.buffer.position() == bytesToReturn);
             return transferPendingPlain(dest);
           }
         }
+
         if (shutdownReceived) {
           return -1;
         }
@@ -223,6 +232,7 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
+  /** Copies bytes from the internal input plain buffer to the supplied buffer. */
   private int transferPendingPlain(ByteBufferSet dstBuffers) {
     inPlain.buffer.flip(); // will read
     int bytes = dstBuffers.putRemaining(inPlain.buffer);

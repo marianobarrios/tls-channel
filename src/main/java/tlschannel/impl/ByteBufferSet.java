@@ -37,6 +37,14 @@ public class ByteBufferSet {
     return ret;
   }
 
+  public long position() {
+    long ret = 0;
+    for (int i = offset; i < offset + length; i++) {
+      ret += array[i].position();
+    }
+    return ret;
+  }
+
   public int putRemaining(ByteBuffer from) {
     int totalBytes = 0;
     for (int i = offset; i < offset + length; i++) {
