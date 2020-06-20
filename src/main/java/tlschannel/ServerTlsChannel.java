@@ -383,7 +383,7 @@ public class ServerTlsChannel implements TlsChannel {
       Map<Integer, SNIServerName> serverNames = TlsExplorer.explore(inEncrypted.buffer);
       inEncrypted.buffer.compact();
       SNIServerName hostName = serverNames.get(StandardConstants.SNI_HOST_NAME);
-      if (hostName != null && hostName instanceof SNIHostName) {
+      if (hostName instanceof SNIHostName) {
         SNIHostName sniHostName = (SNIHostName) hostName;
         return Optional.of(sniHostName);
       } else {
