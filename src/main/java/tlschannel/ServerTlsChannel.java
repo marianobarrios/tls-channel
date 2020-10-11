@@ -326,8 +326,12 @@ public class ServerTlsChannel implements TlsChannel {
 
   @Override
   public void close() throws IOException {
-    if (impl != null) impl.close();
-    if (inEncrypted != null) inEncrypted.dispose();
+    if (impl != null) {
+      impl.close();
+    }
+    if (inEncrypted != null) {
+      inEncrypted.dispose();
+    }
     underlying.close();
   }
 
@@ -380,7 +384,7 @@ public class ServerTlsChannel implements TlsChannel {
         TlsChannelImpl.readFromChannel(underlying, inEncrypted.buffer); // IO block
       }
       inEncrypted.buffer.flip();
-      Map<Integer, SNIServerName> serverNames = TlsExplorer.explore(inEncrypted.buffer);
+      Map<Integer, SNIServerName> serverNames = TlsExplorer.exploreTlsRecord(inEncrypted.buffer);
       inEncrypted.buffer.compact();
       SNIServerName hostName = serverNames.get(StandardConstants.SNI_HOST_NAME);
       if (hostName instanceof SNIHostName) {
@@ -395,12 +399,14 @@ public class ServerTlsChannel implements TlsChannel {
   }
 
   private int readRecordHeaderSize() throws IOException, EofException {
+    // ensure at least 5 bytes, to be able to read the record size
     while (inEncrypted.buffer.position() < TlsExplorer.RECORD_HEADER_SIZE) {
       if (!inEncrypted.buffer.hasRemaining()) {
         throw new IllegalStateException("inEncrypted too small");
       }
       TlsChannelImpl.readFromChannel(underlying, inEncrypted.buffer); // IO block
     }
+
     inEncrypted.buffer.flip();
     int recordHeaderSize = TlsExplorer.getRequiredSize(inEncrypted.buffer);
     inEncrypted.buffer.compact();

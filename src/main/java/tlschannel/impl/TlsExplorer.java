@@ -27,88 +27,104 @@ public final class TlsExplorer {
    * <p>This method tries to parse as few bytesProduced as possible from {@code source} byte buffer
    * to get the length of an SSL/TLS record.
    *
-   * @param source source buffer
+   * <p>The method does not advance the buffer.
+   *
+   * @param input source buffer
    * @return the required size
    */
-  public static int getRequiredSize(ByteBuffer source) {
-    if (source.remaining() < RECORD_HEADER_SIZE) {
+  public static int getRequiredSize(ByteBuffer input) {
+    if (input.remaining() < RECORD_HEADER_SIZE) {
       throw new BufferUnderflowException();
     }
-    source.mark();
+    input.mark();
     try {
-      byte firstByte = source.get();
-      source.get(); // second byte discarded
-      byte thirdByte = source.get();
-      if ((firstByte & 0x80) != 0 && thirdByte == 0x01) {
-        // looks like a V2ClientHello
-        return RECORD_HEADER_SIZE; // Only need the header fields
-      } else {
-        return getInt16(source) + RECORD_HEADER_SIZE;
-      }
+      ignore(input, 1); // ignore record type
+      ignore(input, 2); // ignore version
+      return getInt16(input) + RECORD_HEADER_SIZE;
     } finally {
-      source.reset();
+      input.reset();
     }
   }
 
-  public static Map<Integer, SNIServerName> explore(ByteBuffer source) throws SSLProtocolException {
-    if (source.remaining() < RECORD_HEADER_SIZE) {
+  /*
+   * struct {
+   *   uint8 major;
+   *   uint8 minor;
+   * } ProtocolVersion;
+   *
+   * enum {
+   *   change_cipher_spec(20),
+   *   alert(21),
+   *   handshake(22),
+   *   application_data(23),
+   *   (255)
+   * } ContentType;
+   *
+   * struct {
+   *   ContentType type;
+   *   ProtocolVersion version;
+   *   uint16 length;
+   *   opaque fragment[TLSPlaintext.length];
+   * } TLSPlaintext;
+   */
+  public static Map<Integer, SNIServerName> exploreTlsRecord(ByteBuffer input)
+      throws SSLProtocolException {
+    if (input.remaining() < RECORD_HEADER_SIZE) {
       throw new BufferUnderflowException();
     }
-    source.mark();
+    input.mark();
     try {
-      byte firstByte = source.get();
-      ignore(source, 1); // ignore second byte
-      byte thirdByte = source.get();
-      if ((firstByte & 0x80) != 0 && thirdByte == 0x01) {
-        // looks like a V2ClientHello
-        return new HashMap<>();
-      } else if (firstByte == 22) {
+      byte firstByte = input.get();
+      if (firstByte != 22) {
         // 22: handshake record
-        return exploreTLSRecord(source, firstByte);
-      } else {
         throw new SSLProtocolException("Not a handshake record");
       }
+
+      ignore(input, 2); // ignore version
+
+      // Is there enough data for a full record?
+      int recordLength = getInt16(input);
+      if (recordLength > input.remaining()) {
+        throw new BufferUnderflowException();
+      }
+
+      return exploreHandshake(input, recordLength);
     } finally {
-      source.reset();
+      input.reset();
     }
   }
 
   /*
-   * struct { uint8 major; uint8 minor; } ProtocolVersion;
+   * enum {
+   *   hello_request(0),
+   *   client_hello(1),
+   *   server_hello(2),
+   *   certificate(11),
+   *   server_key_exchange (12),
+   *   certificate_request(13),
+   *   server_hello_done(14),
+   *   certificate_verify(15),
+   *   client_key_exchange(16),
+   *   finished(20),
+   *   (255)
+   * } HandshakeType;
    *
-   * enum { change_cipher_spec(20), alert(21), handshake(22),
-   * application_data(23), (255) } ContentType;
-   *
-   * struct { ContentType type; ProtocolVersion version; uint16 length; opaque
-   * fragment[TLSPlaintext.length]; } TLSPlaintext;
-   */
-  private static Map<Integer, SNIServerName> exploreTLSRecord(ByteBuffer input, byte firstByte)
-      throws SSLProtocolException {
-    if (firstByte != 22) {
-      // 22: handshake record
-      throw new SSLProtocolException("Not a handshake record");
-    }
-    // Is there enough data for a full record?
-    int recordLength = getInt16(input);
-    if (recordLength > input.remaining()) {
-      throw new BufferUnderflowException();
-    }
-    return exploreHandshake(input, recordLength);
-  }
-
-  /*
-   * enum { hello_request(0), client_hello(1), server_hello(2),
-   * certificate(11), server_key_exchange (12), certificate_request(13),
-   * server_hello_done(14), certificate_verify(15), client_key_exchange(16),
-   * finished(20) (255) } HandshakeType;
-   *
-   * struct { HandshakeType msg_type; uint24 length; select (HandshakeType) {
-   * case hello_request: HelloRequest; case client_hello: ClientHello; case
-   * server_hello: ServerHello; case certificate: Certificate; case
-   * server_key_exchange: ServerKeyExchange; case certificate_request:
-   * CertificateRequest; case server_hello_done: ServerHelloDone; case
-   * certificate_verify: CertificateVerify; case client_key_exchange:
-   * ClientKeyExchange; case finished: Finished; } body; } Handshake;
+   * struct {
+   *   HandshakeType msg_type;
+   *   uint24 length;
+   *   select (HandshakeType) {
+   *     case hello_request: HelloRequest;
+   *     case client_hello: ClientHello;
+   *     case server_hello: ServerHello;
+   *     case certificate: Certificate;
+   *     case server_key_exchange: ServerKeyExchange;
+   *     case certificate_request: CertificateRequest;
+   *     case server_hello_done: ServerHelloDone;
+   *     case certificate_verify: CertificateVerify;
+   *     case client_key_exchange: ClientKeyExchange;
+   *     case finished: Finished;
+   *   } body;
+   * } Handshake;
    */
   private static Map<Integer, SNIServerName> exploreHandshake(ByteBuffer input, int recordLength)
       throws SSLProtocolException {
@@ -130,18 +146,31 @@ public final class TlsExplorer {
   }
 
   /*
-   * struct { uint32 gmt_unix_time; opaque random_bytes[28]; } Random;
+   * struct {
+   *   uint32 gmt_unix_time;
+   *   opaque random_bytes[28];
+   * } Random;
    *
    * opaque SessionID<0..32>;
    *
    * uint8 CipherSuite[2];
    *
-   * enum { null(0), (255) } CompressionMethod;
+   * enum {
+   *   null(0),
+   *   (255)
+   * } CompressionMethod;
    *
-   * struct { ProtocolVersion client_version; Random random; SessionID
-   * session_id; CipherSuite cipher_suites<2..2^16-2>; CompressionMethod
-   * compression_methods<1..2^8-1>; select (extensions_present) { case false:
-   * struct {}; case true: Extension extensions<0..2^16-1>; }; } ClientHello;
+   * struct {
+   *   ProtocolVersion client_version;
+   *   Random random;
+   *   SessionID session_id;
+   *   CipherSuite cipher_suites<2..2^16-2>;
+   *   CompressionMethod compression_methods<1..2^8-1>;
+   *   select (extensions_present) {
+   *     case false: struct {};
+   *     case true: Extension extensions<0..2^16-1>;
+   *   };
+   * } ClientHello;
    */
   private static Map<Integer, SNIServerName> exploreClientHello(ByteBuffer input)
       throws SSLProtocolException {
@@ -158,11 +187,20 @@ public final class TlsExplorer {
   }
 
   /*
-   * struct { ExtensionType extension_type; opaque extension_data<0..2^16-1>;
+   * struct {
+   *   ExtensionType extension_type;
+   *   opaque extension_data<0..2^16-1>;
    * } Extension;
    *
-   * enum { server_name(0), max_fragment_length(1), client_certificate_url(2),
-   * trusted_ca_keys(3), truncated_hmac(4), status_request(5), (65535) }
+   * enum {
+   *   server_name(0),
+   *   max_fragment_length(1),
+   *   client_certificate_url(2),
+   *   trusted_ca_keys(3),
+   *   truncated_hmac(4),
+   *   status_request(5),
+   *   (65535)
+   * }
    * ExtensionType;
    */
   private static Map<Integer, SNIServerName> exploreExtensions(ByteBuffer input)
@@ -184,14 +222,23 @@ public final class TlsExplorer {
   }
 
   /*
-   * struct { NameType name_type; select (name_type) { case host_name:
-   * HostName; } name; } ServerName;
+   * struct {
+   *   NameType name_type;
+   *   select (name_type) {
+   *     case host_name: HostName;
+   *   } name;
+   * } ServerName;
    *
-   * enum { host_name(0), (255) } NameType;
+   * enum {
+   *   host_name(0),
+   *   (255)
+   * } NameType;
    *
    * opaque HostName<1..2^16-1>;
    *
-   * struct { ServerName server_name_list<1..2^16-1> } ServerNameList;
+   * struct {
+   *   ServerName server_name_list<1..2^16-1>
+   * } ServerNameList;
    */
   private static Map<Integer, SNIServerName> exploreSNIExt(ByteBuffer input, int extLen)
       throws SSLProtocolException {
