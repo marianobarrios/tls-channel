@@ -5,5 +5,5 @@ jdk:
   - openjdk11
   - openjdk12
   - openjdk13
+  - openjdk14
 after_failure: "cat log/test.log"
-
