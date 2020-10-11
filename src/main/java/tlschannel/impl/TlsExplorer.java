@@ -9,42 +9,10 @@ import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLProtocolException;
 import javax.net.ssl.StandardConstants;
 
-/*
- * Implement basic TLS parsing, just to read the SNI (as this is not done by
- * {@link SSLEngine}.
- */
+/** Implement basic TLS parsing, just to read the SNI. */
 public final class TlsExplorer {
 
   private TlsExplorer() {}
-
-  /** The header size of TLS/SSL records. */
-  public static final int RECORD_HEADER_SIZE = 5;
-
-  /**
-   * Returns the required number of bytesProduced in the {@code source} {@link ByteBuffer} necessary
-   * to explore SSL/TLS connection.
-   *
-   * <p>This method tries to parse as few bytesProduced as possible from {@code source} byte buffer
-   * to get the length of an SSL/TLS record.
-   *
-   * <p>The method does not advance the buffer.
-   *
-   * @param input source buffer
-   * @return the required size
-   */
-  public static int getRequiredSize(ByteBuffer input) {
-    if (input.remaining() < RECORD_HEADER_SIZE) {
-      throw new BufferUnderflowException();
-    }
-    input.mark();
-    try {
-      ignore(input, 1); // ignore record type
-      ignore(input, 2); // ignore version
-      return getInt16(input) + RECORD_HEADER_SIZE;
-    } finally {
-      input.reset();
-    }
-  }
 
   /*
    * struct {
@@ -67,11 +35,10 @@ public final class TlsExplorer {
    *   opaque fragment[TLSPlaintext.length];
    * } TLSPlaintext;
    */
+  /** Explores a TLS record in search to the SNI. This method does not consume buffer. */
   public static Map<Integer, SNIServerName> exploreTlsRecord(ByteBuffer input)
       throws SSLProtocolException {
-    if (input.remaining() < RECORD_HEADER_SIZE) {
-      throw new BufferUnderflowException();
-    }
+
     input.mark();
     try {
       byte firstByte = input.get();
@@ -133,8 +100,10 @@ public final class TlsExplorer {
       // 0x01: client_hello message
       throw new SSLProtocolException("Not an initial handshaking");
     }
+
     // What is the handshake body length?
     int handshakeLength = getInt24(input);
+
     // Theoretically, a single handshake message might span multiple
     // records, but in practice this does not occur.
     if (handshakeLength > recordLength - 4) {
@@ -142,6 +111,7 @@ public final class TlsExplorer {
       throw new SSLProtocolException("Handshake message spans multiple records");
     }
     input.limit(handshakeLength + input.position());
+
     return exploreClientHello(input);
   }
 
@@ -307,6 +277,9 @@ public final class TlsExplorer {
 
   private static void ignore(ByteBuffer input, int length) {
     if (length != 0) {
+      if (input.remaining() < length) {
+        throw new BufferUnderflowException();
+      }
       input.position(input.position() + length);
     }
   }

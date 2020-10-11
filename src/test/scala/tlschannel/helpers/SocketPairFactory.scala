@@ -46,7 +46,7 @@ class SocketPairFactory(
 
   private val releaseBuffers = true
 
-  private val clientSniHostName = new SNIHostName(serverName)
+  val clientSniHostName = new SNIHostName(serverName)
   private val expectedSniHostName = SNIHostName.createSNIMatcher(serverName /* regex! */ )
 
   def fixedCipherServerSslEngineFactory(cipher: Option[String])(sslContext: SSLContext): SSLEngine = {
@@ -81,7 +81,7 @@ class SocketPairFactory(
   val globalPlainTrackingAllocator = new TrackingAllocator(TlsChannel.defaultPlainBufferAllocator)
   val globalEncryptedTrackingAllocator = new TrackingAllocator(TlsChannel.defaultEncryptedBufferAllocator)
 
-  private def createClientSslEngine(cipher: Option[String], peerPort: Integer): SSLEngine = {
+  def createClientSslEngine(cipher: Option[String], peerPort: Integer): SSLEngine = {
     val engine = sslContext.createSSLEngine(serverName, peerPort)
     engine.setUseClientMode(true)
     cipher.foreach(c => engine.setEnabledCipherSuites(Array(c)))

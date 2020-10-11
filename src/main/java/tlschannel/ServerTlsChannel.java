@@ -1,6 +1,7 @@
 package tlschannel;
 
 import java.io.IOException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.Channel;
@@ -376,41 +377,32 @@ public class ServerTlsChannel implements TlsChannel {
   private Optional<SNIServerName> getServerNameIndication() throws IOException, EofException {
     inEncrypted.prepare();
     try {
-      int recordHeaderSize = readRecordHeaderSize();
-      while (inEncrypted.buffer.position() < recordHeaderSize) {
-        if (!inEncrypted.buffer.hasRemaining()) {
-          inEncrypted.enlarge();
+      // loop finishes using return statements
+      while (true) {
+        try {
+          inEncrypted.buffer.flip();
+          try {
+            Map<Integer, SNIServerName> serverNames =
+                TlsExplorer.exploreTlsRecord(inEncrypted.buffer);
+            SNIServerName hostName = serverNames.get(StandardConstants.SNI_HOST_NAME);
+            if (hostName instanceof SNIHostName) {
+              return Optional.of(hostName);
+            } else {
+              return Optional.empty();
+            }
+          } finally {
+            inEncrypted.buffer.compact();
+          }
+        } catch (BufferUnderflowException e) {
+          if (!inEncrypted.buffer.hasRemaining()) {
+            inEncrypted.enlarge();
+          }
+          TlsChannelImpl.readFromChannel(underlying, inEncrypted.buffer); // IO block
         }
-        TlsChannelImpl.readFromChannel(underlying, inEncrypted.buffer); // IO block
-      }
-      inEncrypted.buffer.flip();
-      Map<Integer, SNIServerName> serverNames = TlsExplorer.exploreTlsRecord(inEncrypted.buffer);
-      inEncrypted.buffer.compact();
-      SNIServerName hostName = serverNames.get(StandardConstants.SNI_HOST_NAME);
-      if (hostName instanceof SNIHostName) {
-        SNIHostName sniHostName = (SNIHostName) hostName;
-        return Optional.of(sniHostName);
-      } else {
-        return Optional.empty();
       }
     } finally {
       inEncrypted.release();
     }
-  }
-
-  private int readRecordHeaderSize() throws IOException, EofException {
-    // ensure at least 5 bytes, to be able to read the record size
-    while (inEncrypted.buffer.position() < TlsExplorer.RECORD_HEADER_SIZE) {
-      if (!inEncrypted.buffer.hasRemaining()) {
-        throw new IllegalStateException("inEncrypted too small");
-      }
-      TlsChannelImpl.readFromChannel(underlying, inEncrypted.buffer); // IO block
-    }
-
-    inEncrypted.buffer.flip();
-    int recordHeaderSize = TlsExplorer.getRequiredSize(inEncrypted.buffer);
-    inEncrypted.buffer.compact();
-    return recordHeaderSize;
   }
 
   @Override
