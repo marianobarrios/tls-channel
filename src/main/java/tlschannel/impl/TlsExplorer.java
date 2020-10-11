@@ -31,7 +31,9 @@ public final class TlsExplorer {
    * @return the required size
    */
   public static int getRequiredSize(ByteBuffer source) {
-    if (source.remaining() < RECORD_HEADER_SIZE) throw new BufferUnderflowException();
+    if (source.remaining() < RECORD_HEADER_SIZE) {
+      throw new BufferUnderflowException();
+    }
     source.mark();
     try {
       byte firstByte = source.get();
@@ -41,7 +43,7 @@ public final class TlsExplorer {
         // looks like a V2ClientHello
         return RECORD_HEADER_SIZE; // Only need the header fields
       } else {
-        return (((source.get() & 0xFF) << 8) | (source.get() & 0xFF)) + 5;
+        return getInt16(source) + RECORD_HEADER_SIZE;
       }
     } finally {
       source.reset();
@@ -49,7 +51,9 @@ public final class TlsExplorer {
   }
 
   public static Map<Integer, SNIServerName> explore(ByteBuffer source) throws SSLProtocolException {
-    if (source.remaining() < RECORD_HEADER_SIZE) throw new BufferUnderflowException();
+    if (source.remaining() < RECORD_HEADER_SIZE) {
+      throw new BufferUnderflowException();
+    }
     source.mark();
     try {
       byte firstByte = source.get();
@@ -62,7 +66,7 @@ public final class TlsExplorer {
         // 22: handshake record
         return exploreTLSRecord(source, firstByte);
       } else {
-        throw new SSLProtocolException("Not handshake record");
+        throw new SSLProtocolException("Not a handshake record");
       }
     } finally {
       source.reset();
@@ -80,12 +84,15 @@ public final class TlsExplorer {
    */
   private static Map<Integer, SNIServerName> exploreTLSRecord(ByteBuffer input, byte firstByte)
       throws SSLProtocolException {
-    // Is it a handshake message?
-    if (firstByte != 22) // 22: handshake record
-    throw new SSLProtocolException("Not handshake record");
+    if (firstByte != 22) {
+      // 22: handshake record
+      throw new SSLProtocolException("Not a handshake record");
+    }
     // Is there enough data for a full record?
     int recordLength = getInt16(input);
-    if (recordLength > input.remaining()) throw new BufferUnderflowException();
+    if (recordLength > input.remaining()) {
+      throw new BufferUnderflowException();
+    }
     return exploreHandshake(input, recordLength);
   }
 
@@ -105,16 +112,19 @@ public final class TlsExplorer {
    */
   private static Map<Integer, SNIServerName> exploreHandshake(ByteBuffer input, int recordLength)
       throws SSLProtocolException {
-    // What is the handshake type?
     byte handshakeType = input.get();
-    if (handshakeType != 0x01) // 0x01: client_hello message
-    throw new SSLProtocolException("Not initial handshaking");
+    if (handshakeType != 0x01) {
+      // 0x01: client_hello message
+      throw new SSLProtocolException("Not an initial handshaking");
+    }
     // What is the handshake body length?
     int handshakeLength = getInt24(input);
     // Theoretically, a single handshake message might span multiple
     // records, but in practice this does not occur.
-    if (handshakeLength > recordLength - 4) // 4: handshake header size
-    throw new SSLProtocolException("Handshake message spans multiple records");
+    if (handshakeLength > recordLength - 4) {
+      // 4: handshake header size
+      throw new SSLProtocolException("Handshake message spans multiple records");
+    }
     input.limit(handshakeLength + input.position());
     return exploreClientHello(input);
   }
@@ -140,8 +150,11 @@ public final class TlsExplorer {
     ignoreByteVector8(input); // ignore session id
     ignoreByteVector16(input); // ignore cipher_suites
     ignoreByteVector8(input); // ignore compression methods
-    if (input.remaining() > 0) return exploreExtensions(input);
-    else return new HashMap<>();
+    if (input.hasRemaining()) {
+      return exploreExtensions(input);
+    } else {
+      return new HashMap<>();
+    }
   }
 
   /*
@@ -158,9 +171,11 @@ public final class TlsExplorer {
     while (length > 0) {
       int extType = getInt16(input); // extension type
       int extLen = getInt16(input); // length of extension data
-      if (extType == 0x00) { // 0x00: type of server name indication
+      if (extType == 0x00) {
+        // 0x00: type of server name indication
         return exploreSNIExt(input, extLen);
-      } else { // ignore other extensions
+      } else {
+        // ignore other extensions
         ignore(input, extLen);
       }
       length -= extLen + 4;
@@ -182,38 +197,44 @@ public final class TlsExplorer {
       throws SSLProtocolException {
     Map<Integer, SNIServerName> sniMap = new HashMap<>();
     int remains = extLen;
-    if (extLen >= 2) { // "server_name" extension in ClientHello
+    if (extLen >= 2) {
+      // "server_name" extension in ClientHello
       int listLen = getInt16(input); // length of server_name_list
-      if (listLen == 0 || listLen + 2 != extLen)
+      if (listLen == 0 || listLen + 2 != extLen) {
         throw new SSLProtocolException("Invalid server name indication extension");
+      }
       remains -= 2; // 2: the length field of server_name_list
       while (remains > 0) {
         int code = getInt8(input); // name_type
         int snLen = getInt16(input); // length field of server name
-        if (snLen > remains)
+        if (snLen > remains) {
           throw new SSLProtocolException("Not enough data to fill declared vector size");
+        }
         byte[] encoded = new byte[snLen];
         input.get(encoded);
         SNIServerName serverName;
-        switch (code) {
-          case StandardConstants.SNI_HOST_NAME:
-            if (encoded.length == 0)
-              throw new SSLProtocolException("Empty HostName in server name indication");
-            serverName = new SNIHostName(encoded);
-            break;
-          default:
-            serverName = new UnknownServerName(code, encoded);
+        if (code == StandardConstants.SNI_HOST_NAME) {
+          if (encoded.length == 0) {
+            throw new SSLProtocolException("Empty HostName in server name indication");
+          }
+          serverName = new SNIHostName(encoded);
+        } else {
+          serverName = new UnknownServerName(code, encoded);
         }
         // check for duplicated server name type
-        if (sniMap.put(serverName.getType(), serverName) != null)
+        if (sniMap.put(serverName.getType(), serverName) != null) {
           throw new SSLProtocolException("Duplicated server name of type " + serverName.getType());
+        }
         remains -= encoded.length + 3; // NameType: 1 byte; HostName;
         // length: 2 bytesProduced
       }
-    } else if (extLen == 0) { // "server_name" extension in ServerHello
+    } else if (extLen == 0) {
+      // "server_name" extension in ServerHello
       throw new SSLProtocolException("Not server name indication extension in client");
     }
-    if (remains != 0) throw new SSLProtocolException("Invalid server name indication extension");
+    if (remains != 0) {
+      throw new SSLProtocolException("Invalid server name indication extension");
+    }
     return sniMap;
   }
 
@@ -238,7 +259,9 @@ public final class TlsExplorer {
   }
 
   private static void ignore(ByteBuffer input, int length) {
-    if (length != 0) input.position(input.position() + length);
+    if (length != 0) {
+      input.position(input.position() + length);
+    }
   }
 
   // For some reason, SNIServerName is abstract
