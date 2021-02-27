@@ -41,7 +41,9 @@ public class SimpleBlockingClient {
         ByteBuffer res = ByteBuffer.allocate(10000);
 
         // being HTTP 1.0, the server will just close the connection at the end
-        while (tlsChannel.read(res) != -1) ;
+        while (tlsChannel.read(res) != -1) {
+          // empty
+        }
         res.flip();
         System.out.println(utf8.decode(res).toString());
       }

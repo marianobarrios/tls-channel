@@ -3,8 +3,8 @@ plugins {
     id 'scala'
     id 'signing'
     id 'maven-publish'
-    id "com.diffplug.gradle.spotless" version "4.3.0"
-    id "com.github.spotbugs" version "4.3.0"
+    id "com.diffplug.spotless" version "5.10.2"
+    id "com.github.spotbugs" version "4.6.2"
 }
 
 compileJava {
@@ -20,16 +20,16 @@ repositories {
 
 dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.30'
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'org.scala-lang:scala-library:2.13.2'
-    testImplementation 'org.scalatest:scalatest_2.13:3.1.2'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.scala-lang:scala-library:2.13.5'
+    testImplementation 'org.scalatest:scalatest_2.13:3.2.5'
     testImplementation 'org.scalatestplus:scalatestplus-junit_2.13:1.0.0-M2'
     testImplementation 'ch.qos.logback:logback-classic:1.2.3'
     testImplementation 'com.typesafe.scala-logging:scala-logging_2.13:3.9.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.6.2'
-    testImplementation 'io.netty:netty-buffer:4.1.50.Final'
-    testImplementation 'io.netty:netty-handler:4.1.50.Final'
-    testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.30.Final'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
+    testImplementation 'io.netty:netty-buffer:4.1.59.Final'
+    testImplementation 'io.netty:netty-handler:4.1.59.Final'
+    testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.36.Final'
 }
 
 spotless {
