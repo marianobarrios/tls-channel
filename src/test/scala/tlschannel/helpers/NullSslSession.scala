@@ -12,7 +12,13 @@ class NullSslSession(bufferSize: Int) extends SSLSession {
   def getLocalCertificates() = Array()
   def getLocalPrincipal() = null
   def getPacketBufferSize() = bufferSize
-  def getPeerCertificateChain() = Array()
+
+  /**
+   * getPeerCertificateChain is a default method since Java 15, so we have to override to make the compiler
+   * happy (and still supply an implementation for earlier versions).
+   */
+  override def getPeerCertificateChain() = Array()
+
   def getPeerCertificates() = Array()
   def getPeerHost() = null
   def getPeerPort() = 0
