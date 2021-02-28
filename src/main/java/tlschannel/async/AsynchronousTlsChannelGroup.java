@@ -78,8 +78,7 @@ public class AsynchronousTlsChannelGroup {
     /** Bitwise union of pending operation to be registered in the selector */
     final AtomicInteger pendingOps = new AtomicInteger();
 
-    RegisteredSocket(TlsChannel tlsChannel, SocketChannel socketChannel)
-        throws ClosedChannelException {
+    RegisteredSocket(TlsChannel tlsChannel, SocketChannel socketChannel) {
       this.tlsChannel = tlsChannel;
       this.socketChannel = socketChannel;
     }
@@ -87,7 +86,9 @@ public class AsynchronousTlsChannelGroup {
     public void close() {
       doCancelRead(this, null);
       doCancelWrite(this, null);
-      if (key != null) key.cancel();
+      if (key != null) {
+        key.cancel();
+      }
       currentRegistrations.getAndDecrement();
       /*
        * Actual de-registration from the selector will happen asynchronously.
