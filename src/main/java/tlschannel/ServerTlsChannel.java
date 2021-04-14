@@ -44,7 +44,7 @@ public class ServerTlsChannel implements TlsChannel {
 
   private static class SniSslContextStrategy implements SslContextStrategy {
 
-    private SniSslContextFactory sniSslContextFactory;
+    private final SniSslContextFactory sniSslContextFactory;
 
     public SniSslContextStrategy(SniSslContextFactory sniSslContextFactory) {
       this.sniSslContextFactory = sniSslContextFactory;

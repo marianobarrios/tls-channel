@@ -19,7 +19,7 @@ public class ClientTlsChannel implements TlsChannel {
   /** Builder of {@link ClientTlsChannel} */
   public static class Builder extends TlsChannelBuilder<Builder> {
 
-    private Supplier<SSLEngine> sslEngineFactory;
+    private final Supplier<SSLEngine> sslEngineFactory;
 
     private Builder(ByteChannel underlying, SSLEngine sslEngine) {
       super(underlying);

@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DirectBufferDeallocator {
 
-  private static Logger logger = LoggerFactory.getLogger(DirectBufferDeallocator.class);
+  private static final Logger logger = LoggerFactory.getLogger(DirectBufferDeallocator.class);
 
   private interface Deallocator {
     void free(ByteBuffer bb);

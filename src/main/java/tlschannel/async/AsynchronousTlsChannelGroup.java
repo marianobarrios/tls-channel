@@ -48,7 +48,7 @@ public class AsynchronousTlsChannelGroup {
   /** The main executor of the group has a queue, whose size is a multiple of the number of CPUs. */
   private static final int queueLengthMultiplier = 32;
 
-  private static AtomicInteger globalGroupCount = new AtomicInteger();
+  private static final AtomicInteger globalGroupCount = new AtomicInteger();
 
   class RegisteredSocket {
 
