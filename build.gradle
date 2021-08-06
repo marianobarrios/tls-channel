@@ -117,8 +117,8 @@ publishing {
                 url = 'https://github.com/marianobarrios/tls-channel'
                 licenses {
                     license {
-                        name = 'BSD-style'
-                        url = 'http://www.opensource.org/licenses/bsd-license.php'
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
                     }
                 }
                 developers {
