@@ -23,7 +23,7 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.scala-lang:scala-library:2.13.6'
     testImplementation 'org.scalatest:scalatest_2.13:3.2.9'
-    testImplementation 'org.scalatestplus:scalatestplus-junit_2.13:1.0.0-M2'
+    testImplementation 'org.scalatestplus:junit-4-13_2.13:3.2.9.0'
     testImplementation 'ch.qos.logback:logback-classic:1.2.5'
     testImplementation 'com.typesafe.scala-logging:scala-logging_2.13:3.9.4'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.2'
@@ -34,7 +34,8 @@ dependencies {
 
 spotless {
     java {
-        googleJavaFormat()
+        // forcing a newer version than default to make it compatible with Java 16
+        googleJavaFormat("1.11.0")
     }
     scala {
         scalafmt().configFile('.scalafmt.conf')
