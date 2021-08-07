@@ -34,8 +34,7 @@ dependencies {
 
 spotless {
     java {
-        // forcing a newer version than default to make it compatible with Java 16
-        googleJavaFormat("1.11.0")
+        googleJavaFormat()
     }
     scala {
         scalafmt().configFile('.scalafmt.conf')
