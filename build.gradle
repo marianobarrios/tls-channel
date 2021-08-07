@@ -81,7 +81,7 @@ compileScala {
 
 test {
     // override security properties enabling all options
-    systemProperty "java.security.override.properties", "java.security.override.override"
+    systemProperty "java.security.properties", "java.security.override"
     testLogging {
         showStandardStreams = true
         events = ["failed", "skipped", "passed"]
