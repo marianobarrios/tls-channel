@@ -14,7 +14,6 @@ import javax.crypto.Cipher
 import java.nio.channels.ByteChannel
 import java.util.Optional
 
-import sun.security.ssl.SSLSocketImpl
 import javax.net.ssl.SNIHostName
 import javax.net.ssl.SNIServerName
 
@@ -104,9 +103,8 @@ class SocketPairFactory(
       port: Int,
       requestedHost: String
   ): SSLSocket = {
-    val socket = sslSocketFactory.createSocket(host, port).asInstanceOf[SSLSocketImpl]
+    val socket = sslSocketFactory.createSocket(host, port).asInstanceOf[SSLSocket]
     cipher.foreach(c => socket.setEnabledCipherSuites(Array(c)))
-    socket.setHost(requestedHost)
     socket
   }
 
