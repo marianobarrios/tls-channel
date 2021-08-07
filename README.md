@@ -4,7 +4,7 @@ TLS Channel is a library that implements a [ByteChannel](https://docs.oracle.com
 
 In other words, a simple library that allows the programmer to implement TLS using the same standard socket API used for plaintext, just like OpenSSL does for C, only for Java, filling a specially painful missing feature of the standard library.
 
-[![Build Status](https://travis-ci.com/marianobarrios/tls-channel.svg?branch=master)](https://travis-ci.com/marianobarrios/tls-channel)
+[![Build Status](https://github.com/marianobarrios/tls-channel/actions/workflows/main.yml/badge.svg)](https://github.com/marianobarrios/tls-channel/actions)
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/tls-channel/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/tls-channel)
 [![Javadoc](http://javadoc-badge.appspot.com/com.github.marianobarrios/tls-channel.svg?label=javadoc)](http://javadoc-badge.appspot.com/com.github.marianobarrios/tls-channel)
