@@ -1,0 +1,4 @@
+# Java uses these to properties to paternalistically disable protocols and cipher as they get old
+# Here we enable everything to properly test all possible combinations
+jdk.certpath.disabledAlgorithms=
+jdk.tls.disabledAlgorithms=

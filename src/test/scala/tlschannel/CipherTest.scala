@@ -1,6 +1,7 @@
 package tlschannel
 
 import com.typesafe.scalalogging.StrictLogging
+
 import javax.net.ssl.SSLContext
 import org.junit.runner.RunWith
 import org.scalatest.Assertions
@@ -10,6 +11,8 @@ import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.Loops
+
+import java.security.Security
 
 @RunWith(classOf[JUnitRunner])
 class CipherTest extends AnyFunSuite with Assertions with StrictLogging {

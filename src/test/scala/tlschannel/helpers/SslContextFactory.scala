@@ -76,12 +76,6 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
 
 object SslContextFactory extends StrictLogging {
 
-  /*
-   * Overrule paternalistic JVM behavior of forbidding ciphers even if allowed in code.
-   */
-  Security.setProperty("jdk.tls.disabledAlgorithms", "")
-  Security.setProperty("jdk.certpath.disabledAlgorithms", "")
-
   val tlsMaxDataSize = math.pow(2, 14).toInt
   val certificateCommonName = "name" // must match what's in the certificates
 
