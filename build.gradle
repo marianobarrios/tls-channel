@@ -32,12 +32,16 @@ dependencies {
     testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.40.Final'
 }
 
-spotless {
-    java {
-        googleJavaFormat()
-    }
-    scala {
-        scalafmt().configFile('.scalafmt.conf')
+// Google Java Format requires problematic configuration in Java 16, which is hard to get to work with Java 8
+// (pre modules) at the same time
+if (JavaVersion.current().ordinal() < JavaVersion.VERSION_16.ordinal()) {
+    spotless {
+        java {
+            googleJavaFormat()
+        }
+        scala {
+            scalafmt().configFile('.scalafmt.conf')
+        }
     }
 }
 
