@@ -364,7 +364,7 @@ public class TlsChannelImpl implements ByteChannel {
     outEncrypted.prepare();
     try {
       while (true) {
-        writeToChannel();
+        writeToChannel(); // IO block
         if (source.remaining() == 0) {
           return bytesToConsume;
         }
