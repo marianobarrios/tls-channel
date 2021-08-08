@@ -70,7 +70,7 @@ class AsyncCloseTest extends AnyFunSuite with AsyncTestBase with Assertions {
       socketPair.server.external.close()
       socketPair.client.external.close()
 
-      Thread.sleep(100)
+      Thread.sleep(200)
 
       intercept[Exception] {
         writeFuture.get(1000, TimeUnit.MILLISECONDS)
