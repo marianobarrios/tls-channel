@@ -137,4 +137,25 @@ public class BufferHolder {
   public boolean nullOrEmpty() {
     return buffer == null || buffer.position() == 0;
   }
+
+  @Override
+  public String toString() {
+    return "BufferHolder{"
+        + "name='"
+        + name
+        + '\''
+        + ", allocator="
+        + allocator
+        + ", plainData="
+        + plainData
+        + ", maxSize="
+        + maxSize
+        + ", opportunisticDispose="
+        + opportunisticDispose
+        + ", buffer="
+        + buffer
+        + ", lastSize="
+        + lastSize
+        + '}';
+  }
 }
