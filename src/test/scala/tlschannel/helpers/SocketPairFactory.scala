@@ -351,7 +351,7 @@ class SocketPairFactory(
     }
   }
 
-  def printGlobalAllocationReport() = {
+  def getGlobalAllocationReport(): String = {
     val plainAlloc = globalPlainTrackingAllocator
     val encryptedAlloc = globalEncryptedTrackingAllocator
     val maxPlain = plainAlloc.maxAllocation()
@@ -362,11 +362,13 @@ class SocketPairFactory(
     val buffersAllocatedEncrypted = encryptedAlloc.buffersAllocated()
     val buffersDeallocatedPlain = plainAlloc.buffersDeallocated()
     val buffersDeallocatedEncrypted = encryptedAlloc.buffersDeallocated()
-    println(s"Allocation report:")
-    println(s"  max allocation (bytes) - plain: $maxPlain - encrypted: $maxEncrypted")
-    println(s"  total allocation (bytes) - plain: $totalPlain - encrypted: $totalEncrypted")
-    println(s"  buffers allocated - plain: $buffersAllocatedPlain - encrypted: $buffersAllocatedEncrypted")
-    println(s"  buffers deallocated - plain: $buffersDeallocatedPlain - encrypted: $buffersDeallocatedEncrypted")
+    val ret = new StringBuilder
+    ret ++= s"Allocation report:\n"
+    ret ++= s"  max allocation (bytes) - plain: $maxPlain - encrypted: $maxEncrypted\n"
+    ret ++= s"  total allocation (bytes) - plain: $totalPlain - encrypted: $totalEncrypted\n"
+    ret ++= s"  buffers allocated - plain: $buffersAllocatedPlain - encrypted: $buffersAllocatedEncrypted\n"
+    ret ++= s"  buffers deallocated - plain: $buffersDeallocatedPlain - encrypted: $buffersDeallocatedEncrypted\n"
+    ret.toString()
   }
 
 }

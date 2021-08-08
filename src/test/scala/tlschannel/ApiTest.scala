@@ -9,12 +9,9 @@ import javax.net.ssl.SSLContext
 import tlschannel.impl.{BufferHolder, ByteBufferSet, TlsChannelImpl}
 import java.util.Optional
 
-import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 class ApiTest extends AnyFunSuite with Assertions {
 
   val arraySize = 1024

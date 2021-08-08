@@ -2,15 +2,12 @@ package tlschannel
 
 import org.scalatest.{Assertions, BeforeAndAfterAll}
 import com.typesafe.scalalogging.StrictLogging
-import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 
-@RunWith(classOf[JUnitRunner])
 class MultiNonBlockingTest
     extends AnyFunSuite
     with Assertions
@@ -58,7 +55,7 @@ class MultiNonBlockingTest
   }
 
   override def afterAll() = {
-    factory.printGlobalAllocationReport()
+    info(factory.getGlobalAllocationReport())
   }
 
 }

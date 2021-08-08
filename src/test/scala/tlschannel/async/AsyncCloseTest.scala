@@ -2,16 +2,13 @@ package tlschannel.async
 
 import java.nio.ByteBuffer
 import java.util.concurrent.{CancellationException, TimeUnit}
-import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.{SocketPairFactory, SslContextFactory}
 
 import java.nio.channels.ClosedChannelException
 import scala.concurrent.ExecutionException
 
-@RunWith(classOf[JUnitRunner])
 class AsyncCloseTest extends AnyFunSuite with AsyncTestBase with Assertions {
 
   val sslContextFactory = new SslContextFactory
