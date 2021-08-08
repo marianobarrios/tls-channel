@@ -44,7 +44,7 @@ public class TlsChannelImpl implements ByteChannel {
   private final ReadableByteChannel readChannel;
   private final WritableByteChannel writeChannel;
   private final SSLEngine engine;
-  private BufferHolder inEncrypted;
+  private final BufferHolder inEncrypted;
   private final Consumer<SSLSession> initSessionCallback;
 
   private final boolean runTasks;
@@ -122,10 +122,10 @@ public class TlsChannelImpl implements ByteChannel {
   private volatile boolean shutdownReceived = false;
 
   /** Decrypted data from inEncrypted */
-  private BufferHolder inPlain;
+  private final BufferHolder inPlain;
 
   /** Contains data encrypted to send to the underlying channel */
-  private BufferHolder outEncrypted;
+  private final BufferHolder outEncrypted;
 
   /**
    * Reference to the current read buffer supplied by the client this field is only valid during a
@@ -698,18 +698,9 @@ public class TlsChannelImpl implements ByteChannel {
   }
 
   private void freeBuffers() {
-    if (inEncrypted != null) {
-      inEncrypted.dispose();
-      inEncrypted = null;
-    }
-    if (inPlain != null) {
-      inPlain.dispose();
-      inPlain = null;
-    }
-    if (outEncrypted != null) {
-      outEncrypted.dispose();
-      outEncrypted = null;
-    }
+    inEncrypted.dispose();
+    inPlain.dispose();
+    outEncrypted.dispose();
   }
 
   public boolean isOpen() {
