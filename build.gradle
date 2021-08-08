@@ -101,7 +101,7 @@ java {
 // see tlschannel.AllocationTest for comment about this
 task allocationTest(type: JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    main = "tlschannel.AllocationTest"
+    mainClass = 'tlschannel.AllocationTest'
     jvmArgs = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseEpsilonGC']
 }
 
