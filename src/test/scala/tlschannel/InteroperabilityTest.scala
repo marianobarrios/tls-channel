@@ -8,15 +8,12 @@ import javax.net.ssl.SSLSocket
 import java.nio.ByteBuffer
 
 import com.typesafe.scalalogging.StrictLogging
-import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 
-@RunWith(classOf[JUnitRunner])
 class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLogging {
 
   import InteroperabilityTest._

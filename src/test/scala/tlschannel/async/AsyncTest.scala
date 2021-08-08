@@ -1,15 +1,12 @@
 package tlschannel.async
 
-import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.AsyncLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 
-@RunWith(classOf[JUnitRunner])
 class AsyncTest extends AnyFunSuite with Assertions with AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory

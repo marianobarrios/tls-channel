@@ -28,10 +28,10 @@ object AllocationTest extends StrictLogging {
     // do a "warm-up" loop, in order to not count anything statically allocated
     Loops.halfDuplex(socketPair1, 10000)
 
-    val before = memoryBean.getHeapMemoryUsage().getUsed
+    val before = memoryBean.getHeapMemoryUsage.getUsed
     Loops.halfDuplex(socketPair2, dataSize)
     Loops.halfDuplex(socketPair3, dataSize, scattering = true)
-    val after = memoryBean.getHeapMemoryUsage().getUsed
+    val after = memoryBean.getHeapMemoryUsage.getUsed
 
     println(f"memory allocation test finished - used heap: ${(after - before).toDouble / 1024}%.0f KB")
   }

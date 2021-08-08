@@ -6,13 +6,10 @@ import java.nio.channels.ClosedChannelException
 import com.typesafe.scalalogging.StrictLogging
 import java.nio.channels.AsynchronousCloseException
 
-import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.{SocketPairFactory, SslContextFactory, TestUtil}
 
-@RunWith(classOf[JUnitRunner])
 class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val sslContextFactory = new SslContextFactory

@@ -2,9 +2,7 @@ package tlschannel
 
 import org.scalatest.{Assertions, BeforeAndAfterAll}
 import com.typesafe.scalalogging.StrictLogging
-import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SocketPairFactory
@@ -16,7 +14,6 @@ import tlschannel.helpers.SslContextFactory
   * the overhead of the real [[javax.net.ssl.SSLEngine]] to be able to test the overhead of the
   * [[TlsChannel]].
   */
-@RunWith(classOf[JUnitRunner])
 class NullEngineTest extends AnyFunSuite with Assertions with StrictLogging with BeforeAndAfterAll {
 
   val sslContextFactory = new SslContextFactory
@@ -59,7 +56,7 @@ class NullEngineTest extends AnyFunSuite with Assertions with StrictLogging with
   }
 
   override def afterAll() = {
-    factory.printGlobalAllocationReport()
+    info(factory.getGlobalAllocationReport())
   }
 
 }

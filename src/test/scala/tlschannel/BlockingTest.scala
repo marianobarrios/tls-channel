@@ -1,17 +1,14 @@
 package tlschannel
 
 import com.typesafe.scalalogging.StrictLogging
-import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.Loops
 
-@RunWith(classOf[JUnitRunner])
 class BlockingTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val sslContextFactory = new SslContextFactory

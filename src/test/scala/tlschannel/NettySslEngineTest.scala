@@ -5,8 +5,6 @@ import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.SslProvider
 import io.netty.handler.ssl.util.SimpleTrustManagerFactory
 import javax.net.ssl.{ManagerFactoryParameters, SSLEngine, TrustManager, TrustManagerFactory, X509ExtendedTrustManager}
-import org.junit.runner.RunWith
-import org.scalatestplus.junit.JUnitRunner
 import java.net.Socket
 import java.nio.ByteBuffer
 import java.nio.channels.ByteChannel
@@ -15,7 +13,6 @@ import java.security.cert.X509Certificate
 
 import org.scalatest.funsuite.AnyFunSuite
 
-@RunWith(classOf[JUnitRunner])
 class NettySslEngineTest extends AnyFunSuite {
 
   import NettySslEngineTest._

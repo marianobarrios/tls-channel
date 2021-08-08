@@ -5,13 +5,10 @@ import java.time.Duration
 import java.util.concurrent.atomic.AtomicLong
 
 import com.typesafe.scalalogging.StrictLogging
-import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.{SocketGroup, SocketPairFactory, SslContextFactory, TestUtil}
 
-@RunWith(classOf[JUnitRunner])
 class ConcurrentTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val sslContextFactory = new SslContextFactory

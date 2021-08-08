@@ -22,12 +22,13 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.32'
     testImplementation 'org.scala-lang:scala-library:2.13.6'
     testImplementation 'org.scalatest:scalatest_2.13:3.2.9'
-    testImplementation 'org.scalatestplus:junit-4-13_2.13:3.2.9.0'
     testImplementation 'ch.qos.logback:logback-classic:1.2.5'
     testImplementation 'com.typesafe.scala-logging:scala-logging_2.13:3.9.4'
     testImplementation 'io.netty:netty-buffer:4.1.66.Final'
     testImplementation 'io.netty:netty-handler:4.1.66.Final'
     testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.40.Final'
+    // https://github.com/scalatest/scalatest/issues/1736
+    testRuntimeOnly "com.vladsch.flexmark:flexmark-all:0.36.8"
 }
 
 // Google Java Format requires problematic configuration in Java 16, which is hard to get to work with Java 8
@@ -77,14 +78,17 @@ compileScala {
     ]
 }
 
-test {
+task scalaTest(dependsOn: ['testClasses'], type: JavaExec) {
     // override security properties enabling all options
     systemProperty "java.security.properties", "java.security.override"
-    testLogging {
-        showStandardStreams = true
-        events = ["failed", "skipped", "passed"]
-    }
+    mainClass = 'org.scalatest.tools.Runner'
+    args = ['-R', 'build/classes/scala/test', '-o', '-h', file("$buildDir/reports/test")]
+    classpath = sourceSets.test.runtimeClasspath
 }
+
+test.enabled = false
+check.dependsOn scalaTest
+
 
 javadoc {
     exclude "tlschannel/impl"
@@ -153,4 +157,3 @@ publishing {
 signing {
     sign publishing.publications.tlschannel
 }
-

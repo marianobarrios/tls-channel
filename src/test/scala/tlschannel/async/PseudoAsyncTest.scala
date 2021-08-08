@@ -1,17 +1,14 @@
 package tlschannel.async
 
 import com.typesafe.scalalogging.StrictLogging
-import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.Loops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 
-@RunWith(classOf[JUnitRunner])
 class PseudoAsyncTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val sslContextFactory = new SslContextFactory

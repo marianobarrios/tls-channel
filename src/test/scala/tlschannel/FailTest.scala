@@ -6,13 +6,10 @@ import java.nio.channels.{ServerSocketChannel, SocketChannel}
 
 import com.typesafe.scalalogging.StrictLogging
 import javax.net.ssl.SSLException
-import org.junit.runner.RunWith
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.junit.JUnitRunner
 import tlschannel.helpers.{SocketPairFactory, SslContextFactory, TestUtil}
 
-@RunWith(classOf[JUnitRunner])
 class FailTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val sslContextFactory = new SslContextFactory
