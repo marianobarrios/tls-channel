@@ -163,7 +163,9 @@ public class TlsChannelImpl implements ByteChannel {
 
   public long read(ByteBufferSet dest) throws IOException, NeedsTaskException {
     checkReadBuffer(dest);
-    if (!dest.hasRemaining()) return 0;
+    if (!dest.hasRemaining()) {
+      return 0;
+    }
     handshake();
     readLock.lock();
     try {
@@ -313,9 +315,9 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private int readFromChannel() throws IOException, EofException {
+  private void readFromChannel() throws IOException, EofException {
     try {
-      return readFromChannel(readChannel, inEncrypted.buffer);
+      readFromChannel(readChannel, inEncrypted.buffer);
     } catch (WouldBlockException e) {
       throw e;
     } catch (IOException e) {
@@ -324,7 +326,7 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  public static int readFromChannel(ReadableByteChannel readChannel, ByteBuffer buffer)
+  public static void readFromChannel(ReadableByteChannel readChannel, ByteBuffer buffer)
       throws IOException, EofException {
     Util.assertTrue(buffer.hasRemaining());
     logger.trace("Reading from channel");
@@ -336,7 +338,6 @@ public class TlsChannelImpl implements ByteChannel {
     if (c == 0) {
       throw new NeedsReadException();
     }
-    return c;
   }
 
   // write
