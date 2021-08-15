@@ -496,10 +496,14 @@ public class TlsChannelImpl implements ByteChannel {
   }
 
   private void doHandshake(boolean force) throws IOException, EofException {
-    if (!force && negotiated) return;
+    if (!force && negotiated) {
+      return;
+    }
     initLock.lock();
     try {
-      if (invalid || shutdownSent) throw new ClosedChannelException();
+      if (invalid || shutdownSent) {
+        throw new ClosedChannelException();
+      }
       if (force || !negotiated) {
         engine.beginHandshake();
         logger.trace("Called engine.beginHandshake()");
