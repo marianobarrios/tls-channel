@@ -560,21 +560,16 @@ public class TlsChannelImpl implements ByteChannel {
           }
           break;
         case NOT_HANDSHAKING:
-          /*
-           * This should not really happen using SSLEngine, because
-           * handshaking ends with a FINISHED status. However, we accept
-           * this value to permit the use of a pass-through stub engine
-           * with no encryption.
-           */
           return 0;
         case NEED_TASK:
           handleTask();
           break;
         case FINISHED:
-          return 0;
+          // this status is never returned by SSLEngine.getHandshakeStatus()
+          throw new IllegalStateException();
         default:
           // Unsupported stage eg: NEED_UNWRAP_AGAIN
-          return 0;
+          throw new IllegalStateException();
       }
     }
   }
