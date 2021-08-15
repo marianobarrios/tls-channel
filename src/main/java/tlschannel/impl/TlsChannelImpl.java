@@ -523,7 +523,7 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private int writeAndHandshake() throws IOException, EofException {
+  private void writeAndHandshake() throws IOException, EofException {
     readLock.lock();
     try {
       writeLock.lock();
@@ -532,7 +532,7 @@ public class TlsChannelImpl implements ByteChannel {
         outEncrypted.prepare();
         try {
           writeToChannel(); // IO block
-          return handshakeLoop();
+          handshakeLoop();
         } finally {
           outEncrypted.release();
         }
@@ -544,7 +544,7 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private int handshakeLoop() throws IOException, EofException {
+  private void handshakeLoop() throws IOException, EofException {
     Util.assertTrue(inPlain.nullOrEmpty());
     while (true) {
       switch (engine.getHandshakeStatus()) {
@@ -556,11 +556,11 @@ public class TlsChannelImpl implements ByteChannel {
         case NEED_UNWRAP:
           readAndUnwrap();
           if (bytesToReturn > 0) {
-            return bytesToReturn;
+            return;
           }
           break;
         case NOT_HANDSHAKING:
-          return 0;
+          return;
         case NEED_TASK:
           handleTask();
           break;
