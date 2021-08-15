@@ -120,12 +120,6 @@ public class ByteBufferSet {
 
   @Override
   public String toString() {
-    return "ByteBufferSet[array="
-        + Arrays.toString(array)
-        + ", offset="
-        + offset
-        + ", length="
-        + length
-        + "]";
+    return "ByteBufferSet[" + Arrays.toString(array) + ":" + offset + ":" + length + "]";
   }
 }

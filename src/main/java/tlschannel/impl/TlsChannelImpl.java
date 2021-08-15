@@ -455,7 +455,7 @@ public class TlsChannelImpl implements ByteChannel {
         throw new NeedsWriteException();
       }
       // blocking SocketChannels can write less than all the bytesProduced
-      // just before an error the loop forces the exception
+      // just before an error, the loop forces the exception
     }
   }
 
