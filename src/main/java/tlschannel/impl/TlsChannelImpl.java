@@ -226,10 +226,13 @@ public class TlsChannelImpl implements ByteChannel {
   }
 
   private void handleTask() throws NeedsTaskException {
+    Runnable task = engine.getDelegatedTask();
     if (runTasks) {
-      engine.getDelegatedTask().run();
+      logger.trace("delegating in task: {}", task);
+      task.run();
     } else {
-      throw new NeedsTaskException(engine.getDelegatedTask());
+      logger.trace("task needed, throwing exception: {}", task);
+      throw new NeedsTaskException(task);
     }
   }
 
@@ -245,8 +248,7 @@ public class TlsChannelImpl implements ByteChannel {
     return bytes;
   }
 
-  private void unwrapLoop(HandshakeStatus originalStatus) throws SSLException {
-
+  private SSLEngineResult unwrapLoop() throws SSLException {
     ByteBufferSet effDest;
     if (suppliedInPlain != null) {
       effDest = suppliedInPlain;
@@ -258,19 +260,24 @@ public class TlsChannelImpl implements ByteChannel {
     while (true) {
       Util.assertTrue(inPlain.nullOrEmpty());
       SSLEngineResult result = callEngineUnwrap(effDest);
+      HandshakeStatus status = engine.getHandshakeStatus();
       /*
        * Note that data can be returned even in case of overflow, in that
        * case, just return the data.
        */
-      if (result.bytesProduced() > 0
-          || result.getStatus() == Status.BUFFER_UNDERFLOW
-          || result.getStatus() == Status.CLOSED
-          || result.getHandshakeStatus() != originalStatus) {
-        bytesToReturn = result.bytesProduced();
-        if (result.getStatus() == Status.CLOSED) {
-          shutdownReceived = true;
-        }
-        return;
+      if (result.bytesProduced() > 0) {
+        return result;
+      }
+      if (result.getStatus() == Status.CLOSED) {
+        return result;
+      }
+      if (result.getStatus() == Status.BUFFER_UNDERFLOW) {
+        return result;
+      }
+      if (result.getHandshakeStatus() == HandshakeStatus.FINISHED
+          || status == HandshakeStatus.NEED_TASK
+          || status == HandshakeStatus.NEED_WRAP) {
+        return result;
       }
       if (result.getStatus() == Status.BUFFER_OVERFLOW) {
         if (suppliedInPlain != null && effDest == suppliedInPlain) {
@@ -298,9 +305,9 @@ public class TlsChannelImpl implements ByteChannel {
           engine.unwrap(inEncrypted.buffer, dest.array, dest.offset, dest.length);
       if (logger.isTraceEnabled()) {
         logger.trace(
-            "engine.unwrap() result [{}]. Engine status: {}; inEncrypted {}; inPlain: {}",
+            "engine.unwrap() result [{}]. engine status: {}; inEncrypted {}; inPlain: {}",
             Util.resultToString(result),
-            result.getHandshakeStatus(),
+            engine.getHandshakeStatus(),
             inEncrypted,
             dest);
       }
@@ -317,7 +324,7 @@ public class TlsChannelImpl implements ByteChannel {
 
   private void readFromChannel() throws IOException, EofException {
     try {
-      readFromChannel(readChannel, inEncrypted.buffer);
+      callChannelRead(readChannel, inEncrypted.buffer);
     } catch (WouldBlockException e) {
       throw e;
     } catch (IOException e) {
@@ -326,7 +333,7 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  public static void readFromChannel(ReadableByteChannel readChannel, ByteBuffer buffer)
+  public static void callChannelRead(ReadableByteChannel readChannel, ByteBuffer buffer)
       throws IOException, EofException {
     Util.assertTrue(buffer.hasRemaining());
     logger.trace("Reading from channel");
@@ -430,7 +437,7 @@ public class TlsChannelImpl implements ByteChannel {
     outEncrypted.buffer.flip();
     try {
       try {
-        writeToChannel(writeChannel, outEncrypted.buffer);
+        callChannelWrite(writeChannel, outEncrypted.buffer); // IO block
       } catch (WouldBlockException e) {
         throw e;
       } catch (IOException e) {
@@ -442,11 +449,11 @@ public class TlsChannelImpl implements ByteChannel {
     }
   }
 
-  private static void writeToChannel(WritableByteChannel channel, ByteBuffer src)
+  private static void callChannelWrite(WritableByteChannel channel, ByteBuffer src)
       throws IOException {
     while (src.hasRemaining()) {
-      logger.trace("Writing to channel: {}", src);
-      int c = channel.write(src);
+      logger.trace("calling channel.write({})", src);
+      int c = channel.write(src); // IO block
       if (c == 0) {
         /*
          * If no bytesProduced were written, it means that the socket is
@@ -505,8 +512,8 @@ public class TlsChannelImpl implements ByteChannel {
         throw new ClosedChannelException();
       }
       if (force || !negotiated) {
+        logger.trace("Calling SSLEngine.beginHandshake()");
         engine.beginHandshake();
-        logger.trace("Called engine.beginHandshake()");
         writeAndHandshake();
 
         if (engine.getSession().getProtocol().startsWith("DTLS")) {
@@ -580,13 +587,23 @@ public class TlsChannelImpl implements ByteChannel {
 
   private void readAndUnwrap() throws IOException, EofException {
     // Save status before operation: use it to stop when status changes
-    HandshakeStatus orig = engine.getHandshakeStatus();
     inEncrypted.prepare();
     try {
       while (true) {
         Util.assertTrue(inPlain.nullOrEmpty());
-        unwrapLoop(orig);
-        if (bytesToReturn > 0 || engine.getHandshakeStatus() != orig || shutdownReceived) {
+        SSLEngineResult result = unwrapLoop();
+        HandshakeStatus status = engine.getHandshakeStatus();
+        if (result.bytesProduced() > 0) {
+          bytesToReturn = result.bytesProduced();
+          return;
+        }
+        if (result.getStatus() == Status.CLOSED) {
+          shutdownReceived = true;
+          return;
+        }
+        if (result.getHandshakeStatus() == HandshakeStatus.FINISHED
+            || status == HandshakeStatus.NEED_TASK
+            || status == HandshakeStatus.NEED_WRAP) {
           return;
         }
         if (!inEncrypted.buffer.hasRemaining()) {
