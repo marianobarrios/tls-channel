@@ -280,7 +280,7 @@ public class TlsChannelImpl implements ByteChannel {
         return result;
       }
       if (result.getStatus() == Status.BUFFER_OVERFLOW) {
-        if (suppliedInPlain != null && effDest == suppliedInPlain) {
+        if (effDest == suppliedInPlain) {
           /*
            * The client-supplier buffer is not big enough. Use the
            * internal inPlain buffer, also ensure that it is bigger
