@@ -397,7 +397,7 @@ public class ServerTlsChannel implements TlsChannel {
           if (!inEncrypted.buffer.hasRemaining()) {
             inEncrypted.enlarge();
           }
-          TlsChannelImpl.readFromChannel(underlying, inEncrypted.buffer); // IO block
+          TlsChannelImpl.callChannelRead(underlying, inEncrypted.buffer); // IO block
         }
       }
     } finally {
