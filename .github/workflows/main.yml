@@ -1,7 +1,7 @@
 name: build
 on: push
 jobs:
-  build:
+  build-hotspot:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -13,3 +13,16 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ matrix.java-version }}
       - run: ./gradlew assemble check --info
+  build-graalvm:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [ 8, 11 ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ayltai/setup-graalvm@v1
+        with:
+          java-version: ${{ matrix.java-version }}
+          graalvm-version: 21.1.0
+          native-image: true
+      - run: ./gradlew assemble check nativeImage --info

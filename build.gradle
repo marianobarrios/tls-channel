@@ -6,7 +6,10 @@ plugins {
     id "com.diffplug.spotless" version "6.9.0"
     // pinned version due to https://github.com/spotbugs/spotbugs/issues/2041
     id "com.github.spotbugs" version "5.0.12"
+    id 'org.mikeneck.graalvm-native-image' version 'v1.4.0'
 }
+
+import org.mikeneck.graalvm.BuildTypeSelector
 
 compileJava {
     if (JavaVersion.current().ordinal() > JavaVersion.VERSION_1_8.ordinal()) {
@@ -115,6 +118,15 @@ task allocationTest(type: JavaExec) {
 
 if (JavaVersion.current().ordinal() >= JavaVersion.VERSION_11.ordinal()) {
     check.dependsOn allocationTest
+}
+
+nativeImage {
+    graalVmHome = System.getProperty('java.home')
+    buildType { BuildTypeSelector build ->
+        build.sharedLibrary
+    }
+    executableName = 'tls-channel'
+    outputDirectory = file("$buildDir/native-lib")
 }
 
 publishing {
