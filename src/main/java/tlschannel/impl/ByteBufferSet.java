@@ -10,11 +10,19 @@ public class ByteBufferSet {
   public final int length;
 
   public ByteBufferSet(ByteBuffer[] array, int offset, int length) {
-    if (array == null) throw new NullPointerException();
-    if (array.length < offset) throw new IndexOutOfBoundsException();
-    if (array.length < offset + length) throw new IndexOutOfBoundsException();
+    if (array == null) {
+      throw new NullPointerException();
+    }
+    if (array.length < offset) {
+      throw new IndexOutOfBoundsException();
+    }
+    if (array.length < offset + length) {
+      throw new IndexOutOfBoundsException();
+    }
     for (int i = offset; i < offset + length; i++) {
-      if (array[i] == null) throw new NullPointerException();
+      if (array[i] == null) {
+        throw new NullPointerException();
+      }
     }
     this.array = array;
     this.offset = offset;
@@ -48,7 +56,9 @@ public class ByteBufferSet {
   public int putRemaining(ByteBuffer from) {
     int totalBytes = 0;
     for (int i = offset; i < offset + length; i++) {
-      if (!from.hasRemaining()) break;
+      if (!from.hasRemaining()) {
+        break;
+      }
       ByteBuffer dstBuffer = array[i];
       int bytes = Math.min(from.remaining(), dstBuffer.remaining());
       ByteBufferUtil.copy(from, dstBuffer, bytes);
@@ -67,7 +77,9 @@ public class ByteBufferSet {
     int totalBytes = 0;
     for (int i = offset; i < offset + this.length; i++) {
       int pending = length - totalBytes;
-      if (pending == 0) break;
+      if (pending == 0) {
+        break;
+      }
       int bytes = Math.min(pending, (int) remaining());
       ByteBuffer dstBuffer = array[i];
       ByteBufferUtil.copy(from, dstBuffer, bytes);
@@ -79,7 +91,9 @@ public class ByteBufferSet {
   public int getRemaining(ByteBuffer dst) {
     int totalBytes = 0;
     for (int i = offset; i < offset + length; i++) {
-      if (!dst.hasRemaining()) break;
+      if (!dst.hasRemaining()) {
+        break;
+      }
       ByteBuffer srcBuffer = array[i];
       int bytes = Math.min(dst.remaining(), srcBuffer.remaining());
       ByteBufferUtil.copy(srcBuffer, dst, bytes);
@@ -98,7 +112,9 @@ public class ByteBufferSet {
     int totalBytes = 0;
     for (int i = offset; i < offset + this.length; i++) {
       int pending = length - totalBytes;
-      if (pending == 0) break;
+      if (pending == 0) {
+        break;
+      }
       ByteBuffer srcBuffer = array[i];
       int bytes = Math.min(pending, srcBuffer.remaining());
       ByteBufferUtil.copy(srcBuffer, dst, bytes);
@@ -113,7 +129,9 @@ public class ByteBufferSet {
 
   public boolean isReadOnly() {
     for (int i = offset; i < offset + length; i++) {
-      if (array[i].isReadOnly()) return true;
+      if (array[i].isReadOnly()) {
+        return true;
+      }
     }
     return false;
   }

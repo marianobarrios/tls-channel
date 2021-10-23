@@ -61,19 +61,6 @@ public class BufferHolder {
     }
   }
 
-  public void resize(int newCapacity) {
-    if (newCapacity > maxSize)
-      throw new IllegalArgumentException(
-          String.format(
-              "new capacity (%s) bigger than absolute max size (%s)", newCapacity, maxSize));
-    logger.trace(
-        "resizing buffer {}, increasing from {} to {} (manual sizing)",
-        name,
-        buffer.capacity(),
-        newCapacity);
-    resizeImpl(newCapacity);
-  }
-
   public void enlarge() {
     if (buffer.capacity() >= maxSize) {
       throw new IllegalStateException(
@@ -82,14 +69,11 @@ public class BufferHolder {
     }
     int newCapacity = Math.min(buffer.capacity() * 2, maxSize);
     logger.trace(
-        "enlarging buffer {}, increasing from {} to {} (automatic enlarge)",
-        name,
-        buffer.capacity(),
-        newCapacity);
-    resizeImpl(newCapacity);
+        "enlarging buffer {}, increasing from {} to {}", name, buffer.capacity(), newCapacity);
+    resize(newCapacity);
   }
 
-  private void resizeImpl(int newCapacity) {
+  private void resize(int newCapacity) {
     ByteBuffer newBuffer = allocator.allocate(newCapacity);
     buffer.flip();
     newBuffer.put(buffer);
