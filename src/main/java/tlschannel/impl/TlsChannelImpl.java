@@ -261,6 +261,7 @@ public class TlsChannelImpl implements ByteChannel {
       Util.assertTrue(inPlain.nullOrEmpty());
       SSLEngineResult result = callEngineUnwrap(effDest);
       HandshakeStatus status = engine.getHandshakeStatus();
+
       /*
        * Note that data can be returned even in case of overflow, in that
        * case, just return the data.
@@ -274,6 +275,7 @@ public class TlsChannelImpl implements ByteChannel {
       if (result.getStatus() == Status.BUFFER_UNDERFLOW) {
         return result;
       }
+
       if (result.getHandshakeStatus() == HandshakeStatus.FINISHED
           || status == HandshakeStatus.NEED_TASK
           || status == HandshakeStatus.NEED_WRAP) {
@@ -283,15 +285,17 @@ public class TlsChannelImpl implements ByteChannel {
         if (effDest == suppliedInPlain) {
           /*
            * The client-supplier buffer is not big enough. Use the
-           * internal inPlain buffer, also ensure that it is bigger
+           * internal inPlain buffer. Also ensure that it is bigger
            * than the too-small supplied one.
            */
           inPlain.prepare();
-          ensureInPlainCapacity(
-              Math.min(((int) suppliedInPlain.remaining()) * 2, maxTlsPacketSize));
+          if (inPlain.buffer.capacity() <= suppliedInPlain.remaining()) {
+            inPlain.enlarge();
+          }
         } else {
           inPlain.enlarge();
         }
+
         // inPlain changed, re-create the wrapper
         effDest = new ByteBufferSet(inPlain.buffer);
       }
@@ -417,16 +421,6 @@ public class TlsChannelImpl implements ByteChannel {
     } catch (SSLException e) {
       invalid = true;
       throw e;
-    }
-  }
-
-  private void ensureInPlainCapacity(int newCapacity) {
-    if (inPlain.buffer.capacity() < newCapacity) {
-      logger.trace(
-          "inPlain buffer too small, increasing from {} to {}",
-          inPlain.buffer.capacity(),
-          newCapacity);
-      inPlain.resize(newCapacity);
     }
   }
 
