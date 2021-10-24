@@ -7,7 +7,7 @@ In other words, a simple library that allows the programmer to implement TLS usi
 [![Build Status](https://github.com/marianobarrios/tls-channel/actions/workflows/main.yml/badge.svg)](https://github.com/marianobarrios/tls-channel/actions)
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/tls-channel/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/tls-channel)
-[![Javadoc](http://javadoc-badge.appspot.com/com.github.marianobarrios/tls-channel.svg?label=javadoc)](http://javadoc-badge.appspot.com/com.github.marianobarrios/tls-channel)
+[![Javadoc](https://javadoc.io/badge2/com.github.marianobarrios/tls-channel/javadoc.svg)](https://javadoc.io/doc/com.github.marianobarrios/tls-channel)
 
 ### Main features
 
