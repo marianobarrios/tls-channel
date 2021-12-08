@@ -584,10 +584,15 @@ public class AsynchronousTlsChannelGroup {
     }
   }
 
-  private void registerPendingSockets() throws ClosedChannelException {
+  private void registerPendingSockets() {
     RegisteredSocket socket;
     while ((socket = pendingRegistrations.poll()) != null) {
-      socket.key = socket.socketChannel.register(selector, 0, socket);
+      try {
+        socket.key = socket.socketChannel.register(selector, 0, socket);
+      } catch (ClosedChannelException e) {
+        // can happen when channels are closed right after creation
+        continue;
+      }
       logger.trace("registered key: {}", socket.key);
       socket.registered.countDown();
     }
@@ -746,5 +751,14 @@ public class AsynchronousTlsChannelGroup {
    */
   public long getCurrentRegistrationCount() {
     return currentRegistrations.longValue();
+  }
+
+  /**
+   * Returns whether the selector thread is alive (used for debugging).
+   *
+   * @return whether the selector thread is alive
+   */
+  public boolean isAlive() {
+    return selectorThread.isAlive();
   }
 }

@@ -52,6 +52,7 @@ class AsyncCloseTest extends AnyFunSuite with AsyncTestBase with Assertions {
       assert(channelGroup.getSuccessfulReadCount == 0)
 
       printChannelGroupStatus(channelGroup)
+      channelGroup.shutdown()
     }
   }
 
