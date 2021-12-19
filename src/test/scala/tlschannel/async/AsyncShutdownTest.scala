@@ -36,14 +36,7 @@ class AsyncShutdownTest extends AnyFunSuite with Assertions with AsyncTestBase {
     val terminated = channelGroup.awaitTermination(100, TimeUnit.MILLISECONDS)
     assert(terminated)
     assert(channelGroup.isTerminated)
-
-    // give time to adders to converge
-    Thread.sleep(500)
-
     assertChannelGroupConsistency(channelGroup)
-
-    assert(channelGroup.getFailedReadCount == 0)
-    assert(channelGroup.getFailedWriteCount == 0)
 
     printChannelGroupStatus(channelGroup)
   }

@@ -20,7 +20,7 @@ class AsyncCloseTest extends AnyFunSuite with AsyncTestBase with Assertions {
    * Closing sockets registered in an asynchronous channel group is inherently racy, using repetitions to try to catch
    * most races.
    */
-  val repetitions = 100
+  val repetitions = 1000
 
   test("should throw an CancellationException (or ClosedChannelException) when closing the group while reading") {
     for (_ <- 1 to repetitions) {
@@ -31,27 +31,28 @@ class AsyncCloseTest extends AnyFunSuite with AsyncTestBase with Assertions {
       val readFuture = socketPair.server.external.read(readBuffer)
 
       socketPair.server.external.close()
-      socketPair.client.external.close()
 
       intercept[Exception] {
         readFuture.get(1000, TimeUnit.MILLISECONDS)
       } match {
         case _: CancellationException =>
+          // give time to adders to converge
+          Thread.sleep(10)
           assert(channelGroup.getCancelledReadCount == 1)
           assert(channelGroup.getFailedReadCount == 0)
         case ee: ExecutionException =>
+          // give time to adders to converge
+          Thread.sleep(10)
           assert(ee.getCause.isInstanceOf[ClosedChannelException])
           assert(channelGroup.getCancelledReadCount == 0)
           assert(channelGroup.getFailedReadCount == 1)
         case e => fail(e)
       }
 
+      socketPair.client.external.close()
       shutdownChannelGroup(channelGroup)
       assertChannelGroupConsistency(channelGroup)
-
       assert(channelGroup.getSuccessfulReadCount == 0)
-
-      printChannelGroupStatus(channelGroup)
       channelGroup.shutdown()
     }
   }
