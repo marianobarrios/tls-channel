@@ -36,6 +36,8 @@ trait AsyncTestBase extends Informing with Assertions {
   }
 
   def assertChannelGroupConsistency(group: AsynchronousTlsChannelGroup) = {
+    // give time to adders to converge
+    Thread.sleep(10)
     assert(group.getCurrentRegistrationCount == 0)
     assert(group.getCurrentReadCount == 0)
     assert(group.getCurrentWriteCount == 0)
