@@ -248,11 +248,9 @@ public class AsynchronousTlsChannelGroup {
       throws ReadPendingException {
     checkTerminated();
     Util.assertTrue(buffer.hasRemaining());
-
+    waitForSocketRegistration(socket);
     socket.readLock.lock();
     try {
-      waitForSocketRegistration(socket);
-
       if (socket.readOperation != null) {
         throw new ReadPendingException();
       }
@@ -303,11 +301,9 @@ public class AsynchronousTlsChannelGroup {
       throws WritePendingException {
     checkTerminated();
     Util.assertTrue(buffer.hasRemaining());
-
+    waitForSocketRegistration(socket);
     socket.writeLock.lock();
     try {
-      waitForSocketRegistration(socket);
-
       if (socket.writeOperation != null) {
         throw new WritePendingException();
       }
