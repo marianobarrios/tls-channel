@@ -249,12 +249,13 @@ public class AsynchronousTlsChannelGroup {
     checkTerminated();
     Util.assertTrue(buffer.hasRemaining());
     waitForSocketRegistration(socket);
+    ReadOperation op;
     socket.readLock.lock();
     try {
       if (socket.readOperation != null) {
         throw new ReadPendingException();
       }
-      ReadOperation op = new ReadOperation(buffer, onSuccess, onFailure);
+      op = new ReadOperation(buffer, onSuccess, onFailure);
 
       startedReads.increment();
       currentReads.increment();
@@ -288,7 +289,7 @@ public class AsynchronousTlsChannelGroup {
       socket.readLock.unlock();
     }
     selector.wakeup();
-    return socket.readOperation;
+    return op;
   }
 
   WriteOperation startWrite(
@@ -302,12 +303,13 @@ public class AsynchronousTlsChannelGroup {
     checkTerminated();
     Util.assertTrue(buffer.hasRemaining());
     waitForSocketRegistration(socket);
+    WriteOperation op;
     socket.writeLock.lock();
     try {
       if (socket.writeOperation != null) {
         throw new WritePendingException();
       }
-      WriteOperation op = new WriteOperation(buffer, onSuccess, onFailure);
+      op = new WriteOperation(buffer, onSuccess, onFailure);
 
       startedWrites.increment();
       currentWrites.increment();
@@ -341,7 +343,7 @@ public class AsynchronousTlsChannelGroup {
       socket.writeLock.unlock();
     }
     selector.wakeup();
-    return socket.writeOperation;
+    return op;
   }
 
   private void checkTerminated() {
@@ -484,9 +486,7 @@ public class AsynchronousTlsChannelGroup {
         socket.pendingOps.accumulateAndGet(SelectionKey.OP_WRITE, (a, b) -> a | b);
         selector.wakeup();
       } catch (IOException e) {
-        if (socket.writeOperation == op) {
-          socket.writeOperation = null;
-        }
+        socket.writeOperation = null;
         if (op.timeoutFuture != null) {
           op.timeoutFuture.cancel(false);
         }
@@ -548,9 +548,7 @@ public class AsynchronousTlsChannelGroup {
         socket.pendingOps.accumulateAndGet(SelectionKey.OP_WRITE, (a, b) -> a | b);
         selector.wakeup();
       } catch (IOException e) {
-        if (socket.readOperation == op) {
-          socket.readOperation = null;
-        }
+        socket.readOperation = null;
         if (op.timeoutFuture != null) {
           op.timeoutFuture.cancel(false);
         }
