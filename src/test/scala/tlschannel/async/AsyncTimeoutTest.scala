@@ -20,65 +20,71 @@ class AsyncTimeoutTest extends AnyFunSuite with AsyncTestBase with Assertions {
 
   val bufferSize = 10
 
+  val repetitions = 1000
+
   test("scheduled timeout") {
     val channelGroup = new AsynchronousTlsChannelGroup()
-    val socketPairCount = 1000
-    val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
-    val latch = new CountDownLatch(socketPairCount * 2)
     val successWrites = new LongAdder
     val successReads = new LongAdder
-    for (AsyncSocketPair(client, server) <- socketPairs) {
-      val writeBuffer = ByteBuffer.allocate(bufferSize)
-      val clientDone = new AtomicBoolean
-      client.external.write(
-        writeBuffer,
-        50,
-        TimeUnit.MILLISECONDS,
-        null,
-        new CompletionHandler[Integer, Null] {
-          override def failed(exc: Throwable, attachment: Null) = {
-            if (!clientDone.compareAndSet(false, true)) {
-              fail()
+    for (_ <- 1 to repetitions) {
+      val socketPairCount = 100
+      val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
+      val latch = new CountDownLatch(socketPairCount * 2)
+      for (AsyncSocketPair(client, server) <- socketPairs) {
+        val writeBuffer = ByteBuffer.allocate(bufferSize)
+        val clientDone = new AtomicBoolean
+        client.external.write(
+          writeBuffer,
+          50,
+          TimeUnit.MILLISECONDS,
+          null,
+          new CompletionHandler[Integer, Null] {
+            override def failed(exc: Throwable, attachment: Null) = {
+              if (!clientDone.compareAndSet(false, true)) {
+                fail()
+              }
+              latch.countDown()
             }
-            latch.countDown()
-          }
-          override def completed(result: Integer, attachment: Null) = {
-            if (!clientDone.compareAndSet(false, true)) {
-              fail()
+
+            override def completed(result: Integer, attachment: Null) = {
+              if (!clientDone.compareAndSet(false, true)) {
+                fail()
+              }
+              latch.countDown()
+              successWrites.increment()
             }
-            latch.countDown()
-            successWrites.increment()
           }
-        }
-      )
-      val readBuffer = ByteBuffer.allocate(bufferSize)
-      val serverDone = new AtomicBoolean
-      server.external.read(
-        readBuffer,
-        100,
-        TimeUnit.MILLISECONDS,
-        null,
-        new CompletionHandler[Integer, Null] {
-          override def failed(exc: Throwable, attachment: Null) = {
-            if (!serverDone.compareAndSet(false, true)) {
-              fail()
+        )
+        val readBuffer = ByteBuffer.allocate(bufferSize)
+        val serverDone = new AtomicBoolean
+        server.external.read(
+          readBuffer,
+          100,
+          TimeUnit.MILLISECONDS,
+          null,
+          new CompletionHandler[Integer, Null] {
+            override def failed(exc: Throwable, attachment: Null) = {
+              if (!serverDone.compareAndSet(false, true)) {
+                fail()
+              }
+              latch.countDown()
             }
-            latch.countDown()
-          }
-          override def completed(result: Integer, attachment: Null) = {
-            if (!serverDone.compareAndSet(false, true)) {
-              fail()
+
+            override def completed(result: Integer, attachment: Null) = {
+              if (!serverDone.compareAndSet(false, true)) {
+                fail()
+              }
+              latch.countDown()
+              successReads.increment()
             }
-            latch.countDown()
-            successReads.increment()
           }
-        }
-      )
-    }
-    latch.await()
-    for (AsyncSocketPair(client, server) <- socketPairs) {
-      client.external.close()
-      server.external.close()
+        )
+      }
+      latch.await()
+      for (AsyncSocketPair(client, server) <- socketPairs) {
+        client.external.close()
+        server.external.close()
+      }
     }
 
     shutdownChannelGroup(channelGroup)
@@ -97,30 +103,32 @@ class AsyncTimeoutTest extends AnyFunSuite with AsyncTestBase with Assertions {
 
   test("triggered timeout") {
     val channelGroup = new AsynchronousTlsChannelGroup()
-    val socketPairCount = 1000
-    val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
-    val futures = for (AsyncSocketPair(client, server) <- socketPairs) yield {
-      val writeBuffer = ByteBuffer.allocate(bufferSize)
-      val writeFuture = client.external.write(writeBuffer)
-      val readBuffer = ByteBuffer.allocate(bufferSize)
-      val readFuture = server.external.read(readBuffer)
-      (writeFuture, readFuture)
-    }
     var successfulWriteCancellations = 0
     var successfulReadCancellations = 0
-    for ((writeFuture, readFuture) <- futures) {
-      if (writeFuture.cancel(true)) {
-        successfulWriteCancellations += 1
+    for (_ <- 1 to repetitions) {
+      val socketPairCount = 100
+      val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
+      val futures = for (AsyncSocketPair(client, server) <- socketPairs) yield {
+        val writeBuffer = ByteBuffer.allocate(bufferSize)
+        val writeFuture = client.external.write(writeBuffer)
+        val readBuffer = ByteBuffer.allocate(bufferSize)
+        val readFuture = server.external.read(readBuffer)
+        (writeFuture, readFuture)
       }
-      if (readFuture.cancel(true)) {
-        successfulReadCancellations += 1
-      }
-    }
-    for (AsyncSocketPair(client, server) <- socketPairs) {
-      client.external.close()
-      server.external.close()
-    }
 
+      for ((writeFuture, readFuture) <- futures) {
+        if (writeFuture.cancel(true)) {
+          successfulWriteCancellations += 1
+        }
+        if (readFuture.cancel(true)) {
+          successfulReadCancellations += 1
+        }
+      }
+      for (AsyncSocketPair(client, server) <- socketPairs) {
+        client.external.close()
+        server.external.close()
+      }
+    }
     shutdownChannelGroup(channelGroup)
     assertChannelGroupConsistency(channelGroup)
 
@@ -132,7 +140,7 @@ class AsyncTimeoutTest extends AnyFunSuite with AsyncTestBase with Assertions {
 
     info(f"success writes:     ${channelGroup.getSuccessfulWriteCount}%8d")
     info(f"success reads:      ${channelGroup.getSuccessfulReadCount}%8d")
-    printChannelGroupStatus(channelGroup)
+
   }
 
 }
