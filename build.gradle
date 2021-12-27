@@ -50,8 +50,8 @@ spotbugs {
 spotbugsMain {
     reports {
         html {
-            enabled = true
-            destination = file("$buildDir/reports/spotbugs/spotbugs.html")
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/spotbugs.html")
         }
     }
 }
@@ -60,8 +60,8 @@ spotbugsTest {
     excludeFilter = file('spotbugs-exclude-tests.xml')
     reports {
         html {
-            enabled = true
-            destination = file("$buildDir/reports/spotbugs/spotbugsTest.html")
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/spotbugsTest.html")
         }
     }
 }
