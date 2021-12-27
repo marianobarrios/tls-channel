@@ -22,11 +22,11 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.32'
     testImplementation 'org.scala-lang:scala-library:2.13.6'
     testImplementation 'org.scalatest:scalatest_2.13:3.2.9'
-    testImplementation 'ch.qos.logback:logback-classic:1.2.6'
+    testImplementation 'ch.qos.logback:logback-classic:1.2.9'
     testImplementation 'com.typesafe.scala-logging:scala-logging_2.13:3.9.4'
-    testImplementation 'io.netty:netty-buffer:4.1.69.Final'
-    testImplementation 'io.netty:netty-handler:4.1.69.Final'
-    testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.44.Final'
+    testImplementation 'io.netty:netty-buffer:4.1.72.Final'
+    testImplementation 'io.netty:netty-handler:4.1.72.Final'
+    testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.46.Final'
     // https://github.com/scalatest/scalatest/issues/1736
     testRuntimeOnly "com.vladsch.flexmark:flexmark-all:0.36.8"
 }
