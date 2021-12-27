@@ -7,9 +7,8 @@ import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil
 
-/**
-  * Test using concurrent, non-blocking connections, and a "null" [[javax.net.ssl.SSLEngine]] that just passes
-  * all byte as they are.
+/** Test using concurrent, non-blocking connections, and a "null" [[javax.net.ssl.SSLEngine]] that just passes all byte
+  * as they are.
   */
 class NullMultiNonBlockingTest extends AnyFunSuite with Assertions with NonBlockingSuite with BeforeAndAfterAll {
 

@@ -16,8 +16,7 @@ class BlockingTest extends AnyFunSuite with Assertions with StrictLogging {
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
   val dataSize = 60 * 1000
 
-  /**
-    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+  /** Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
     */
   test("half duplex (with renegotiations)") {
     val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
@@ -36,8 +35,7 @@ class BlockingTest extends AnyFunSuite with Assertions with StrictLogging {
     }
   }
 
-  /**
-    * Test a full-duplex interaction, without any renegotiation
+  /** Test a full-duplex interaction, without any renegotiation
     */
   test("full duplex") {
     val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)

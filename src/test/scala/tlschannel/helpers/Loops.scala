@@ -23,9 +23,8 @@ object Loops extends Assertions with StrictLogging {
   val renegotiatePeriod = 10000
   val hashAlgorithm = "MD5" // for speed
 
-  /**
-    * Test a half-duplex interaction, with (optional) renegotiation
-    * before reversing the direction of the flow (as in HTTP)
+  /** Test a half-duplex interaction, with (optional) renegotiation before reversing the direction of the flow (as in
+    * HTTP)
     */
   def halfDuplex(socketPair: SocketPair, dataSize: Int, renegotiation: Boolean = false, scattering: Boolean = false) = {
     val clientWriterThread =

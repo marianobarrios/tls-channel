@@ -33,10 +33,8 @@ case class SocketGroup(external: ByteChannel, tls: TlsChannel, plain: SocketChan
 
 case class AsyncSocketGroup(external: ExtendedAsynchronousByteChannel, tls: TlsChannel, plain: SocketChannel)
 
-/**
-  * Create pairs of connected sockets (using the loopback interface).
-  * Additionally, all the raw (non-encrypted) socket channel are wrapped with a chunking decorator that partitions
-  * the bytesProduced of any read or write operation.
+/** Create pairs of connected sockets (using the loopback interface). Additionally, all the raw (non-encrypted) socket
+  * channel are wrapped with a chunking decorator that partitions the bytesProduced of any read or write operation.
   */
 class SocketPairFactory(
     val sslContext: SSLContext,

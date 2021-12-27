@@ -16,8 +16,7 @@ class ConcurrentTest extends AnyFunSuite with Assertions with StrictLogging {
   val dataSize = 500_000_000
   val bufferSize = 2000
 
-  /**
-    * Test several parties writing concurrently
+  /** Test several parties writing concurrently
     */
   test("write-size thread-safety") {
     val socketPair = factory.nioNio()
@@ -37,8 +36,7 @@ class ConcurrentTest extends AnyFunSuite with Assertions with StrictLogging {
     info(f"${elapsed.toMillis}%5d ms")
   }
 
-  /**
-    * Test several parties reading concurrently
+  /** Test several parties reading concurrently
     */
   test("read-size thread-safety") {
     val socketPair = factory.nioNio()

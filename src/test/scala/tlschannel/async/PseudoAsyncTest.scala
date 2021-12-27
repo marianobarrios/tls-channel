@@ -18,8 +18,7 @@ class PseudoAsyncTest extends AnyFunSuite with Assertions with StrictLogging {
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
   val dataSize = 60 * 1000
 
-  /**
-    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+  /** Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
     */
   test("half duplex") {
     logger.debug(s"Testing half duplex")
@@ -40,8 +39,7 @@ class PseudoAsyncTest extends AnyFunSuite with Assertions with StrictLogging {
     }
   }
 
-  /**
-    * Test a full-duplex interaction, without any renegotiation
+  /** Test a full-duplex interaction, without any renegotiation
     */
   test("full duplex") {
     logger.debug(s"Testing full duplex")

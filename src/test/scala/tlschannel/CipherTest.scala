@@ -19,8 +19,7 @@ class CipherTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val dataSize = 200 * 1000
 
-  /**
-    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+  /** Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
     */
   test("half duplex (with renegotiations)") {
     for (protocol <- protocols) {
@@ -42,8 +41,7 @@ class CipherTest extends AnyFunSuite with Assertions with StrictLogging {
     }
   }
 
-  /**
-    * Test a full-duplex interaction, without any renegotiation
+  /** Test a full-duplex interaction, without any renegotiation
     */
   test("full duplex") {
     for (protocol <- protocols) {

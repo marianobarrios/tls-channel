@@ -74,8 +74,7 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
     assert(receivedData.slice(0, dataSize) sameElements data)
   }
 
-  /**
-    * Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+  /** Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
     */
   def halfDuplexStream(
       serverWriter: Writer,
@@ -103,8 +102,7 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
     info(s"elapsed: ${elapsed.toMillis} ms")
   }
 
-  /**
-    * Test a full-duplex interaction, without any renegotiation
+  /** Test a full-duplex interaction, without any renegotiation
     */
   def fullDuplexStream(
       serverWriter: Writer,

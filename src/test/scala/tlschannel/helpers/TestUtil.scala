@@ -81,10 +81,12 @@ object TestUtil extends StrictLogging {
     }
   }
 
-  /**
-    * @param f the function to memoize
-    * @tparam I input to f
-    * @tparam O output of f
+  /** @param f
+    *   the function to memoize
+    * @tparam I
+    *   input to f
+    * @tparam O
+    *   output of f
     */
   class Memo[I, O](f: I => O) extends (I => O) {
     val cache = new ConcurrentHashMap[I, O]

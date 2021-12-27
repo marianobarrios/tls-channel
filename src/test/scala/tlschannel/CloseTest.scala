@@ -17,8 +17,7 @@ class CloseTest extends AnyFunSuite with Assertions with StrictLogging {
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
   val data = Array[Byte](15)
 
-  /**
-    * Less than a TLS message, to force read/write loops
+  /** Less than a TLS message, to force read/write loops
     */
   val internalBufferSize = Some(10)
 
