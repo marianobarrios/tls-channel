@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.Channel;
 import java.util.Optional;
+import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.net.ssl.SSLContext;
@@ -45,7 +46,10 @@ public class ClientTlsChannel implements TlsChannel {
           plainBufferAllocator,
           encryptedBufferAllocator,
           releaseBuffers,
-          waitForCloseConfirmation);
+          waitForCloseConfirmation,
+          lockSupplier.newInitLock(),
+          lockSupplier.newReadLock(),
+          lockSupplier.newWriteLock());
     }
   }
 
@@ -91,7 +95,10 @@ public class ClientTlsChannel implements TlsChannel {
       BufferAllocator plainBufAllocator,
       BufferAllocator encryptedBufAllocator,
       boolean releaseBuffers,
-      boolean waitForCloseNotifyOnClose) {
+      boolean waitForCloseNotifyOnClose,
+      Lock initLock,
+      Lock readLock,
+      Lock writeLock) {
     if (!engine.getUseClientMode())
       throw new IllegalArgumentException("SSLEngine must be in client mode");
     this.underlying = underlying;
@@ -108,7 +115,10 @@ public class ClientTlsChannel implements TlsChannel {
             trackingPlainBufAllocator,
             trackingEncryptedAllocator,
             releaseBuffers,
-            waitForCloseNotifyOnClose);
+            waitForCloseNotifyOnClose,
+            initLock,
+            readLock,
+            writeLock);
   }
 
   @Override

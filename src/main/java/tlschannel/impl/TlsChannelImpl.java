@@ -52,6 +52,32 @@ public class TlsChannelImpl implements ByteChannel {
   private final TrackingAllocator plainBufAllocator;
   private final boolean waitForCloseConfirmation;
 
+  public TlsChannelImpl(
+          ReadableByteChannel readChannel,
+          WritableByteChannel writeChannel,
+          SSLEngine engine,
+          Optional<BufferHolder> inEncrypted,
+          Consumer<SSLSession> initSessionCallback,
+          boolean runTasks,
+          TrackingAllocator plainBufAllocator,
+          TrackingAllocator encryptedBufAllocator,
+          boolean releaseBuffers,
+          boolean waitForCloseConfirmation) {
+    this(readChannel,
+         writeChannel,
+         engine,
+         inEncrypted,
+         initSessionCallback,
+         runTasks,
+         plainBufAllocator,
+         encryptedBufAllocator,
+         releaseBuffers,
+         waitForCloseConfirmation,
+         new ReentrantLock(),
+         new ReentrantLock(),
+         new ReentrantLock());
+  }
+
   // @formatter:off
   public TlsChannelImpl(
       ReadableByteChannel readChannel,
@@ -63,11 +89,17 @@ public class TlsChannelImpl implements ByteChannel {
       TrackingAllocator plainBufAllocator,
       TrackingAllocator encryptedBufAllocator,
       boolean releaseBuffers,
-      boolean waitForCloseConfirmation) {
+      boolean waitForCloseConfirmation,
+      Lock initLock,
+      Lock readLock,
+      Lock writeLock) {
     // @formatter:on
     this.readChannel = readChannel;
     this.writeChannel = writeChannel;
     this.engine = engine;
+    this.initLock = initLock;
+    this.readLock = readLock;
+    this.writeLock = writeLock;
     this.inEncrypted =
         inEncrypted.orElseGet(
             () ->
@@ -104,9 +136,9 @@ public class TlsChannelImpl implements ByteChannel {
             releaseBuffers);
   }
 
-  private final Lock initLock = new ReentrantLock();
-  private final Lock readLock = new ReentrantLock();
-  private final Lock writeLock = new ReentrantLock();
+  private final Lock initLock;
+  private final Lock readLock;
+  private final Lock writeLock;
 
   private volatile boolean negotiated = false;
 

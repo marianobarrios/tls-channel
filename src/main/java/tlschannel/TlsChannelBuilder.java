@@ -19,6 +19,7 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
   BufferAllocator encryptedBufferAllocator = TlsChannel.defaultEncryptedBufferAllocator;
   boolean releaseBuffers = true;
   boolean waitForCloseConfirmation = false;
+  LockSupplier lockSupplier = new LockSupplier() {};
 
   TlsChannelBuilder(ByteChannel underlying) {
     this.underlying = underlying;
@@ -60,6 +61,19 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
    */
   public T withEncryptedBufferAllocator(BufferAllocator bufferAllocator) {
     this.encryptedBufferAllocator = bufferAllocator;
+    return getThis();
+  }
+
+  /**
+   * Set the {@link LockSupplier} to use when creating the underlying impl instance.
+   * By default the {@link java.util.concurrent.locks.ReentrantLock} will be used
+   * for init, read and write.
+   *
+   * @param lockSupplier the lock supplier
+   * @return this object
+   */
+  public T withLockSupplier(LockSupplier lockSupplier) {
+    this.lockSupplier = lockSupplier;
     return getThis();
   }
 
