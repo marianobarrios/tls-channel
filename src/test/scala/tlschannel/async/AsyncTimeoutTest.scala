@@ -5,7 +5,7 @@ import java.nio.channels.CompletionHandler
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.LongAdder
+import java8.util.concurrent.atomic.LongAdder
 
 import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuite

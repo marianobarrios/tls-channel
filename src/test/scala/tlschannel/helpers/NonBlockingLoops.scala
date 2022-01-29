@@ -3,7 +3,7 @@ package tlschannel.helpers
 import tlschannel.NeedsWriteException
 import tlschannel.NeedsReadException
 import tlschannel.NeedsTaskException
-import java.util.concurrent.atomic.LongAdder
+import java8.util.concurrent.atomic.LongAdder
 
 import scala.util.Random
 import java.util.concurrent.ConcurrentLinkedQueue
