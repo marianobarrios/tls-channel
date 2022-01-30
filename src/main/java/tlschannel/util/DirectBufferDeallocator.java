@@ -3,6 +3,7 @@ package tlschannel.util;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.NullPointerException;
 import java.nio.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +53,11 @@ public class DirectBufferDeallocator {
         clean.invoke(cleanerAccessor.invoke(bb));
       } catch (IllegalAccessException | InvocationTargetException t) {
           throw new RuntimeException(t);
+      } catch (NullPointerException t) {
+          // Well, the Android API 29 sources leave `cleaner` null, saying:
+          // "Only have references to java objects, no need for a cleaner since the GC will do all
+          // the work."
+          // So... I guess we do nothing.
       } catch (IllegalArgumentException t) {
         try {
           dbbFree.invoke(bb);
