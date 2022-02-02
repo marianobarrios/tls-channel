@@ -1,7 +1,7 @@
 name: build
 on: [push, pull_request]
 jobs:
-  build:
+  build-java:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -15,4 +15,10 @@ jobs:
       # delete gradle.properties in Java 8 because it contains a then-unsupported JVM argument: --add-exports
       - run: rm gradle.properties
         if: ${{ matrix.java-version == 8 }}
+      - run: ./gradlew assemble check --info
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: android-actions/setup-android@v2
       - run: ./gradlew assemble check --info
