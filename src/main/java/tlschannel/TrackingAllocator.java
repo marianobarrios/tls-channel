@@ -2,8 +2,8 @@ package tlschannel;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.LongAccumulator;
-import java.util.concurrent.atomic.LongAdder;
+import java8.util.concurrent.atomic.LongAccumulator;
+import java8.util.concurrent.atomic.LongAdder;
 
 /** A decorating {@link BufferAllocator} that keeps statistics. */
 public class TrackingAllocator implements BufferAllocator {

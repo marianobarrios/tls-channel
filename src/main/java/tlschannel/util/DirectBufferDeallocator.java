@@ -27,6 +27,7 @@ public class DirectBufferDeallocator {
 
     final Method cleanerAccessor;
     final Method clean;
+    final Method dbbFree;
 
     Java8Deallocator() {
       try {
@@ -35,6 +36,14 @@ public class DirectBufferDeallocator {
       } catch (NoSuchMethodException | ClassNotFoundException t) {
         throw new RuntimeException(t);
       }
+      Method dbbFree0 = null;
+      try {
+        dbbFree0 = Class.forName("java.nio.DirectByteBuffer").getMethod("free");
+      } catch (NoSuchMethodException | ClassNotFoundException t) {
+        // t.printStackTrace();
+        // throw new RuntimeException(t);
+      }
+      dbbFree = dbbFree0;
     }
 
     @Override
@@ -43,6 +52,17 @@ public class DirectBufferDeallocator {
         clean.invoke(cleanerAccessor.invoke(bb));
       } catch (IllegalAccessException | InvocationTargetException t) {
         throw new RuntimeException(t);
+      } catch (NullPointerException t) {
+        // Well, the Android API 29 sources leave `cleaner` null, saying:
+        // "Only have references to java objects, no need for a cleaner since the GC will do all
+        // the work."
+        // So... I guess we do nothing.
+      } catch (IllegalArgumentException t) {
+        try {
+          dbbFree.invoke(bb);
+        } catch (IllegalAccessException | InvocationTargetException t2) {
+          throw new RuntimeException(t2);
+        }
       }
     }
   }

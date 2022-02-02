@@ -6,7 +6,7 @@ import java.security.MessageDigest
 import java.util.SplittableRandom
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.LongAdder
+import java8.util.concurrent.atomic.LongAdder
 
 import com.typesafe.scalalogging.StrictLogging
 import org.scalatest.Assertions

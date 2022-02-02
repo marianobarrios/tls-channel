@@ -20,6 +20,8 @@ repositories {
 
 dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.32'
+    implementation 'net.sourceforge.streamsupport:streamsupport_all:1.7.4'
+
     testImplementation 'org.scala-lang:scala-library:2.13.7'
     testImplementation 'org.scalatest:scalatest_2.13:3.2.9'
     testImplementation 'ch.qos.logback:logback-classic:1.2.9'
@@ -31,6 +33,7 @@ dependencies {
     testRuntimeOnly "com.vladsch.flexmark:flexmark-all:0.36.8"
 }
 
+
 spotless {
     java {
         googleJavaFormat()
@@ -39,6 +42,7 @@ spotless {
         scalafmt().configFile('.scalafmt.conf')
     }
 }
+
 
 spotbugs {
     ignoreFailures = false
