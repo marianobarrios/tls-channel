@@ -3,7 +3,7 @@ plugins {
     id 'scala'
     id 'signing'
     id 'maven-publish'
-//    id "com.diffplug.spotless" version "6.1.0"
+    id "com.diffplug.spotless" version "6.1.0"
     id "com.github.spotbugs" version "5.0.3"
 }
 
@@ -33,7 +33,7 @@ dependencies {
     testRuntimeOnly "com.vladsch.flexmark:flexmark-all:0.36.8"
 }
 
-/*
+
 spotless {
     java {
         googleJavaFormat()
@@ -42,7 +42,7 @@ spotless {
         scalafmt().configFile('.scalafmt.conf')
     }
 }
-*/
+
 
 spotbugs {
     ignoreFailures = false
@@ -156,5 +156,5 @@ publishing {
 }
 
 signing {
-//    sign publishing.publications.tlschannel
+    sign publishing.publications.tlschannel
 }
