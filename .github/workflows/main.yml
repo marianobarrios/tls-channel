@@ -29,3 +29,6 @@ jobs:
         with:
           api-level: ${{ matrix.api-version }}
           script: ./gradlew connectedAndroidTest --info
+      # AFAIK Android doesn't support --add-exports
+      - run: rm gradle.properties
+      - run: ./gradlew assemble check --info
