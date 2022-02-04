@@ -16,3 +16,16 @@ jobs:
       - run: rm gradle.properties
         if: ${{ matrix.java-version == 8 }}
       - run: ./gradlew assemble check --info
+  android_tests:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        api-version: [16,19,23,29]
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Android tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-version }}
+          script: ./gradlew connectedAndroidTest --info
