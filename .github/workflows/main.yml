@@ -24,11 +24,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
+      # AFAIK Android doesn't support --add-exports
+      - run: rm gradle.properties
       - name: Android tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-version }}
           script: ./gradlew connectedAndroidTest --info
-      # AFAIK Android doesn't support --add-exports
-      - run: rm gradle.properties
-      - run: ./gradlew assemble check --info
