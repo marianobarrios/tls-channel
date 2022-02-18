@@ -1,4 +1,23 @@
 dependencyResolutionManagement {
+  pluginManagement {
+    resolutionStrategy {
+      eachPlugin {
+        if (requested.id.namespace == 'org.gradle.sample') {
+            useModule('org.gradle.sample:sample-plugins:1.0.0')
+        }
+      }
+    }
+    repositories {
+      maven {
+        url 'maven-repo'
+      }
+      gradlePluginPortal()
+      ivy {
+        url 'ivy-repo'
+      }
+      google()
+    }
+  }
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         mavenLocal()
@@ -8,4 +27,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "TLS Channel"
-include ':java'
+include ':java', ':android'
