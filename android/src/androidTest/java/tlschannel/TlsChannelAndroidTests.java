@@ -22,6 +22,7 @@ import tlschannel.util.DirectBufferDeallocator;
 @RunWith(AndroidJUnit4.class)
 public class TlsChannelAndroidTests {
     @Test
+    // Differential confirmation, 0d546f2b7562bd95dd52f7f0418f6bab0bc5e859 vs 31c939e5334b6dc7306346e9ee2407fc75416bfa
     public void testDirectBufferDeallocator() {
         DirectBufferDeallocator deallocator = new DirectBufferDeallocator();
         ByteBuffer buffer = ByteBuffer.allocateDirect(1000);
