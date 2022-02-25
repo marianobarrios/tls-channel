@@ -30,12 +30,22 @@ public class DirectBufferDeallocator {
     final Method dbbFree;
 
     Java8Deallocator() {
+      Method cleanerAccessor0 = null;
       try {
-        cleanerAccessor = Class.forName("sun.nio.ch.DirectBuffer").getMethod("cleaner");
-        clean = Class.forName("sun.misc.Cleaner").getMethod("clean");
+        cleanerAccessor0 = Class.forName("sun.nio.ch.DirectBuffer").getMethod("cleaner");
       } catch (NoSuchMethodException | ClassNotFoundException t) {
-        throw new RuntimeException(t);
+        // throw new RuntimeException(t);
       }
+      cleanerAccessor = cleanerAccessor0;
+
+      Method clean0 = null;
+      try {
+        clean0 = Class.forName("sun.misc.Cleaner").getMethod("clean");
+      } catch (NoSuchMethodException | ClassNotFoundException t) {
+        // throw new RuntimeException(t);
+      }
+      clean = clean0;
+
       Method dbbFree0 = null;
       try {
         dbbFree0 = Class.forName("java.nio.DirectByteBuffer").getMethod("free");
@@ -52,14 +62,15 @@ public class DirectBufferDeallocator {
         clean.invoke(cleanerAccessor.invoke(bb));
       } catch (IllegalAccessException | InvocationTargetException t) {
         throw new RuntimeException(t);
-      } catch (NullPointerException t) {
+      } catch (NullPointerException | IllegalArgumentException t) {
         // Well, the Android API 29 sources leave `cleaner` null, saying:
         // "Only have references to java objects, no need for a cleaner since the GC will do all
         // the work."
-        // So... I guess we do nothing.
-      } catch (IllegalArgumentException t) {
+        // So... I guess we do nothing, in that case.  We can still TRY dbbFree, I guess
         try {
-          dbbFree.invoke(bb);
+          if (dbbFree != null) {
+            dbbFree.invoke(bb);
+          }
         } catch (IllegalAccessException | InvocationTargetException t2) {
           throw new RuntimeException(t2);
         }
