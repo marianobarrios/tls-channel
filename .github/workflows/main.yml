@@ -30,4 +30,4 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-version }}
-          script: ./gradlew connectedAndroidTest --info
+          script: ./gradlew :android:connectedAndroidTest --info
