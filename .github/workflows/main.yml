@@ -15,12 +15,6 @@ jobs:
       # delete gradle.properties in Java 8 because it contains a then-unsupported JVM argument: --add-exports
       - run: rm java/gradle.properties
         if: ${{ matrix.java-version == 8 }}
-      # use settings.gradle_j8 (excludes :android) in Java 8 because the Android plugin requires Java 11+
-      - run: mv settings.gradle_j8 settings.gradle
-        if: ${{ matrix.java-version == 8 }}
-      - run: |
-          echo "GRADLE_USER_HOME=${HOME}/.gradle"
-          echo "${GRADLE_PROPERTIES}"
       - run: ./gradlew assemble check --info
   android_tests:
     runs-on: macos-latest
@@ -34,9 +28,10 @@ jobs:
           distribution: 'adopt'
           java-version: 11
       
-      - run: |
-          echo "GRADLE_USER_HOME=${HOME}/.gradle"
-          echo "${GRADLE_PROPERTIES}"
+      # append settings.gradle_android (includes :android) only when doing Android tests because the Android plugin requires Java 11+,
+      #   and ALSO, for some reason github ci is throwing "java.lang.OutOfMemoryError: Metaspace" on :java:spotlessScala when Android is included,
+      #   and it's not really necessary for the Java compilation, so.  Out it goes.
+      - run: cat settings.gradle_android >> settings.gradle
       - name: Android tests
         uses: reactivecircus/android-emulator-runner@v2
         with:

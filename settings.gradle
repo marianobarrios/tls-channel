@@ -27,4 +27,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "TLS Channel"
-include ':java', ':android'
+include ':java'
