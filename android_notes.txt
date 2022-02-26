@@ -1,0 +1,12 @@
+Android doesn't support keystore type JKS ; use PKCS12 ; convert with e.g.:
+keytool -importkeystore -srckeystore keystore.jks -destkeystore keystore.p12 -srcstoretype JKS -deststoretype PKCS12 -deststorepass password
+
+If your phone is lower than API...26?  (Whenever lambdas were introduced.)  Integrate the following into your app's build.gradle:
+android {
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+    }
+}
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
+}
