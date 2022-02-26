@@ -16,7 +16,7 @@ jobs:
       - run: rm gradle.properties
         if: ${{ matrix.java-version == 8 }}
       # use settings.gradle_j8 (excludes :android) in Java 8 because the Android plugin requires Java 11+
-      - run mv settings.gradle_j8 settings.gradle
+      - run: mv settings.gradle_j8 settings.gradle
         if: ${{ matrix.java-version == 8 }}
       - run: ./gradlew assemble check --info
   android_tests:
