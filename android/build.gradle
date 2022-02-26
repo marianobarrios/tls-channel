@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId "com.github.marianobarrios.tlschannel"
-        minSdk 16
+        minSdk 19
         targetSdk 31
         versionCode 1
         versionName "1.0"
