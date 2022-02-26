@@ -1,0 +1,32 @@
+dependencyResolutionManagement {
+  pluginManagement {
+    resolutionStrategy {
+      eachPlugin {
+        if (requested.id.namespace == 'org.gradle.sample') {
+            useModule('org.gradle.sample:sample-plugins:1.0.0')
+        }
+      }
+    }
+    repositories {
+      maven {
+        url 'maven-repo'
+      }
+      gradlePluginPortal()
+      ivy {
+        url 'ivy-repo'
+      }
+      google()
+    }
+  }
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenLocal()
+        google()
+        mavenCentral()
+        jcenter() // Warning: this repository is going to shut down soon
+    }
+}
+rootProject.name = "TLS Channel"
+// For compilation with Java 8, exclude the Android tests
+//include ':java', ':android'
+include ':java'
