@@ -282,6 +282,10 @@ The library has only one dependency: [SLF4J](https://www.slf4j.org/). The main j
 
 The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most widely used pluggable logging framework for the JVM. As a policy, _all_ logging events emitted by the core package are at `TRACE` level, which is below the default threshold in most logging implementations and thus completely silent by default. The optional `tlschannel.async` package can log with higher severity in exceptional circumstances, as it manages threads internally.
 
+### Android
+
+This library supports Android api 19 and above.  To run Android tests, append settings.gradle_android to settings.gradle, connect via usb an Android with usb debuggin enabled (or start an emulator) and call `./gradlew :android:connectedAndroidTest`.
+
 ## Similar efforts
 
 - [NIO SSL](https://github.com/baswerc/niossl) is a simple library with a similar purpose, written by Corey Baswell.

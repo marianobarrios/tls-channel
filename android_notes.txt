@@ -17,3 +17,5 @@ android {
         multiDexEnabled true
     }
 }
+
+(I have since discovered that api 16 does not support some other stuff in use, so...no api 16.)
