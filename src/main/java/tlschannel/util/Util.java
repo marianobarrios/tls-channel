@@ -40,7 +40,7 @@ public class Util {
     // 9.0.1
     int dotPos = version.indexOf('.');
     int dashPos = version.indexOf('-');
-    return Integer.parseInt(version.substring(0,
-            dotPos > -1 ? dotPos : dashPos > -1 ? dashPos : 1));
+    return Integer.parseInt(
+        version.substring(0, dotPos > -1 ? dotPos : dashPos > -1 ? dashPos : 1));
   }
 }
