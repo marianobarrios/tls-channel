@@ -22,7 +22,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.32'
     testImplementation 'org.scala-lang:scala-library:2.13.7'
     testImplementation 'org.scalatest:scalatest_2.13:3.2.9'
-    testImplementation 'ch.qos.logback:logback-classic:1.2.9'
+    testImplementation 'ch.qos.logback:logback-classic:1.2.11'
     testImplementation 'com.typesafe.scala-logging:scala-logging_2.13:3.9.4'
     testImplementation 'io.netty:netty-buffer:4.1.72.Final'
     testImplementation 'io.netty:netty-handler:4.1.72.Final'
