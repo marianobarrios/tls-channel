@@ -24,9 +24,9 @@ dependencies {
     testImplementation 'org.scalatest:scalatest_2.13:3.2.9'
     testImplementation 'ch.qos.logback:logback-classic:1.2.11'
     testImplementation 'com.typesafe.scala-logging:scala-logging_2.13:3.9.4'
-    testImplementation 'io.netty:netty-buffer:4.1.72.Final'
-    testImplementation 'io.netty:netty-handler:4.1.72.Final'
-    testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.46.Final'
+    testImplementation 'io.netty:netty-buffer:4.1.76.Final'
+    testImplementation 'io.netty:netty-handler:4.1.76.Final'
+    testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.51.Final'
     // https://github.com/scalatest/scalatest/issues/1736
     testRuntimeOnly "com.vladsch.flexmark:flexmark-all:0.36.8"
 }
