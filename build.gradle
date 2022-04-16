@@ -28,7 +28,7 @@ dependencies {
     testImplementation 'io.netty:netty-handler:4.1.72.Final'
     testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.46.Final'
     // https://github.com/scalatest/scalatest/issues/1736
-    testRuntimeOnly "com.vladsch.flexmark:flexmark-all:0.36.8"
+    testRuntimeOnly "com.vladsch.flexmark:flexmark-all:0.64.0"
 }
 
 spotless {
