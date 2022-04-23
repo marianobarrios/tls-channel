@@ -46,10 +46,10 @@ spotbugs {
     ignoreFailures = false
     showProgress = true
     reportsDir = file("$buildDir/spotbugs")
-    toolVersion = '4.2.3'
 }
 
 spotbugsMain {
+    excludeFilter = file('spotbugs-exclude.xml')
     reports {
         html {
             required = true
