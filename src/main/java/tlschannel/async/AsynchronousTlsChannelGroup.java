@@ -561,9 +561,7 @@ public class AsynchronousTlsChannelGroup {
     }
   }
 
-  /**
-   * @see #writeHandlingTasks
-   */
+  /** @see #writeHandlingTasks */
   private long readHandlingTasks(RegisteredSocket socket, ReadOperation op) throws IOException {
     while (true) {
       try {
