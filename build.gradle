@@ -21,7 +21,7 @@ repositories {
 dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.36'
     testImplementation 'org.scala-lang:scala-library:2.13.8'
-    testImplementation 'org.scalatest:scalatest_2.13:3.2.9'
+    testImplementation 'org.scalatest:scalatest_2.13:3.2.12'
     testImplementation 'com.typesafe.scala-logging:scala-logging_2.13:3.9.4'
     // pinned due to netty-tcnative-boringssl-static being pinned
     testImplementation 'io.netty:netty-buffer:4.1.73.Final'
@@ -29,8 +29,8 @@ dependencies {
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.2.11'
     // pinned: https://github.com/netty/netty-tcnative/issues/716
     testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.47.Final'
-    // pinned: https://github.com/scalatest/scalatest/issues/1736
-    testRuntimeOnly "com.vladsch.flexmark:flexmark-all:0.36.8"
+    // required by ScalaTest
+    testRuntimeOnly 'com.vladsch.flexmark:flexmark-all:0.64.0'
 }
 
 spotless {
@@ -88,7 +88,11 @@ task scalaTest(dependsOn: ['testClasses'], type: JavaExec) {
     // override security properties enabling all options
     systemProperty "java.security.properties", "java.security.override"
     mainClass = 'org.scalatest.tools.Runner'
-    args = ['-R', 'build/classes/scala/test', '-o', '-h', file("$buildDir/reports/test")]
+    args = ['-R', 'build/classes/scala/test', '-o']
+    // ScalaTest HTML report don't work in old version of Java
+    if (JavaVersion.current().ordinal() >= JavaVersion.VERSION_11.ordinal()) {
+        args += ['-h', file("$buildDir/reports/test")]
+    }
     classpath = sourceSets.test.runtimeClasspath
 }
 
