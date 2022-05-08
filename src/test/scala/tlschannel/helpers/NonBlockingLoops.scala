@@ -90,7 +90,7 @@ object NonBlockingLoops extends Assertions {
           endpoint match {
             case writer: WriterEndpoint =>
               // rewriting do-while loop in a way compatible with Scala 23
-              while ({
+              while {
                 if (renegotiationCount < maxRenegotiations) {
                   if (random.nextBoolean()) {
                     renegotiationCount += 1
@@ -111,17 +111,17 @@ object NonBlockingLoops extends Assertions {
                   writer.remaining -= bytesWriten
                 }
                 writer.remaining > 0
-              }) ()
+              } do ()
             case reader: ReaderEndpoint =>
               // rewriting do-while loop in a way compatible with Scala 23
-              while ({
+              while {
                 reader.buffer.clear()
                 val c = reader.socketGroup.external.read(reader.buffer)
                 assert(c > 0) // the necessity of blocking is communicated with exceptions
                 reader.digest.update(reader.buffer.array, 0, c)
                 reader.remaining -= c
                 reader.remaining > 0
-              }) ()
+              } do ()
           }
         } catch {
           case e: NeedsWriteException =>
