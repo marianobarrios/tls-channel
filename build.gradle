@@ -3,7 +3,7 @@ plugins {
     id 'scala'
     id 'signing'
     id 'maven-publish'
-    id "com.diffplug.spotless" version "6.5.0"
+    id "com.diffplug.spotless" version "6.5.2"
     id "com.github.spotbugs" version "5.0.6"
 }
 
@@ -40,6 +40,13 @@ spotless {
     scala {
         scalafmt().configFile('.scalafmt.conf')
     }
+}
+
+// There are some compatibility issues with spotless older Java versions,
+// but we don't need to cross-do style checks anyway
+if (JavaVersion.current().ordinal() < JavaVersion.VERSION_17.ordinal()) {
+    tasks.findByName("spotlessScala").enabled(false)
+    tasks.findByName("spotlessJava").enabled(false)
 }
 
 spotbugs {
