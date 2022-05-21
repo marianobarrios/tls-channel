@@ -23,7 +23,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.36'
     testImplementation 'org.scala-lang:scala3-library_3:3.1.2'
     testImplementation 'org.scalatest:scalatest_3:3.2.12'
-    testImplementation 'com.typesafe.scala-logging:scala-logging_3:3.9.4'
+    testImplementation 'com.typesafe.scala-logging:scala-logging_3:3.9.5'
     // pinned due to netty-tcnative-boringssl-static being pinned
     testImplementation 'io.netty:netty-buffer:4.1.73.Final'
     testImplementation 'io.netty:netty-handler:4.1.73.Final'
