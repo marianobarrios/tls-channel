@@ -3,7 +3,7 @@ plugins {
     id 'scala'
     id 'signing'
     id 'maven-publish'
-    id "com.diffplug.spotless" version "6.6.1"
+    id "com.diffplug.spotless" version "6.7.2"
     // pinned version due to https://github.com/spotbugs/spotbugs/issues/2041
     id "com.github.spotbugs" version "5.0.6"
 }
