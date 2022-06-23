@@ -38,9 +38,10 @@ public class Util {
     // 9-ea
     // 9
     // 9.0.1
+    // 17
     int dotPos = version.indexOf('.');
     int dashPos = version.indexOf('-');
     return Integer.parseInt(
-        version.substring(0, dotPos > -1 ? dotPos : dashPos > -1 ? dashPos : 1));
+        version.substring(0, dotPos > -1 ? dotPos : dashPos > -1 ? dashPos : version.length()));
   }
 }
