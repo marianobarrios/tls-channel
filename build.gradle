@@ -111,6 +111,12 @@ java {
     withJavadocJar()
 }
 
+jar {
+    manifest {
+        attributes  'Automatic-Module-Name': 'tls.channel'
+    }
+}
+
 // see tlschannel.AllocationTest for comment about this
 task allocationTest(type: JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
