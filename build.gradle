@@ -5,7 +5,7 @@ plugins {
     id 'maven-publish'
     id "com.diffplug.spotless" version "6.9.0"
     // pinned version due to https://github.com/spotbugs/spotbugs/issues/2041
-    id "com.github.spotbugs" version "5.0.9"
+    id "com.github.spotbugs" version "5.0.10"
 }
 
 compileJava {
