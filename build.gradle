@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'org.slf4j:slf4j-api:2.0.1'
     testImplementation 'org.scala-lang:scala3-library_3:3.2.0'
     testImplementation 'org.scalatest:scalatest_3:3.2.13'
     testImplementation 'com.typesafe.scala-logging:scala-logging_3:3.9.5'
