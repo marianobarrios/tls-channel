@@ -380,7 +380,10 @@ public class TlsChannelImpl implements ByteChannel {
         if (source.remaining() == 0) {
           return bytesToConsume;
         }
-        wrapLoop(source);
+        SSLEngineResult result = wrapLoop(source);
+        if (result.getStatus() == Status.CLOSED) {
+          return bytesToConsume - source.remaining();
+        }
       }
     } finally {
       outEncrypted.release();
@@ -388,13 +391,13 @@ public class TlsChannelImpl implements ByteChannel {
   }
 
   /** Returns last {@link HandshakeStatus} of the loop */
-  private void wrapLoop(ByteBufferSet source) throws SSLException {
+  private SSLEngineResult wrapLoop(ByteBufferSet source) throws SSLException {
     while (true) {
       SSLEngineResult result = callEngineWrap(source);
       switch (result.getStatus()) {
         case OK:
         case CLOSED:
-          return;
+          return result;
         case BUFFER_OVERFLOW:
           Util.assertTrue(result.bytesConsumed() == 0);
           outEncrypted.enlarge();
