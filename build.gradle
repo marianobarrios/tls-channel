@@ -28,7 +28,7 @@ dependencies {
     testImplementation 'io.netty:netty-buffer:4.1.73.Final'
     testImplementation 'io.netty:netty-handler:4.1.73.Final'
     // pinned due to lack of compatibility with older lockback versions
-    testRuntimeOnly 'ch.qos.logback:logback-classic:1.2.11'
+    testRuntimeOnly 'ch.qos.logback:logback-classic:1.4.4'
     // pinned: https://github.com/netty/netty-tcnative/issues/716
     testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.47.Final'
     // required by ScalaTest
