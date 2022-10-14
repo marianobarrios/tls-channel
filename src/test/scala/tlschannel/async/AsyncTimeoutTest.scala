@@ -1,19 +1,21 @@
 package tlschannel.async
 
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.TestInstance.Lifecycle
+import org.junit.jupiter.api.{Assertions, Test, TestInstance}
+
 import java.nio.ByteBuffer
 import java.nio.channels.CompletionHandler
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.LongAdder
-
-import org.scalatest.Assertions
-import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.AsyncSocketPair
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 
-class AsyncTimeoutTest extends AnyFunSuite with AsyncTestBase with Assertions {
+@TestInstance(Lifecycle.PER_CLASS)
+class AsyncTimeoutTest extends AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
@@ -22,7 +24,10 @@ class AsyncTimeoutTest extends AnyFunSuite with AsyncTestBase with Assertions {
 
   val repetitions = 1000
 
-  test("scheduled timeout") {
+  // scheduled timeout
+  @Test
+  def testScheduledTimeout(): Unit = {
+    println("testScheduledTimeout()")
     val channelGroup = new AsynchronousTlsChannelGroup()
     val successWrites = new LongAdder
     val successReads = new LongAdder
@@ -41,14 +46,14 @@ class AsyncTimeoutTest extends AnyFunSuite with AsyncTestBase with Assertions {
           new CompletionHandler[Integer, Null] {
             override def failed(exc: Throwable, attachment: Null) = {
               if (!clientDone.compareAndSet(false, true)) {
-                fail()
+                Assertions.fail()
               }
               latch.countDown()
             }
 
             override def completed(result: Integer, attachment: Null) = {
               if (!clientDone.compareAndSet(false, true)) {
-                fail()
+                Assertions.fail()
               }
               latch.countDown()
               successWrites.increment()
@@ -65,14 +70,14 @@ class AsyncTimeoutTest extends AnyFunSuite with AsyncTestBase with Assertions {
           new CompletionHandler[Integer, Null] {
             override def failed(exc: Throwable, attachment: Null) = {
               if (!serverDone.compareAndSet(false, true)) {
-                fail()
+                Assertions.fail()
               }
               latch.countDown()
             }
 
             override def completed(result: Integer, attachment: Null) = {
               if (!serverDone.compareAndSet(false, true)) {
-                fail()
+                Assertions.fail()
               }
               latch.countDown()
               successReads.increment()
@@ -90,18 +95,21 @@ class AsyncTimeoutTest extends AnyFunSuite with AsyncTestBase with Assertions {
     shutdownChannelGroup(channelGroup)
     assertChannelGroupConsistency(channelGroup)
 
-    assert(channelGroup.getFailedReadCount == 0)
-    assert(channelGroup.getFailedWriteCount == 0)
+    assertEquals(0, channelGroup.getFailedReadCount)
+    assertEquals(0, channelGroup.getFailedWriteCount)
 
-    assert(successWrites.longValue == channelGroup.getSuccessfulWriteCount)
-    assert(successReads.longValue == channelGroup.getSuccessfulReadCount)
+    assertEquals(channelGroup.getSuccessfulWriteCount, successWrites.longValue)
+    assertEquals(channelGroup.getSuccessfulReadCount, successReads.longValue)
 
-    info(f"success writes:     ${successWrites.longValue}%8d")
-    info(f"success reads:      ${successReads.longValue}%8d")
+    println(f"success writes:     ${successWrites.longValue}%8d")
+    println(f"success reads:      ${successReads.longValue}%8d")
     printChannelGroupStatus(channelGroup)
   }
 
-  test("triggered timeout") {
+  // triggered timeout
+  @Test
+  def testTriggeredTimeout(): Unit = {
+    println("testScheduledTimeout()")
     val channelGroup = new AsynchronousTlsChannelGroup()
     var successfulWriteCancellations = 0
     var successfulReadCancellations = 0
@@ -132,15 +140,13 @@ class AsyncTimeoutTest extends AnyFunSuite with AsyncTestBase with Assertions {
     shutdownChannelGroup(channelGroup)
     assertChannelGroupConsistency(channelGroup)
 
-    assert(channelGroup.getFailedReadCount == 0)
-    assert(channelGroup.getFailedWriteCount == 0)
+    assertEquals(0, channelGroup.getFailedReadCount)
+    assertEquals(0, channelGroup.getFailedWriteCount)
 
-    assert(successfulWriteCancellations == channelGroup.getCancelledWriteCount)
-    assert(successfulReadCancellations == channelGroup.getCancelledReadCount)
+    assertEquals(channelGroup.getCancelledWriteCount, successfulWriteCancellations)
+    assertEquals(channelGroup.getCancelledReadCount, successfulReadCancellations)
 
-    info(f"success writes:     ${channelGroup.getSuccessfulWriteCount}%8d")
-    info(f"success reads:      ${channelGroup.getSuccessfulReadCount}%8d")
-
+    println(f"success writes:     ${channelGroup.getSuccessfulWriteCount}%8d")
+    println(f"success reads:      ${channelGroup.getSuccessfulReadCount}%8d")
   }
-
 }

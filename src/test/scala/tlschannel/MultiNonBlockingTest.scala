@@ -1,61 +1,62 @@
 package tlschannel
 
-import org.scalatest.{Assertions, BeforeAndAfterAll}
 import com.typesafe.scalalogging.StrictLogging
-import org.scalatest.funsuite.AnyFunSuite
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.{AfterAll, Test, TestInstance}
+import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
-import tlschannel.helpers.TestUtil
 
-class MultiNonBlockingTest
-    extends AnyFunSuite
-    with Assertions
-    with StrictLogging
-    with NonBlockingSuite
-    with BeforeAndAfterAll {
+@TestInstance(Lifecycle.PER_CLASS)
+class MultiNonBlockingTest extends StrictLogging {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
   val dataSize = 50 * 1024
   val totalConnections = 200
 
-  test("running tasks in non-blocking loop - no renegotiation") {
+  // running tasks in non-blocking loop - no renegotiation
+  @Test
+  def testTaskLoop(): Unit = {
+    println("testTasksInExecutorWithRenegotiation():")
     val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = true)
-    val (report, elapsed) = TestUtil.time {
-      NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
-    }
-    assert(report.asyncTasksRun == 0)
-    printReport(report, elapsed)
+    val report = NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
+    assertEquals(0, report.asyncTasksRun)
+    report.print()
   }
 
-  test("running tasks in executor - no renegotiation") {
+  // running tasks in executor - no renegotiation
+  @Test
+  def testTasksInExecutor(): Unit = {
+    println("testTasksInExecutorWithRenegotiation():")
     val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = false)
-    val (report, elapsed) = TestUtil.time {
-      NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
-    }
-    printReport(report, elapsed)
+    val report = NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
+    report.print()
   }
 
-  test("running tasks in non-blocking loop - with renegotiation") {
+  // running tasks in non-blocking loop - with renegotiation
+  @Test
+  def testTasksInLoopWithRenegotiation(): Unit = {
+    println("testTasksInExecutorWithRenegotiation():")
     val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = true)
-    val (report, elapsed) = TestUtil.time {
-      NonBlockingLoops.loop(pairs, dataSize, renegotiate = true)
-    }
-    assert(report.asyncTasksRun == 0)
-    printReport(report, elapsed)
+    val report = NonBlockingLoops.loop(pairs, dataSize, renegotiate = true)
+    assertEquals(0, report.asyncTasksRun)
+    report.print()
   }
 
-  test("running tasks in executor - with renegotiation") {
+  // running tasks in executor - with renegotiation
+  @Test
+  def testTasksInExecutorWithRenegotiation(): Unit = {
+    println("testTasksInExecutorWithRenegotiation():")
     val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = false)
-    val (report, elapsed) = TestUtil.time {
-      NonBlockingLoops.loop(pairs, dataSize, renegotiate = true)
-    }
-    printReport(report, elapsed)
+    val report = NonBlockingLoops.loop(pairs, dataSize, renegotiate = true)
+    report.print()
   }
 
-  override def afterAll() = {
-    info(factory.getGlobalAllocationReport())
+  @AfterAll
+  def afterAll() = {
+    println(factory.getGlobalAllocationReport())
   }
 
 }

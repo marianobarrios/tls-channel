@@ -4,6 +4,10 @@ import io.netty.buffer.ByteBufAllocator
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.SslProvider
 import io.netty.handler.ssl.util.SimpleTrustManagerFactory
+import org.junit.jupiter.api.{Test, TestInstance}
+import org.junit.jupiter.api.TestInstance.Lifecycle
+import org.junit.jupiter.api.Assertions.assertThrows
+
 import javax.net.ssl.{ManagerFactoryParameters, SSLEngine, TrustManager, TrustManagerFactory, X509ExtendedTrustManager}
 import java.net.Socket
 import java.nio.ByteBuffer
@@ -11,13 +15,14 @@ import java.nio.channels.ByteChannel
 import java.security.KeyStore
 import java.security.cert.X509Certificate
 
-import org.scalatest.funsuite.AnyFunSuite
-
-class NettySslEngineTest extends AnyFunSuite {
+@TestInstance(Lifecycle.PER_CLASS)
+class NettySslEngineTest {
 
   import NettySslEngineTest._
 
-  test("dummy handshake as minimal sanity test") {
+  // dummy handshake as minimal sanity test
+  @Test
+  def testDummyHandshake(): Unit = {
     val ctx = SslContextBuilder
       .forClient()
       .sslProvider(SslProvider.OPENSSL)
@@ -31,9 +36,7 @@ class NettySslEngineTest extends AnyFunSuite {
       .withEncryptedBufferAllocator(new HeapBufferAllocator())
       .build()
 
-    assertThrows[NeedsWriteException] {
-      channel.handshake()
-    }
+    assertThrows(classOf[NeedsWriteException], () => channel.handshake())
   }
 
 }

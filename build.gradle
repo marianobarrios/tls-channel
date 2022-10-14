@@ -25,7 +25,6 @@ dependencies {
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.3.4'
 
     testImplementation 'org.scala-lang:scala3-library_3:3.2.0'
-    testImplementation 'org.scalatest:scalatest_3:3.2.14'
     testImplementation 'com.typesafe.scala-logging:scala-logging_3:3.9.5'
     // pinned due to netty-tcnative-boringssl-static being pinned
     testImplementation 'io.netty:netty-buffer:4.1.73.Final'
@@ -34,6 +33,10 @@ dependencies {
     testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.47.Final'
     // required by ScalaTest
     testRuntimeOnly 'com.vladsch.flexmark:flexmark-all:0.64.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.1'
+
 }
 
 spotless {
@@ -87,21 +90,11 @@ compileScala {
     ]
 }
 
-task scalaTest(dependsOn: ['testClasses'], type: JavaExec) {
+test {
+    useJUnitPlatform()
     // override security properties enabling all options
     systemProperty "java.security.properties", "java.security.override"
-    mainClass = 'org.scalatest.tools.Runner'
-    args = ['-R', 'build/classes/scala/test', '-o']
-    // ScalaTest HTML report don't work in old version of Java
-    if (JavaVersion.current().ordinal() >= JavaVersion.VERSION_11.ordinal()) {
-        args += ['-h', file("$buildDir/reports/test")]
-    }
-    classpath = sourceSets.test.runtimeClasspath
 }
-
-test.enabled = false
-check.dependsOn scalaTest
-
 
 javadoc {
     exclude "tlschannel/impl"

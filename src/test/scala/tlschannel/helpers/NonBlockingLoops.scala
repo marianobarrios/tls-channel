@@ -1,24 +1,22 @@
 package tlschannel.helpers
 
+import org.junit.jupiter.api.Assertions.{assertArrayEquals, assertTrue}
 import tlschannel.NeedsWriteException
 import tlschannel.NeedsReadException
 import tlschannel.NeedsTaskException
-import java.util.concurrent.atomic.LongAdder
 
+import java.util.concurrent.atomic.LongAdder
 import scala.util.Random
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.nio.channels.Selector
 import java.util.concurrent.Executors
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
-
-import org.scalatest.Assertions
 import java.security.MessageDigest
 import java.util.SplittableRandom
-
 import scala.concurrent.duration.Duration
 
-object NonBlockingLoops extends Assertions {
+object NonBlockingLoops {
 
   trait Endpoint {
     def key: SelectionKey
@@ -43,7 +41,17 @@ object NonBlockingLoops extends Assertions {
       renegotiationCount: Int,
       asyncTasksRun: Int,
       totalAsyncTaskRunningTime: Duration
-  )
+  ) {
+
+    def print() = {
+      println(s"Selector cycles: $selectorCycles")
+      println(s"NeedRead count: $needReadCount")
+      println(s"NeedWrite count: $needWriteCount")
+      println(s"Renegotiation count: $renegotiationCount")
+      println(s"Asynchronous tasks run: $asyncTasksRun")
+      println(s"Total asynchronous task running time: ${totalAsyncTaskRunningTime.toMillis} ms")
+    }
+  }
 
   def loop(socketPairs: Seq[SocketPair], dataSize: Int, renegotiate: Boolean): Report = {
 
@@ -105,7 +113,7 @@ object NonBlockingLoops extends Assertions {
                 val oldPosition = writer.buffer.position()
                 try {
                   val c = writer.socketGroup.external.write(writer.buffer)
-                  assert(c >= 0) // the necessity of blocking is communicated with exceptions
+                  assertTrue(c >= 0) // the necessity of blocking is communicated with exceptions
                 } finally {
                   val bytesWriten = writer.buffer.position() - oldPosition
                   writer.remaining -= bytesWriten
@@ -117,7 +125,7 @@ object NonBlockingLoops extends Assertions {
               while {
                 reader.buffer.clear()
                 val c = reader.socketGroup.external.read(reader.buffer)
-                assert(c > 0) // the necessity of blocking is communicated with exceptions
+                assertTrue(c > 0) // the necessity of blocking is communicated with exceptions
                 reader.digest.update(reader.buffer.array, 0, c)
                 reader.remaining -= c
                 reader.remaining > 0
@@ -152,7 +160,7 @@ object NonBlockingLoops extends Assertions {
     }
 
     for (reader <- readers) {
-      assert(dataHash sameElements reader.digest.digest())
+      assertArrayEquals(reader.digest.digest(), dataHash)
     }
 
     Report(

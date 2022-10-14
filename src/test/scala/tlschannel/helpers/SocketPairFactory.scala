@@ -8,15 +8,14 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLServerSocket
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLEngine
-
 import com.typesafe.scalalogging.StrictLogging
+import org.junit.jupiter.api.Assertions.assertEquals
+
 import javax.crypto.Cipher
 import java.nio.channels.ByteChannel
 import java.util.Optional
-
 import javax.net.ssl.SNIHostName
 import javax.net.ssl.SNIServerName
-
 import tlschannel._
 import tlschannel.async.AsynchronousTlsChannel
 import tlschannel.async.AsynchronousTlsChannelGroup
@@ -386,7 +385,7 @@ object SocketPairFactory extends StrictLogging {
   private def checkBufferDeallocation(allocator: TrackingAllocator) = {
     logger.debug(s"allocator: ${allocator}; allocated: ${allocator.bytesAllocated()}")
     logger.debug(s"allocator: ${allocator}; deallocated: ${allocator.bytesDeallocated()}")
-    assert(allocator.bytesAllocated() == allocator.bytesDeallocated(), " - some buffers were not deallocated")
+    assertEquals(allocator.bytesDeallocated(), allocator.bytesAllocated(), " - some buffers were not deallocated")
   }
 
   def getChunkingSize(): Int = {

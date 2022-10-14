@@ -3,12 +3,11 @@ package tlschannel.helpers
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.SplittableRandom
-
-import org.scalatest.Assertions
 import com.typesafe.scalalogging.StrictLogging
+import org.junit.jupiter.api.Assertions.{assertArrayEquals, assertEquals, assertTrue}
 import tlschannel.helpers.TestUtil.Memo
 
-object Loops extends Assertions with StrictLogging {
+object Loops extends StrictLogging {
 
   val seed = 143000953L
 
@@ -85,10 +84,10 @@ object Loops extends Assertions with StrictLogging {
             socketGroup.tls.write(multiWrap(buffer)).toInt
           else
             socketGroup.external.write(buffer)
-        assert(c > 0, "blocking write must return a positive number")
+        assertTrue(c > 0, "blocking write must return a positive number")
         bytesSinceRenegotiation += c
         bytesRemaining -= c.toInt
-        assert(bytesRemaining >= 0)
+        assertTrue(bytesRemaining >= 0)
       }
     }
     if (shutdown)
@@ -117,15 +116,15 @@ object Loops extends Assertions with StrictLogging {
           socketGroup.tls.read(multiWrap(readBuffer)).toInt
         else
           socketGroup.external.read(readBuffer)
-      assert(c > 0, "blocking read must return a positive number")
+      assertTrue(c > 0, "blocking read must return a positive number")
       digest.update(readBuffer.array(), 0, readBuffer.position())
       bytesRemaining -= c
-      assert(bytesRemaining >= 0)
+      assertTrue(bytesRemaining >= 0)
     }
     if (readEof)
-      assert(socketGroup.external.read(ByteBuffer.wrap(readArray)) == -1)
+      assertEquals(-1, socketGroup.external.read(ByteBuffer.wrap(readArray)))
     val actual = digest.digest()
-    assert(actual sameElements expectedBytesHash(size))
+    assertArrayEquals(expectedBytesHash(size), actual)
     if (close)
       socketGroup.external.close()
     logger.debug("Finalizing reader loop")

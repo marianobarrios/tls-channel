@@ -7,13 +7,12 @@ import javax.net.ssl.SSLEngineResult
 import javax.net.ssl.SSLEngineResult.Status
 
 import com.typesafe.scalalogging.StrictLogging
-import org.scalatest.Assertions
 import tlschannel.impl.{ByteBufferSet, ByteBufferUtil}
 
 /*
  * "Null" {@link SSLEngine} that does nothing to the bytesProduced.
  */
-class NullSslEngine extends SSLEngine with StrictLogging with Assertions {
+class NullSslEngine extends SSLEngine with StrictLogging {
 
   /** Internal buffers are still used to prevent any underlying optimization of the wrap/unwrap.
     */

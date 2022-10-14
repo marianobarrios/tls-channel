@@ -1,13 +1,15 @@
 package tlschannel.util
 
+import org.junit.jupiter.api.{Test, TestInstance}
+import org.junit.jupiter.api.TestInstance.Lifecycle
+
 import java.nio.ByteBuffer
 
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.Assertions
+@TestInstance(Lifecycle.PER_CLASS)
+class DirectBufferDeallocatorTest {
 
-class DirectBufferDeallocatorTest extends AnyFunSuite with Assertions {
-
-  test("test direct buffer deallocator") {
+  @Test
+  def testDirectBufferDeallocator(): Unit = {
     val deallocator = new DirectBufferDeallocator
     val buffer = ByteBuffer.allocateDirect(1000)
     deallocator.deallocate(buffer)

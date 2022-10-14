@@ -1,78 +1,79 @@
 package tlschannel.async
 
-import org.scalatest.Assertions
-import org.scalatest.funsuite.AnyFunSuite
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.{Test, TestInstance}
+import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.AsyncLoops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
-import tlschannel.helpers.TestUtil
 
-class AsyncTest extends AnyFunSuite with Assertions with AsyncTestBase {
+@TestInstance(Lifecycle.PER_CLASS)
+class AsyncTest extends AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
   val socketPairCount = 120
 
-  test("real engine - run tasks") {
+  // real engine - run tasks
+  @Test
+  def testRunTasks(): Unit = {
+    println("testRunTasks():")
     val channelGroup = new AsynchronousTlsChannelGroup()
     val dataSize = 5 * 1024 * 1024
-    info(s"data size: $dataSize")
+    println(s"data size: $dataSize")
     val socketPairs = factory.asyncN(None, channelGroup, socketPairCount, runTasks = true)
-    val (report, elapsed) = TestUtil.time {
-      AsyncLoops.loop(socketPairs, dataSize)
-    }
+    val report = AsyncLoops.loop(socketPairs, dataSize)
 
     shutdownChannelGroup(channelGroup)
     assertChannelGroupConsistency(channelGroup)
-    assert(channelGroup.getFailedReadCount == 0)
-    assert(channelGroup.getFailedWriteCount == 0)
+    assertEquals(0, channelGroup.getFailedReadCount)
+    assertEquals(0, channelGroup.getFailedWriteCount)
 
-    info(f"elapsed:            ${elapsed.toMillis}%8d ms")
-    printReport(report)
+    report.print()
     printChannelGroupStatus(channelGroup)
   }
 
-  test("real engine - do not run tasks") {
+  // real engine - do not run tasks
+  @Test
+  def testNotRunTasks(): Unit = {
+    println("testNotRunTasks():")
     val channelGroup = new AsynchronousTlsChannelGroup()
     val dataSize = 2 * 1024 * 1024
-    info(s"data size: $dataSize")
+    println(s"data size: $dataSize")
     val socketPairs = factory.asyncN(None, channelGroup, socketPairCount, runTasks = false)
-    val (report, elapsed) = TestUtil.time {
-      AsyncLoops.loop(socketPairs, dataSize)
-    }
+    val report = AsyncLoops.loop(socketPairs, dataSize)
 
     shutdownChannelGroup(channelGroup)
     assertChannelGroupConsistency(channelGroup)
 
-    assert(channelGroup.getFailedReadCount == 0)
-    assert(channelGroup.getFailedWriteCount == 0)
-    assert(channelGroup.getCancelledReadCount == 0)
-    assert(channelGroup.getCancelledWriteCount == 0)
+    assertEquals(0, channelGroup.getFailedReadCount)
+    assertEquals(0, channelGroup.getFailedWriteCount)
+    assertEquals(0, channelGroup.getCancelledReadCount)
+    assertEquals(0, channelGroup.getCancelledWriteCount)
 
-    info(f"elapsed:            ${elapsed.toMillis}%8d ms")
-    printReport(report)
+    report.print()
     printChannelGroupStatus(channelGroup)
   }
 
-  test("null engine") {
+  // null engine
+  @Test
+  def testNullEngine(): Unit = {
+    println("testNullEngine():")
     val channelGroup = new AsynchronousTlsChannelGroup()
     val dataSize = 12 * 1024 * 1024
-    info(s"data size: $dataSize")
+    println(s"data size: $dataSize")
     val socketPairs = factory.asyncN(cipher = null, channelGroup, socketPairCount, runTasks = true)
-    val (report, elapsed) = TestUtil.time {
-      AsyncLoops.loop(socketPairs, dataSize)
-    }
+    val report = AsyncLoops.loop(socketPairs, dataSize)
 
     shutdownChannelGroup(channelGroup)
     assertChannelGroupConsistency(channelGroup)
 
-    assert(channelGroup.getFailedReadCount == 0)
-    assert(channelGroup.getFailedWriteCount == 0)
-    assert(channelGroup.getCancelledReadCount == 0)
-    assert(channelGroup.getCancelledWriteCount == 0)
+    assertEquals(0, channelGroup.getFailedReadCount)
+    assertEquals(0, channelGroup.getFailedWriteCount)
+    assertEquals(0, channelGroup.getCancelledReadCount)
+    assertEquals(0, channelGroup.getCancelledWriteCount)
 
-    info(f"elapsed:            ${elapsed.toMillis}%8d ms")
-    printReport(report)
+    report.print()
     printChannelGroupStatus(channelGroup)
   }
 

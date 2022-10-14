@@ -1,16 +1,19 @@
 package tlschannel
 
 import com.typesafe.scalalogging.StrictLogging
+import org.junit.jupiter.api.{DynamicTest, Test, TestFactory, TestInstance}
+import org.junit.jupiter.api.TestInstance.Lifecycle
 
 import javax.net.ssl.SSLContext
-import org.scalatest.Assertions
-import org.scalatest.funsuite.AnyFunSuite
-import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.Loops
 
-class CipherTest extends AnyFunSuite with Assertions with StrictLogging {
+import java.util
+import scala.jdk.CollectionConverters._
+
+@TestInstance(Lifecycle.PER_CLASS)
+class CipherTest extends StrictLogging {
 
   val protocols = {
     val allProtocols = SSLContext.getDefault.getSupportedSSLParameters.getProtocols.toSeq
@@ -19,48 +22,51 @@ class CipherTest extends AnyFunSuite with Assertions with StrictLogging {
 
   val dataSize = 200 * 1000
 
-  /** Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
-    */
-  test("half duplex (with renegotiations)") {
-    for (protocol <- protocols) {
-      logger.debug(s"Testing protocol: $protocol")
-      val ctxFactory = new SslContextFactory(protocol)
-      for (cipher <- ctxFactory.allCiphers) {
-        withClue(cipher + ": ") {
-          logger.debug(s"Testing cipher: $cipher")
+  // Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+  @TestFactory
+  def testHalfDuplexWithRenegotiation(): util.Collection[DynamicTest] = {
+    println("testHalfDuplexWithRenegotiation():")
+    val tests = for {
+      protocol <- protocols
+      ctxFactory = new SslContextFactory(protocol)
+      cipher <- ctxFactory.allCiphers
+    } yield {
+      DynamicTest.dynamicTest(
+        s"testHalfDuplexWithRenegotiation() - protocol: $protocol, cipher: $cipher",
+        () => {
           val socketFactory = new SocketPairFactory(ctxFactory.defaultContext)
           val socketPair = socketFactory.nioNio(Some(cipher))
-          val elapsed = TestUtil.time {
-            Loops.halfDuplex(socketPair, dataSize, renegotiation = protocol <= "TLSv1.2")
-          }
+          Loops.halfDuplex(socketPair, dataSize, renegotiation = protocol <= "TLSv1.2")
           val actualProtocol = socketPair.client.tls.getSslEngine.getSession.getProtocol
           val p = s"$protocol ($actualProtocol)"
-          info(f"$p%-18s $cipher%-50s ${elapsed.toMillis}%6s ms")
+          println(f"$p%-18s $cipher%-50s")
         }
-      }
+      )
     }
+    tests.asJava
   }
 
-  /** Test a full-duplex interaction, without any renegotiation
-    */
-  test("full duplex") {
-    for (protocol <- protocols) {
-      logger.debug(s"Testing protocol: $protocol")
-      val ctxFactory = new SslContextFactory(protocol)
-      for (cipher <- ctxFactory.allCiphers) {
-        withClue(cipher + ": ") {
-          logger.debug(s"Testing cipher: $cipher")
+  // Test a full-duplex interaction, without any renegotiation
+  @TestFactory
+  def testFullDuplex(): util.Collection[DynamicTest] = {
+    val tests = for {
+      protocol <- protocols
+      ctxFactory = new SslContextFactory(protocol)
+      cipher <- ctxFactory.allCiphers
+    } yield {
+      DynamicTest.dynamicTest(
+        s"testFullDuplex() - protocol: $protocol, cipher: $cipher",
+        () => {
           val socketFactory = new SocketPairFactory(ctxFactory.defaultContext)
           val socketPair = socketFactory.nioNio(Some(cipher))
-          val elapsed = TestUtil.time {
-            Loops.fullDuplex(socketPair, dataSize)
-          }
+          Loops.fullDuplex(socketPair, dataSize)
           val actualProtocol = socketPair.client.tls.getSslEngine.getSession.getProtocol
           val p = s"$protocol ($actualProtocol)"
-          info(f"$p%-18s $cipher%-50s ${elapsed.toMillis}%6s ms")
+          println(f"$p%-18s $cipher%-50s")
         }
-      }
+      )
     }
+    tests.asJava
   }
 
 }
