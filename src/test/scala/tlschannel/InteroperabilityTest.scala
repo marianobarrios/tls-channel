@@ -3,18 +3,18 @@ package tlschannel
 import scala.util.Random
 import java.net.Socket
 import java.nio.channels.ByteChannel
-
 import javax.net.ssl.SSLSocket
 import java.nio.ByteBuffer
-
 import com.typesafe.scalalogging.StrictLogging
-import org.scalatest.Assertions
-import org.scalatest.funsuite.AnyFunSuite
+import org.junit.jupiter.api.Assertions.{assertArrayEquals, assertEquals, assertNotEquals, assertTrue}
+import org.junit.jupiter.api.{Test, TestInstance}
+import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 
-class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLogging {
+@TestInstance(Lifecycle.PER_CLASS)
+class InteroperabilityTest extends StrictLogging {
 
   import InteroperabilityTest._
 
@@ -65,13 +65,13 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
     while (remaining > 0) {
       val chunkSize = Random.nextInt(remaining + margin) + 1 // 1 <= chunkSize <= remaining + margin
       val c = reader.read(receivedData, dataSize - remaining, chunkSize)
-      assert(c != -1, "read must not return -1 when there were bytesProduced remaining")
-      assert(c <= remaining)
-      assert(c > 0, "blocking read must return a positive number")
+      assertNotEquals(-1, c, "read must not return -1 when there were bytesProduced remaining")
+      assertTrue(c <= remaining)
+      assertTrue(c > 0, "blocking read must return a positive number")
       remaining -= c
     }
-    assert(remaining == 0)
-    assert(receivedData.slice(0, dataSize) sameElements data)
+    assertEquals(0, remaining)
+    assertArrayEquals(data, receivedData.slice(0, dataSize))
   }
 
   /** Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
@@ -82,24 +82,21 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
       clientWriter: Writer,
       serverReader: Reader
   ): Unit = {
-    val elapsed = TestUtil.time {
-      val clientWriterThread = new Thread(() => writerLoop(clientWriter, renegotiate = true), "client-writer")
-      val serverWriterThread = new Thread(() => writerLoop(serverWriter, renegotiate = true), "server-writer")
-      val clientReaderThread = new Thread(() => readerLoop(clientReader), "client-reader")
-      val serverReaderThread = new Thread(() => readerLoop(serverReader), "server-reader")
-      Seq(serverReaderThread, clientWriterThread).foreach(_.start())
-      Seq(serverReaderThread, clientWriterThread).foreach(_.join())
-      clientReaderThread.start()
-      // renegotiate three times, to test idempotency
-      for (_ <- 1 to 3) {
-        serverWriter.renegotiate()
-      }
-      serverWriterThread.start()
-      Seq(clientReaderThread, serverWriterThread).foreach(_.join())
-      serverWriter.close()
-      clientWriter.close()
+    val clientWriterThread = new Thread(() => writerLoop(clientWriter, renegotiate = true), "client-writer")
+    val serverWriterThread = new Thread(() => writerLoop(serverWriter, renegotiate = true), "server-writer")
+    val clientReaderThread = new Thread(() => readerLoop(clientReader), "client-reader")
+    val serverReaderThread = new Thread(() => readerLoop(serverReader), "server-reader")
+    Seq(serverReaderThread, clientWriterThread).foreach(_.start())
+    Seq(serverReaderThread, clientWriterThread).foreach(_.join())
+    clientReaderThread.start()
+    // renegotiate three times, to test idempotency
+    for (_ <- 1 to 3) {
+      serverWriter.renegotiate()
     }
-    info(s"elapsed: ${elapsed.toMillis} ms")
+    serverWriterThread.start()
+    Seq(clientReaderThread, serverWriterThread).foreach(_.join())
+    serverWriter.close()
+    clientWriter.close()
   }
 
   /** Test a full-duplex interaction, without any renegotiation
@@ -110,51 +107,60 @@ class InteroperabilityTest extends AnyFunSuite with Assertions with StrictLoggin
       clientWriter: Writer,
       serverReader: Reader
   ): Unit = {
-    val elapsed = TestUtil.time {
-      val clientWriterThread = new Thread(() => writerLoop(clientWriter), "client-writer")
-      val serverWriterThread = new Thread(() => writerLoop(serverWriter), "server-writer")
-      val clientReaderThread = new Thread(() => readerLoop(clientReader), "client-reader")
-      val serverReaderThread = new Thread(() => readerLoop(serverReader), "server-reader")
-      Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
-      Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
-      clientWriter.close()
-      serverWriter.close()
-    }
-    info(s"elapsed: ${elapsed.toMillis} ms")
+    val clientWriterThread = new Thread(() => writerLoop(clientWriter), "client-writer")
+    val serverWriterThread = new Thread(() => writerLoop(serverWriter), "server-writer")
+    val clientReaderThread = new Thread(() => readerLoop(clientReader), "client-reader")
+    val serverReaderThread = new Thread(() => readerLoop(serverReader), "server-reader")
+    Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.start())
+    Seq(serverReaderThread, clientWriterThread, clientReaderThread, serverWriterThread).foreach(_.join())
+    clientWriter.close()
+    serverWriter.close()
   }
 
   // OLD IO -> OLD IO
 
-  test("old-io -> old-io (half duplex)") {
+  // "old-io -> old-io (half duplex)
+  @Test
+  def testOldToOldHalfDuplex(): Unit = {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldOld()
     halfDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
 
-  test("old-io -> old-io (full duplex)") {
+  // old-io -> old-io (full duplex)
+  @Test
+  def testOldToOldFullDuplex(): Unit = {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldOld()
     fullDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
 
   // NIO -> OLD IO
 
-  test("nio -> old-io (half duplex)") {
+  // nio -> old-io (half duplex)
+  @Test
+  def testNioToOldHalfDuplex(): Unit = {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = nioOld()
     halfDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
 
-  test("nio -> old-io (full duplex)") {
+  // nio -> old-io (full duplex)
+  @Test
+  def testNioToOldFullDuplex(): Unit = {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = nioOld()
     fullDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
 
   // OLD IO -> NIO
 
-  test("old-io -> nio (half duplex)") {
+  // old-io -> nio (half duplex)
+  @Test
+  def testOldToNioHalfDuplex(): Unit = {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldNio()
     halfDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
 
-  test("old-io -> nio (full duplex)") {
+  // old-io -> nio (full duplex)
+  @Test
+  def testOldToNioFullDuplex(): Unit = {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldNio()
     fullDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
   }
@@ -198,13 +204,12 @@ object InteroperabilityTest {
       val buffer = ByteBuffer.wrap(array, offset, length)
       while (buffer.remaining() > 0) {
         val c = socket.write(buffer)
-        assert(c != 0, "blocking write cannot return 0")
+        assertNotEquals(0, c, "blocking write cannot return 0")
       }
     }
 
     def renegotiate(): Unit = socket.renegotiate()
     def close() = socket.close()
-
   }
 
 }

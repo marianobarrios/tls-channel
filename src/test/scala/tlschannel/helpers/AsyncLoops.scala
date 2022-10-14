@@ -7,13 +7,12 @@ import java.util.SplittableRandom
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.LongAdder
-
 import com.typesafe.scalalogging.StrictLogging
-import org.scalatest.Assertions
+import org.junit.jupiter.api.Assertions.{assertArrayEquals, assertTrue}
 
 import scala.util.control.Breaks
 
-object AsyncLoops extends Assertions with StrictLogging {
+object AsyncLoops extends StrictLogging {
 
   trait Endpoint {
     def remaining: Int
@@ -39,7 +38,16 @@ object AsyncLoops extends Assertions with StrictLogging {
       failedReads: Long,
       completedWrites: Long,
       failedWrites: Long
-  )
+  ) {
+    def print(): Unit = {
+      println(f"test loop:")
+      println(f"  dequeue cycles:   $dequeueCycles%8d")
+      println(f"  completed reads:  $completedReads%8d")
+      println(f"  failed reads:     $failedReads%8d")
+      println(f"  completed writes: $completedWrites%8d")
+      println(f"  failed writes:    $failedWrites%8d")
+    }
+  }
 
   def loop(socketPairs: Seq[AsyncSocketPair], dataSize: Int): Report = {
 
@@ -93,7 +101,7 @@ object AsyncLoops extends Assertions with StrictLogging {
                 null,
                 new CompletionHandler[Integer, Null] {
                   override def completed(c: Integer, attach: Null) = {
-                    assert(c > 0)
+                    assertTrue(c > 0)
                     writer.remaining -= c
                     endpointQueue.put(writer)
                     completedWrites.increment()
@@ -115,7 +123,7 @@ object AsyncLoops extends Assertions with StrictLogging {
                 null,
                 new CompletionHandler[Integer, Null] {
                   override def completed(c: Integer, attach: Null) = {
-                    assert(c > 0)
+                    assertTrue(c > 0)
                     reader.digest.update(reader.buffer.array, 0, c)
                     reader.remaining -= c
                     endpointQueue.put(reader)
@@ -138,7 +146,7 @@ object AsyncLoops extends Assertions with StrictLogging {
       SocketPairFactory.checkDeallocation(socketPair)
     }
     for (reader <- readers) {
-      assert(dataHash sameElements reader.digest.digest())
+      assertArrayEquals(reader.digest.digest(), dataHash)
     }
     Report(
       dequeueCycles,

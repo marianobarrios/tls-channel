@@ -1,23 +1,26 @@
 package tlschannel.async
 
+import org.junit.jupiter.api.Assertions.{assertEquals, assertFalse, assertTrue}
+
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
-
-import org.scalatest.Assertions
-import org.scalatest.funsuite.AnyFunSuite
-
 import tlschannel.helpers.AsyncSocketPair
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
+import org.junit.jupiter.api.{Test, TestInstance}
+import org.junit.jupiter.api.TestInstance.Lifecycle
 
-class AsyncShutdownTest extends AnyFunSuite with Assertions with AsyncTestBase {
+@TestInstance(Lifecycle.PER_CLASS)
+class AsyncShutdownTest extends AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
 
   val bufferSize = 10
 
-  test("immediate shutdown") {
+  @Test
+  def testImmediateShutdown(): Unit = {
+    println("testImmediateShutdown():")
     val channelGroup = new AsynchronousTlsChannelGroup()
     val socketPairCount = 100
     val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
@@ -28,20 +31,22 @@ class AsyncShutdownTest extends AnyFunSuite with Assertions with AsyncTestBase {
       server.external.read(readBuffer)
     }
 
-    assert(!channelGroup.isTerminated)
+    assertFalse(channelGroup.isTerminated)
 
     channelGroup.shutdownNow()
 
     // terminated even after a relatively short timeout
     val terminated = channelGroup.awaitTermination(100, TimeUnit.MILLISECONDS)
-    assert(terminated)
-    assert(channelGroup.isTerminated)
+    assertTrue(terminated)
+    assertTrue(channelGroup.isTerminated)
     assertChannelGroupConsistency(channelGroup)
 
     printChannelGroupStatus(channelGroup)
   }
 
-  test("non-immediate shutdown") {
+  @Test
+  def testNonImmediateShutdown(): Unit = {
+    println("testNonImmediateShutdown():")
     val channelGroup = new AsynchronousTlsChannelGroup()
     val socketPairCount = 100
     val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
@@ -52,15 +57,15 @@ class AsyncShutdownTest extends AnyFunSuite with Assertions with AsyncTestBase {
       server.external.read(readBuffer)
     }
 
-    assert(!channelGroup.isTerminated)
+    assertFalse(channelGroup.isTerminated)
 
     channelGroup.shutdown()
 
     {
       // not terminated even after a relatively long timeout
       val terminated = channelGroup.awaitTermination(2000, TimeUnit.MILLISECONDS)
-      assert(!terminated)
-      assert(!channelGroup.isTerminated)
+      assertFalse(terminated)
+      assertFalse(channelGroup.isTerminated)
     }
 
     for (AsyncSocketPair(client, server) <- socketPairs) {
@@ -71,16 +76,16 @@ class AsyncShutdownTest extends AnyFunSuite with Assertions with AsyncTestBase {
     {
       // terminated even after a relatively short timeout
       val terminated = channelGroup.awaitTermination(100, TimeUnit.MILLISECONDS)
-      assert(terminated)
-      assert(channelGroup.isTerminated)
+      assertTrue(terminated)
+      assertTrue(channelGroup.isTerminated)
     }
 
     assertChannelGroupConsistency(channelGroup)
 
-    assert(channelGroup.getCancelledReadCount == 0)
-    assert(channelGroup.getCancelledWriteCount == 0)
-    assert(channelGroup.getFailedReadCount == 0)
-    assert(channelGroup.getFailedWriteCount == 0)
+    assertEquals(0, channelGroup.getCancelledReadCount)
+    assertEquals(0, channelGroup.getCancelledWriteCount)
+    assertEquals(0, channelGroup.getFailedReadCount)
+    assertEquals(0, channelGroup.getFailedWriteCount)
 
     printChannelGroupStatus(channelGroup)
   }

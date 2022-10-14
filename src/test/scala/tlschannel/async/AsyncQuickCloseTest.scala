@@ -1,14 +1,16 @@
 package tlschannel.async
 
-import org.scalatest.Assertions
-import org.scalatest.funsuite.AnyFunSuite
+import org.junit.jupiter.api.Assertions.{assertInstanceOf, assertTrue}
+import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.{SocketPairFactory, SslContextFactory}
 
 import java.nio.ByteBuffer
 import java.nio.channels.ClosedChannelException
 import scala.concurrent.ExecutionException
+import org.junit.jupiter.api.{Assertions, Test, TestInstance}
 
-class AsyncQuickCloseTest extends AnyFunSuite with AsyncTestBase with Assertions {
+@TestInstance(Lifecycle.PER_CLASS)
+class AsyncQuickCloseTest extends AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
@@ -22,7 +24,9 @@ class AsyncQuickCloseTest extends AnyFunSuite with AsyncTestBase with Assertions
   val bufferSize = 10000
 
   // see https://github.com/marianobarrios/tls-channel/issues/34
-  test("immediate closings after registration") {
+  // immediate closings after registration
+  @Test
+  def testImmediateClose(): Unit = {
     val channelGroup = new AsynchronousTlsChannelGroup()
     for (_ <- 1 to repetitions) {
 
@@ -34,25 +38,23 @@ class AsyncQuickCloseTest extends AnyFunSuite with AsyncTestBase with Assertions
       // try read
       val readBuffer = ByteBuffer.allocate(bufferSize)
       val readFuture = socketPair.server.external.read(readBuffer)
-      val readEx = intercept[ExecutionException] {
-        readFuture.get()
-      }
-      assert(readEx.getCause.isInstanceOf[ClosedChannelException])
+      val e1 = Assertions.assertThrows(classOf[ExecutionException], () => readFuture.get())
+      assertInstanceOf(classOf[ClosedChannelException], e1.getCause)
 
       // try write
       val writeFuture = socketPair.client.external.write(ByteBuffer.wrap(Array(1)))
-      val writeEx = intercept[ExecutionException] {
-        writeFuture.get()
-      }
-      assert(writeEx.getCause.isInstanceOf[ClosedChannelException])
-
+      val e2 = Assertions.assertThrows(classOf[ExecutionException], () => writeFuture.get())
+      assertInstanceOf(classOf[ClosedChannelException], e2.getCause)
     }
-    assert(channelGroup.isAlive)
+
+    assertTrue(channelGroup.isAlive)
     channelGroup.shutdown()
     assertChannelGroupConsistency(channelGroup)
   }
 
-  test("immediate closings after registration, even if we close the raw channel") {
+  // immediate closings after registration, even if we close the raw channel
+  @Test
+  def testRawImmediateClosing(): Unit = {
     val channelGroup = new AsynchronousTlsChannelGroup()
     for (_ <- 1 to repetitions) {
 
@@ -64,20 +66,15 @@ class AsyncQuickCloseTest extends AnyFunSuite with AsyncTestBase with Assertions
       // try read
       val readBuffer = ByteBuffer.allocate(bufferSize)
       val readFuture = socketPair.server.external.read(readBuffer)
-      val readEx = intercept[ExecutionException] {
-        readFuture.get()
-      }
-      assert(readEx.getCause.isInstanceOf[ClosedChannelException])
+      val readEx = Assertions.assertThrows(classOf[ExecutionException], () => readFuture.get())
+      assertInstanceOf(classOf[ClosedChannelException], readEx.getCause)
 
       // try write
       val writeFuture = socketPair.client.external.write(ByteBuffer.wrap(Array(1)))
-      val writeEx = intercept[ExecutionException] {
-        writeFuture.get()
-      }
-      assert(writeEx.getCause.isInstanceOf[ClosedChannelException])
-
+      val writeEx = Assertions.assertThrows(classOf[ExecutionException], () => writeFuture.get())
+      assertInstanceOf(classOf[ClosedChannelException], writeEx.getCause)
     }
-    assert(channelGroup.isAlive)
+    assertTrue(channelGroup.isAlive)
     channelGroup.shutdown()
     assertChannelGroupConsistency(channelGroup)
   }

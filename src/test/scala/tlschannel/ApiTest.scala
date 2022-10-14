@@ -1,18 +1,19 @@
 package tlschannel
 
+import org.junit.jupiter.api.TestInstance.Lifecycle
+import org.junit.jupiter.api.{Assertions, Test, TestInstance}
+
 import java.nio.channels.Channels
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-
 import javax.net.ssl.SSLContext
 import tlschannel.impl.{BufferHolder, ByteBufferSet, TlsChannelImpl}
+
 import java.util.Optional
 
-import org.scalatest.Assertions
-import org.scalatest.funsuite.AnyFunSuite
-
-class ApiTest extends AnyFunSuite with Assertions {
+@TestInstance(Lifecycle.PER_CLASS)
+class ApiTest {
 
   val arraySize = 1024
 
@@ -35,17 +36,21 @@ class ApiTest extends AnyFunSuite with Assertions {
     )
   }
 
-  test("reading into a read-only buffer") {
+  @Test
+  def testReadIntoReadOnlyBuffer(): Unit = {
     val socket = newSocket()
-    intercept[IllegalArgumentException] {
-      socket.read(new ByteBufferSet(ByteBuffer.allocate(1).asReadOnlyBuffer()))
-    }
+    Assertions.assertThrows(
+      classOf[IllegalArgumentException],
+      () => socket.read(new ByteBufferSet(ByteBuffer.allocate(1).asReadOnlyBuffer()))
+    )
   }
 
-  test("reading into a buffer without remaining capacity") {
+  @Test
+  def testReadIntoBufferWithoutCapacity(): Unit = {
     val socket = newSocket()
-    assert(
-      socket.read(new ByteBufferSet(ByteBuffer.allocate(0))) == 0,
+    Assertions.assertEquals(
+      0,
+      socket.read(new ByteBufferSet(ByteBuffer.allocate(0))),
       "read must return zero when the buffer was empty"
     )
   }

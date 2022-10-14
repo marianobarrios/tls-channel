@@ -1,15 +1,18 @@
 package tlschannel.async
 
+import org.junit.jupiter.api.Assertions.{assertEquals, assertInstanceOf}
+import org.junit.jupiter.api.TestInstance.Lifecycle
+import org.junit.jupiter.api.{Assertions, Test, TestInstance}
+
 import java.nio.ByteBuffer
 import java.util.concurrent.{CancellationException, TimeUnit}
-import org.scalatest.Assertions
-import org.scalatest.funsuite.AnyFunSuite
 import tlschannel.helpers.{SocketPairFactory, SslContextFactory}
 
 import java.nio.channels.ClosedChannelException
 import scala.concurrent.ExecutionException
 
-class AsyncCloseTest extends AnyFunSuite with AsyncTestBase with Assertions {
+@TestInstance(Lifecycle.PER_CLASS)
+class AsyncCloseTest extends AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
@@ -22,7 +25,9 @@ class AsyncCloseTest extends AnyFunSuite with AsyncTestBase with Assertions {
    */
   val repetitions = 500
 
-  test("should throw an CancellationException (or ClosedChannelException) when closing the group while reading") {
+  // should throw an CancellationException (or ClosedChannelException) when closing the group while reading
+  @Test
+  def testClosingWhileReading(): Unit = {
     for (_ <- 1 to repetitions) {
       val channelGroup = new AsynchronousTlsChannelGroup()
       val socketPair = factory.async(null, channelGroup, runTasks = true)
@@ -32,34 +37,35 @@ class AsyncCloseTest extends AnyFunSuite with AsyncTestBase with Assertions {
 
       socketPair.server.external.close()
 
-      intercept[Exception] {
+      try {
         readFuture.get(1000, TimeUnit.MILLISECONDS)
-      } match {
+      } catch {
         case _: CancellationException =>
           // give time to adders to converge
           Thread.sleep(10)
-          assert(channelGroup.getCancelledReadCount == 1)
-          assert(channelGroup.getFailedReadCount == 0)
+          assertEquals(1, channelGroup.getCancelledReadCount)
+          assertEquals(0, channelGroup.getFailedReadCount)
         case ee: ExecutionException =>
           // give time to adders to converge
           Thread.sleep(10)
-          assert(ee.getCause.isInstanceOf[ClosedChannelException])
-          assert(channelGroup.getCancelledReadCount == 0)
-          assert(channelGroup.getFailedReadCount == 1)
-        case e => fail(e)
+          assertInstanceOf(classOf[ClosedChannelException], ee.getCause)
+          assertEquals(0, channelGroup.getCancelledReadCount)
+          assertEquals(1, channelGroup.getFailedReadCount)
+        case e =>
+          Assertions.fail(e)
       }
 
       socketPair.client.external.close()
       shutdownChannelGroup(channelGroup)
       assertChannelGroupConsistency(channelGroup)
-      assert(channelGroup.getSuccessfulReadCount == 0)
+      assertEquals(0, channelGroup.getSuccessfulReadCount)
       channelGroup.shutdown()
     }
   }
 
-  test(
-    "should throw an CancellationException (or ClosedChannelException) when closing the group while reading, even if we close the raw channel"
-  ) {
+  // should throw an CancellationException (or ClosedChannelException) when closing the group while reading, even if we close the raw channel
+  @Test
+  def testRawClosingWhileReading(): Unit = {
     for (_ <- 1 to repetitions) {
       val channelGroup = new AsynchronousTlsChannelGroup()
       val socketPair = factory.async(null, channelGroup, runTasks = true)
@@ -70,28 +76,30 @@ class AsyncCloseTest extends AnyFunSuite with AsyncTestBase with Assertions {
       // important: closing the raw socket
       socketPair.server.plain.close()
 
-      intercept[Exception] {
+      try {
         readFuture.get(1000, TimeUnit.MILLISECONDS)
-      } match {
+      } catch {
         case _: CancellationException =>
           // give time to adders to converge
           Thread.sleep(10)
-          assert(channelGroup.getCancelledReadCount == 1)
-          assert(channelGroup.getFailedReadCount == 0)
+          assertEquals(1, channelGroup.getCancelledReadCount)
+          assertEquals(0, channelGroup.getFailedReadCount)
         case ee: ExecutionException =>
           // give time to adders to converge
           Thread.sleep(10)
-          assert(ee.getCause.isInstanceOf[ClosedChannelException])
-          assert(channelGroup.getCancelledReadCount == 0)
-          assert(channelGroup.getFailedReadCount == 1)
-        case e => fail(e)
+          assertInstanceOf(classOf[ClosedChannelException], ee.getCause)
+          assertEquals(0, channelGroup.getCancelledReadCount)
+          assertEquals(1, channelGroup.getFailedReadCount)
+        case e =>
+          Assertions.fail(e)
       }
 
       socketPair.client.external.close()
       shutdownChannelGroup(channelGroup)
       assertChannelGroupConsistency(channelGroup)
-      assert(channelGroup.getSuccessfulReadCount == 0)
+      assertEquals(0, channelGroup.getSuccessfulReadCount)
       channelGroup.shutdown()
     }
   }
+
 }
