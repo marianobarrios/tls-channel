@@ -13,15 +13,15 @@ import java.nio.channels.ByteChannel;
  * throw it while still implementing the {@link ByteChannel} interface.
  */
 public abstract class TlsChannelFlowControlException extends IOException {
-  private static final long serialVersionUID = -2394919487958591959L;
+    private static final long serialVersionUID = -2394919487958591959L;
 
-  public TlsChannelFlowControlException() {
-    super();
-  }
+    public TlsChannelFlowControlException() {
+        super();
+    }
 
-  /** For efficiency, override this method to do nothing. */
-  @Override
-  public Throwable fillInStackTrace() {
-    return this;
-  }
+    /** For efficiency, override this method to do nothing. */
+    @Override
+    public Throwable fillInStackTrace() {
+        return this;
+    }
 }

@@ -27,73 +27,70 @@ import tlschannel.async.AsynchronousTlsChannelGroup;
  */
 public class AsynchronousChannelServer {
 
-  private static final Charset utf8 = StandardCharsets.UTF_8;
+    private static final Charset utf8 = StandardCharsets.UTF_8;
 
-  public static void main(String[] args) throws IOException, GeneralSecurityException {
+    public static void main(String[] args) throws IOException, GeneralSecurityException {
 
-    // initialize the SSLContext, a configuration holder, reusable object
-    SSLContext sslContext = ContextFactory.authenticatedContext("TLSv1.2");
+        // initialize the SSLContext, a configuration holder, reusable object
+        SSLContext sslContext = ContextFactory.authenticatedContext("TLSv1.2");
 
-    AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
+        AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
 
-    // connect server socket channel and register it in the selector
-    try (ServerSocketChannel serverSocket = ServerSocketChannel.open()) {
+        // connect server socket channel and register it in the selector
+        try (ServerSocketChannel serverSocket = ServerSocketChannel.open()) {
 
-      serverSocket.socket().bind(new InetSocketAddress(10000));
+            serverSocket.socket().bind(new InetSocketAddress(10000));
 
-      // accept raw connections normally
-      System.out.println("Waiting for connection...");
+            // accept raw connections normally
+            System.out.println("Waiting for connection...");
 
-      while (true) {
-        SocketChannel rawChannel = serverSocket.accept();
-        rawChannel.configureBlocking(false);
+            while (true) {
+                SocketChannel rawChannel = serverSocket.accept();
+                rawChannel.configureBlocking(false);
 
-        // create TlsChannel builder, combining the raw channel and the SSLEngine, using minimal
-        // options
-        ServerTlsChannel.Builder builder = ServerTlsChannel.newBuilder(rawChannel, sslContext);
+                // create TlsChannel builder, combining the raw channel and the SSLEngine, using minimal
+                // options
+                ServerTlsChannel.Builder builder = ServerTlsChannel.newBuilder(rawChannel, sslContext);
 
-        // instantiate TlsChannel
-        TlsChannel tlsChannel = builder.build();
+                // instantiate TlsChannel
+                TlsChannel tlsChannel = builder.build();
 
-        // build asynchronous channel, based in the TLS channel and associated with the global
-        // group.
-        AsynchronousTlsChannel asyncTlsChannel =
-            new AsynchronousTlsChannel(channelGroup, tlsChannel, rawChannel);
+                // build asynchronous channel, based in the TLS channel and associated with the global
+                // group.
+                AsynchronousTlsChannel asyncTlsChannel =
+                        new AsynchronousTlsChannel(channelGroup, tlsChannel, rawChannel);
 
-        // write to stdout all data sent by the client
-        ByteBuffer res = ByteBuffer.allocate(10000);
-        asyncTlsChannel.read(
-            res,
-            null,
-            new CompletionHandler<Integer, Object>() {
-              @Override
-              public void completed(Integer result, Object attachment) {
-                if (result != -1) {
-                  res.flip();
-                  System.out.print(utf8.decode(res).toString());
-                  res.compact();
-                  // repeat
-                  asyncTlsChannel.read(res, null, this);
-                } else {
-                  try {
-                    asyncTlsChannel.close();
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                }
-              }
+                // write to stdout all data sent by the client
+                ByteBuffer res = ByteBuffer.allocate(10000);
+                asyncTlsChannel.read(res, null, new CompletionHandler<Integer, Object>() {
+                    @Override
+                    public void completed(Integer result, Object attachment) {
+                        if (result != -1) {
+                            res.flip();
+                            System.out.print(utf8.decode(res).toString());
+                            res.compact();
+                            // repeat
+                            asyncTlsChannel.read(res, null, this);
+                        } else {
+                            try {
+                                asyncTlsChannel.close();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
 
-              @Override
-              public void failed(Throwable exc, Object attachment) {
-                try {
-                  asyncTlsChannel.close();
-                } catch (IOException e) {
-                  throw new RuntimeException(e);
-                }
-                throw new RuntimeException(exc);
-              }
-            });
-      }
+                    @Override
+                    public void failed(Throwable exc, Object attachment) {
+                        try {
+                            asyncTlsChannel.close();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        throw new RuntimeException(exc);
+                    }
+                });
+            }
+        }
     }
-  }
 }

@@ -12,13 +12,13 @@ import javax.net.ssl.SSLContext;
 @FunctionalInterface
 public interface SniSslContextFactory {
 
-  /**
-   * Return a proper {@link SSLContext}.
-   *
-   * @param sniServerName an optional {@link SNIServerName}; an empty value means that the client
-   *     did not send and SNI value.
-   * @return the chosen context, or an empty value, indicating that no context is supplied and the
-   *     connection should be aborted.
-   */
-  Optional<SSLContext> getSslContext(Optional<SNIServerName> sniServerName);
+    /**
+     * Return a proper {@link SSLContext}.
+     *
+     * @param sniServerName an optional {@link SNIServerName}; an empty value means that the client
+     *     did not send and SNI value.
+     * @return the chosen context, or an empty value, indicating that no context is supplied and the
+     *     connection should be aborted.
+     */
+    Optional<SSLContext> getSslContext(Optional<SNIServerName> sniServerName);
 }

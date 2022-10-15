@@ -23,5 +23,5 @@ import java.nio.channels.SocketChannel;
  *     documentation</a>
  */
 public class NeedsWriteException extends WouldBlockException {
-  private static final long serialVersionUID = -3737940476382846413L;
+    private static final long serialVersionUID = -3737940476382846413L;
 }

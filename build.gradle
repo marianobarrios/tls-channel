@@ -41,7 +41,7 @@ dependencies {
 
 spotless {
     java {
-        googleJavaFormat()
+        palantirJavaFormat()
     }
     scala {
         scalafmt('3.5.9').configFile('.scalafmt.conf')
