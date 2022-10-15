@@ -44,7 +44,7 @@ spotless {
         googleJavaFormat()
     }
     scala {
-        scalafmt().configFile('.scalafmt.conf')
+        scalafmt('3.5.9').configFile('.scalafmt.conf')
     }
 }
 
