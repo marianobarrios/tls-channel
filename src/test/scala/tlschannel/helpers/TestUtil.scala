@@ -1,6 +1,5 @@
 package tlschannel.helpers
 
-import java.time.Duration
 import java.util.SplittableRandom
 
 import com.typesafe.scalalogging.StrictLogging
@@ -25,19 +24,6 @@ object TestUtil extends StrictLogging {
         Thread.sleep(1000) // give the process some time for flushing logs
         System.exit(1)
     }
-  }
-
-  def time[A](thunk: => A): (A, Duration) = {
-    val start = System.nanoTime()
-    val res = thunk
-    val time = Duration.ofNanos(System.nanoTime() - start)
-    (res, time)
-  }
-
-  def time(thunk: => Unit): Duration = {
-    val start = System.nanoTime()
-    thunk
-    Duration.ofNanos(System.nanoTime() - start)
   }
 
   implicit class LazyListWithTakeWhileInclusive[A](stream: LazyList[A]) {

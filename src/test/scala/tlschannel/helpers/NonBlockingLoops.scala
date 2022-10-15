@@ -13,8 +13,8 @@ import java.util.concurrent.Executors
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
 import java.security.MessageDigest
+import java.time.Duration
 import java.util.SplittableRandom
-import scala.concurrent.duration.Duration
 
 object NonBlockingLoops {
 
@@ -140,9 +140,9 @@ object NonBlockingLoops {
             endpoint.key.interestOps(SelectionKey.OP_READ)
           case e: NeedsTaskException =>
             val r: Runnable = { () =>
-              val elapsed = TestUtil.time {
-                e.getTask.run()
-              }
+              val start = System.nanoTime()
+              e.getTask.run()
+              val elapsed = Duration.ofNanos(System.nanoTime() - start)
               selector.wakeup()
               readyTaskSockets.add(endpoint)
               totalTaskTimeNanos.add(elapsed.toNanos)
@@ -169,7 +169,7 @@ object NonBlockingLoops {
       needWriteCount,
       renegotiationCount,
       taskCount,
-      Duration.fromNanos(totalTaskTimeNanos.longValue())
+      Duration.ofNanos(totalTaskTimeNanos.longValue())
     )
   }
 
