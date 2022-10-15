@@ -10,13 +10,13 @@ import java.nio.ByteBuffer;
  */
 public class HeapBufferAllocator implements BufferAllocator {
 
-  @Override
-  public ByteBuffer allocate(int size) {
-    return ByteBuffer.allocate(size);
-  }
+    @Override
+    public ByteBuffer allocate(int size) {
+        return ByteBuffer.allocate(size);
+    }
 
-  @Override
-  public void free(ByteBuffer buffer) {
-    // GC does it
-  }
+    @Override
+    public void free(ByteBuffer buffer) {
+        // GC does it
+    }
 }

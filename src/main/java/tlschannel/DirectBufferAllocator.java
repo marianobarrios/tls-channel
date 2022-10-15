@@ -14,16 +14,16 @@ import tlschannel.util.DirectBufferDeallocator;
  */
 public class DirectBufferAllocator implements BufferAllocator {
 
-  private final DirectBufferDeallocator deallocator = new DirectBufferDeallocator();
+    private final DirectBufferDeallocator deallocator = new DirectBufferDeallocator();
 
-  @Override
-  public ByteBuffer allocate(int size) {
-    return ByteBuffer.allocateDirect(size);
-  }
+    @Override
+    public ByteBuffer allocate(int size) {
+        return ByteBuffer.allocateDirect(size);
+    }
 
-  @Override
-  public void free(ByteBuffer buffer) {
-    // do not wait for GC (and finalizer) to run
-    deallocator.deallocate(buffer);
-  }
+    @Override
+    public void free(ByteBuffer buffer) {
+        // do not wait for GC (and finalizer) to run
+        deallocator.deallocate(buffer);
+    }
 }

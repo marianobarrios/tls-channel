@@ -10,21 +10,18 @@ import javax.net.ssl.TrustManagerFactory;
 
 public class ContextFactory {
 
-  public static SSLContext authenticatedContext(String protocol)
-      throws GeneralSecurityException, IOException {
-    SSLContext sslContext = SSLContext.getInstance(protocol);
-    KeyStore ks = KeyStore.getInstance("JKS");
-    try (InputStream keystoreFile =
-        SimpleBlockingServer.class.getClassLoader().getResourceAsStream("keystore.jks")) {
-      ks.load(keystoreFile, "password".toCharArray());
-      TrustManagerFactory tmf =
-          TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      tmf.init(ks);
-      KeyManagerFactory kmf =
-          KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-      kmf.init(ks, "password".toCharArray());
-      sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-      return sslContext;
+    public static SSLContext authenticatedContext(String protocol) throws GeneralSecurityException, IOException {
+        SSLContext sslContext = SSLContext.getInstance(protocol);
+        KeyStore ks = KeyStore.getInstance("JKS");
+        try (InputStream keystoreFile =
+                SimpleBlockingServer.class.getClassLoader().getResourceAsStream("keystore.jks")) {
+            ks.load(keystoreFile, "password".toCharArray());
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(ks);
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            kmf.init(ks, "password".toCharArray());
+            sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+            return sslContext;
+        }
     }
-  }
 }

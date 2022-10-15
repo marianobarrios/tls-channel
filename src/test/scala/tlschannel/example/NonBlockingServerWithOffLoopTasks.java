@@ -37,106 +37,105 @@ import tlschannel.TlsChannel;
  */
 public class NonBlockingServerWithOffLoopTasks {
 
-  private static final Charset utf8 = StandardCharsets.UTF_8;
+    private static final Charset utf8 = StandardCharsets.UTF_8;
 
-  private static Executor taskExecutor =
-      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-  private static Set<SelectionKey> taskReadyKeys = ConcurrentHashMap.newKeySet();
+    private static Executor taskExecutor =
+            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private static Set<SelectionKey> taskReadyKeys = ConcurrentHashMap.newKeySet();
 
-  public static void main(String[] args) throws IOException, GeneralSecurityException {
+    public static void main(String[] args) throws IOException, GeneralSecurityException {
 
-    // initialize the SSLContext, a configuration holder, reusable object
-    SSLContext sslContext = ContextFactory.authenticatedContext("TLSv1.2");
+        // initialize the SSLContext, a configuration holder, reusable object
+        SSLContext sslContext = ContextFactory.authenticatedContext("TLSv1.2");
 
-    // connect server socket channel and register it in the selector
-    try (ServerSocketChannel serverSocket = ServerSocketChannel.open()) {
-      serverSocket.socket().bind(new InetSocketAddress(10000));
-      serverSocket.configureBlocking(false);
-      Selector selector = Selector.open();
-      serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+        // connect server socket channel and register it in the selector
+        try (ServerSocketChannel serverSocket = ServerSocketChannel.open()) {
+            serverSocket.socket().bind(new InetSocketAddress(10000));
+            serverSocket.configureBlocking(false);
+            Selector selector = Selector.open();
+            serverSocket.register(selector, SelectionKey.OP_ACCEPT);
 
-      while (true) {
+            while (true) {
 
-        // loop blocks here
-        selector.select();
+                // loop blocks here
+                selector.select();
 
-        // process keys whose task finished
-        Iterator<SelectionKey> taskReadyIterator = taskReadyKeys.iterator();
-        while (taskReadyIterator.hasNext()) {
-          SelectionKey key = taskReadyIterator.next();
-          taskReadyIterator.remove();
-          handleReadyChannel(selector, key);
+                // process keys whose task finished
+                Iterator<SelectionKey> taskReadyIterator = taskReadyKeys.iterator();
+                while (taskReadyIterator.hasNext()) {
+                    SelectionKey key = taskReadyIterator.next();
+                    taskReadyIterator.remove();
+                    handleReadyChannel(selector, key);
+                }
+
+                // process keys that had IO events
+                Iterator<SelectionKey> ioReadyIterator = selector.selectedKeys().iterator();
+                while (ioReadyIterator.hasNext()) {
+                    SelectionKey key = ioReadyIterator.next();
+                    ioReadyIterator.remove();
+                    if (key.isAcceptable()) {
+                        // we have a new connection
+                        handleNewConnection(sslContext, selector, (ServerSocketChannel) key.channel());
+                    } else if (key.isReadable() || key.isWritable()) {
+                        // we have data (or buffer space) in existing connections
+                        handleReadyChannel(selector, key);
+                    } else {
+                        throw new IllegalStateException();
+                    }
+                }
+            }
         }
+    }
 
-        // process keys that had IO events
-        Iterator<SelectionKey> ioReadyIterator = selector.selectedKeys().iterator();
-        while (ioReadyIterator.hasNext()) {
-          SelectionKey key = ioReadyIterator.next();
-          ioReadyIterator.remove();
-          if (key.isAcceptable()) {
-            // we have a new connection
-            handleNewConnection(sslContext, selector, (ServerSocketChannel) key.channel());
-          } else if (key.isReadable() || key.isWritable()) {
-            // we have data (or buffer space) in existing connections
-            handleReadyChannel(selector, key);
-          } else {
-            throw new IllegalStateException();
-          }
+    private static void handleNewConnection(SSLContext sslContext, Selector selector, ServerSocketChannel serverChannel)
+            throws IOException {
+        // accept new connection
+        SocketChannel rawChannel = serverChannel.accept();
+        rawChannel.configureBlocking(false);
+
+        // wrap raw channel in TlsChannel
+        TlsChannel tlsChannel = ServerTlsChannel.newBuilder(rawChannel, sslContext)
+                .withRunTasks(false)
+                .build();
+
+        /*
+         * Wrap raw channel with a TlsChannel. Note that the raw channel is registered in the selector
+         * and the TlsChannel put as an attachment register the channel for reading, because TLS
+         * connections are initiated by clients.
+         */
+        SelectionKey newKey = rawChannel.register(selector, SelectionKey.OP_READ);
+        newKey.attach(tlsChannel);
+    }
+
+    private static void handleReadyChannel(Selector selector, SelectionKey key) throws IOException {
+
+        ByteBuffer buffer = ByteBuffer.allocate(10000);
+
+        // recover the TlsChannel from the attachment
+        TlsChannel tlsChannel = (TlsChannel) key.attachment();
+
+        try {
+            // write received bytes in stdout
+            int c = tlsChannel.read(buffer);
+            if (c > 0) {
+                buffer.flip();
+                System.out.print(utf8.decode(buffer));
+            }
+            if (c < 0) {
+                tlsChannel.close();
+            }
+        } catch (NeedsReadException e) {
+            key.interestOps(SelectionKey.OP_READ); // overwrites previous value
+        } catch (NeedsWriteException e) {
+            key.interestOps(SelectionKey.OP_WRITE); // overwrites previous value
+        } catch (NeedsTaskException e) {
+            taskExecutor.execute(() -> {
+                e.getTask().run();
+                // when the task finished, add it the the ready-set
+                taskReadyKeys.add(key);
+                // unblock the selector
+                selector.wakeup();
+            });
         }
-      }
     }
-  }
-
-  private static void handleNewConnection(
-      SSLContext sslContext, Selector selector, ServerSocketChannel serverChannel)
-      throws IOException {
-    // accept new connection
-    SocketChannel rawChannel = serverChannel.accept();
-    rawChannel.configureBlocking(false);
-
-    // wrap raw channel in TlsChannel
-    TlsChannel tlsChannel =
-        ServerTlsChannel.newBuilder(rawChannel, sslContext).withRunTasks(false).build();
-
-    /*
-     * Wrap raw channel with a TlsChannel. Note that the raw channel is registered in the selector
-     * and the TlsChannel put as an attachment register the channel for reading, because TLS
-     * connections are initiated by clients.
-     */
-    SelectionKey newKey = rawChannel.register(selector, SelectionKey.OP_READ);
-    newKey.attach(tlsChannel);
-  }
-
-  private static void handleReadyChannel(Selector selector, SelectionKey key) throws IOException {
-
-    ByteBuffer buffer = ByteBuffer.allocate(10000);
-
-    // recover the TlsChannel from the attachment
-    TlsChannel tlsChannel = (TlsChannel) key.attachment();
-
-    try {
-      // write received bytes in stdout
-      int c = tlsChannel.read(buffer);
-      if (c > 0) {
-        buffer.flip();
-        System.out.print(utf8.decode(buffer));
-      }
-      if (c < 0) {
-        tlsChannel.close();
-      }
-    } catch (NeedsReadException e) {
-      key.interestOps(SelectionKey.OP_READ); // overwrites previous value
-    } catch (NeedsWriteException e) {
-      key.interestOps(SelectionKey.OP_WRITE); // overwrites previous value
-    } catch (NeedsTaskException e) {
-      taskExecutor.execute(
-          () -> {
-            e.getTask().run();
-            // when the task finished, add it the the ready-set
-            taskReadyKeys.add(key);
-            // unblock the selector
-            selector.wakeup();
-          });
-    }
-  }
 }
