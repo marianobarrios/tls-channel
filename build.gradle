@@ -30,7 +30,7 @@ dependencies {
     testImplementation 'io.netty:netty-buffer:4.1.73.Final'
     testImplementation 'io.netty:netty-handler:4.1.73.Final'
     // pinned: https://github.com/netty/netty-tcnative/issues/716
-    testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.47.Final'
+    testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.61.Final'
     // required by ScalaTest
     testRuntimeOnly 'com.vladsch.flexmark:flexmark-all:0.64.2'
 
