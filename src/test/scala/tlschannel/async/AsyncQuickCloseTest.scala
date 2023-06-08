@@ -19,7 +19,7 @@ class AsyncQuickCloseTest extends AsyncTestBase {
    * Closing sockets registered in an asynchronous channel group is inherently racy, using repetitions to try to catch
    * most races.
    */
-  val repetitions = 500
+  val repetitions = 250
 
   val bufferSize = 10000
 

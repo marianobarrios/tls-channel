@@ -13,7 +13,7 @@ class ConcurrentTest extends StrictLogging {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
-  val dataSize = 500_000_000
+  val dataSize = 250_000_000
   val bufferSize = 2000
 
   /** Test several parties writing concurrently

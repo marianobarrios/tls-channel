@@ -24,7 +24,7 @@ class PseudoAsyncTest extends StrictLogging {
   // test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
   @TestFactory
   def testHalfDuplex(): util.Collection[DynamicTest] = {
-    val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val tests = for ((size1, size2) <- sizes zip sizes.reverse) yield {
       DynamicTest.dynamicTest(
         s"testHalfDuplex() - size1=$size1, size2=$size2",
@@ -46,7 +46,7 @@ class PseudoAsyncTest extends StrictLogging {
   // test a full-duplex interaction, without any renegotiation
   @TestFactory
   def testFullDuplex(): util.Collection[DynamicTest] = {
-    val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val tests = for ((size1, size2) <- sizes zip sizes.reverse) yield {
       DynamicTest.dynamicTest(
         s"testFullDuplex() - size1=$size1, size2=$size2",

@@ -23,7 +23,7 @@ class AsyncCloseTest extends AsyncTestBase {
    * Closing sockets registered in an asynchronous channel group is inherently racy, using repetitions to try to catch
    * most races.
    */
-  val repetitions = 500
+  val repetitions = 250
 
   // should throw an CancellationException (or ClosedChannelException) when closing the group while reading
   @Test

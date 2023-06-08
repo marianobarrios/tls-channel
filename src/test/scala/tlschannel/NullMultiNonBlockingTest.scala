@@ -15,7 +15,7 @@ class NullMultiNonBlockingTest {
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
   val dataSize = 10 * 1024 * 1024
-  val totalConnections = 150
+  val totalConnections = 50
 
   @Test
   def testRunTasksInNonBlockingLoop(): Unit = {

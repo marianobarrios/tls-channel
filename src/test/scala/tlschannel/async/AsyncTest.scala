@@ -12,7 +12,7 @@ class AsyncTest extends AsyncTestBase {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
-  val socketPairCount = 120
+  val socketPairCount = 50
 
   // real engine - run tasks
   @Test

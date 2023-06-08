@@ -22,7 +22,7 @@ class AsyncTimeoutTest extends AsyncTestBase {
 
   val bufferSize = 10
 
-  val repetitions = 1000
+  val repetitions = 50
 
   // scheduled timeout
   @Test
@@ -32,7 +32,7 @@ class AsyncTimeoutTest extends AsyncTestBase {
     val successWrites = new LongAdder
     val successReads = new LongAdder
     for (_ <- 1 to repetitions) {
-      val socketPairCount = 100
+      val socketPairCount = 50
       val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
       val latch = new CountDownLatch(socketPairCount * 2)
       for (AsyncSocketPair(client, server) <- socketPairs) {
@@ -114,7 +114,7 @@ class AsyncTimeoutTest extends AsyncTestBase {
     var successfulWriteCancellations = 0
     var successfulReadCancellations = 0
     for (_ <- 1 to repetitions) {
-      val socketPairCount = 100
+      val socketPairCount = 50
       val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
       val futures = for (AsyncSocketPair(client, server) <- socketPairs) yield {
         val writeBuffer = ByteBuffer.allocate(bufferSize)

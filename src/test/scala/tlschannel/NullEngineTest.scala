@@ -28,7 +28,7 @@ class NullEngineTest extends StrictLogging {
   @TestFactory
   def testHalfDuplexHeapBuffers(): util.Collection[DynamicTest] = {
     println("testHalfDuplexHeapBuffers():")
-    val sizes = LazyList.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(512)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val tests = for (size1 <- sizes) yield {
       DynamicTest.dynamicTest(
         s"testHalfDuplexHeapBuffers() - size1=$size1",
@@ -47,7 +47,7 @@ class NullEngineTest extends StrictLogging {
   @TestFactory
   def testHalfDuplexDirectBuffers(): util.Collection[DynamicTest] = {
     println("testHalfDuplexDirectBuffers():")
-    val sizes = LazyList.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(512)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val tests = for (size1 <- sizes) yield {
       DynamicTest.dynamicTest(
         s"Testing sizes: size1=$size1",

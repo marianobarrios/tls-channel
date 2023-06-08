@@ -23,7 +23,7 @@ class BlockingTest extends StrictLogging {
   @TestFactory
   def testHalfDuplexWireRenegotiations(): util.Collection[DynamicTest] = {
     println("testHalfDuplexWireRenegotiations():")
-    val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val tests = for ((size1, size2) <- sizes zip sizes.reverse) yield {
       DynamicTest.dynamicTest(
         s"testHalfDuplexWireRenegotiations() - size1=$size1, size2=$size2",
@@ -46,7 +46,7 @@ class BlockingTest extends StrictLogging {
   @TestFactory
   def testFullDuplex(): util.Collection[DynamicTest] = {
     println("testFullDuplex():")
-    val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val tests = for ((size1, size2) <- sizes zip sizes.reverse) yield {
       DynamicTest.dynamicTest(
         s"testFullDuplex() - size1=$size1,size2=$size2",

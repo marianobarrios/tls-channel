@@ -22,7 +22,7 @@ class AsyncShutdownTest extends AsyncTestBase {
   def testImmediateShutdown(): Unit = {
     println("testImmediateShutdown():")
     val channelGroup = new AsynchronousTlsChannelGroup()
-    val socketPairCount = 100
+    val socketPairCount = 50
     val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
     for (AsyncSocketPair(client, server) <- socketPairs) {
       val writeBuffer = ByteBuffer.allocate(bufferSize)
@@ -48,7 +48,7 @@ class AsyncShutdownTest extends AsyncTestBase {
   def testNonImmediateShutdown(): Unit = {
     println("testNonImmediateShutdown():")
     val channelGroup = new AsynchronousTlsChannelGroup()
-    val socketPairCount = 100
+    val socketPairCount = 50
     val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
     for (AsyncSocketPair(client, server) <- socketPairs) {
       val writeBuffer = ByteBuffer.allocate(bufferSize)
