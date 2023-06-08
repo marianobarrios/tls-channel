@@ -301,13 +301,10 @@ public class TlsChannelImpl implements ByteChannel {
         try {
             SSLEngineResult result = engine.unwrap(inEncrypted.buffer, dest.array, dest.offset, dest.length);
             if (logger.isLoggable(Level.FINEST)) {
-                logger.log(Level.FINEST,
+                logger.log(
+                        Level.FINEST,
                         "engine.unwrap() result [{0}]. engine status: {1}; inEncrypted {2}; inPlain: {3}",
-                        new Object[]{
-                                Util.resultToString(result),
-                                engine.getHandshakeStatus(),
-                                inEncrypted,
-                                dest});
+                        new Object[] {Util.resultToString(result), engine.getHandshakeStatus(), inEncrypted, dest});
             }
             return result;
         } catch (SSLException e) {
@@ -337,7 +334,7 @@ public class TlsChannelImpl implements ByteChannel {
         logger.log(Level.FINEST, "Reading from channel");
         int c = readChannel.read(buffer); // IO block
         if (logger.isLoggable(Level.FINEST)) {
-            logger.log(Level.FINEST, "Read from channel; response: {}, buffer: {}", new Object[]{c, buffer});
+            logger.log(Level.FINEST, "Read from channel; response: {}, buffer: {}", new Object[] {c, buffer});
         }
         if (c == -1) {
             throw new EofException();
@@ -408,13 +405,10 @@ public class TlsChannelImpl implements ByteChannel {
         try {
             SSLEngineResult result = engine.wrap(source.array, source.offset, source.length, outEncrypted.buffer);
             if (logger.isLoggable(Level.FINEST)) {
-                logger.log(Level.FINEST,
+                logger.log(
+                        Level.FINEST,
                         "engine.wrap() result: [{0}]; engine status: {1}; srcBuffer: {2}, outEncrypted: {3}",
-                        new Object[]{
-                                Util.resultToString(result),
-                                result.getHandshakeStatus(),
-                                source,
-                                outEncrypted});
+                        new Object[] {Util.resultToString(result), result.getHandshakeStatus(), source, outEncrypted});
             }
             return result;
         } catch (SSLException e) {

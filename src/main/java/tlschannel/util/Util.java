@@ -1,7 +1,7 @@
 package tlschannel.util;
 
-import javax.net.ssl.SSLEngineResult;
 import java.util.logging.Logger;
+import javax.net.ssl.SSLEngineResult;
 
 public class Util {
 

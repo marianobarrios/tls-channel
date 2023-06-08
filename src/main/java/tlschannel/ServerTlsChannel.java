@@ -349,7 +349,7 @@ public class ServerTlsChannel implements TlsChannel {
                 try {
                     engine = engineFactory.apply(sslContext);
                 } catch (Exception e) {
-                    logger.log(Level.FINEST,"client threw exception in SSLEngine factory", e);
+                    logger.log(Level.FINEST, "client threw exception in SSLEngine factory", e);
                     throw new TlsChannelCallbackException("SSLEngine creation callback failed", e);
                 }
                 impl = new TlsChannelImpl(

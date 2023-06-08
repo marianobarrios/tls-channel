@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import tlschannel.NeedsReadException;
 import tlschannel.NeedsTaskException;
 import tlschannel.NeedsWriteException;
@@ -505,7 +504,8 @@ public class AsynchronousTlsChannelGroup {
 
     private void warnAboutNeedTask() {
         if (!loggedTaskWarning.getAndSet(true)) {
-            logger.log(Level.WARNING,
+            logger.log(
+                    Level.WARNING,
                     "caught {0}; channels used in asynchronous groups should run tasks themselves; "
                             + "although task is being dealt with anyway, consider configuring channels properly",
                     NeedsTaskException.class.getName());
