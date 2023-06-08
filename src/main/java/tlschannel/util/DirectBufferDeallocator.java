@@ -4,16 +4,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Access to NIO sun.misc.Cleaner, allowing caller to deterministically deallocate a given
  * sun.nio.ch.DirectBuffer.
  */
 public class DirectBufferDeallocator {
-
-    private static final Logger logger = LoggerFactory.getLogger(DirectBufferDeallocator.class);
 
     private interface Deallocator {
         void free(ByteBuffer bb);
@@ -85,10 +81,8 @@ public class DirectBufferDeallocator {
     public DirectBufferDeallocator() {
         if (Util.getJavaMajorVersion() >= 9) {
             deallocator = new Java9Deallocator();
-            logger.debug("initialized direct buffer deallocator for java >= 9");
         } else {
             deallocator = new Java8Deallocator();
-            logger.debug("initialized direct buffer deallocator for java < 9");
         }
     }
 

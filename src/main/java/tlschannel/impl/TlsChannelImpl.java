@@ -16,14 +16,10 @@ import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.SSLEngineResult.Status;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tlschannel.*;
 import tlschannel.util.Util;
 
 public class TlsChannelImpl implements ByteChannel {
-
-    private static final Logger logger = LoggerFactory.getLogger(TlsChannelImpl.class);
 
     public static final int buffersInitialSize = 4096;
 
@@ -222,10 +218,8 @@ public class TlsChannelImpl implements ByteChannel {
     private void handleTask() throws NeedsTaskException {
         Runnable task = engine.getDelegatedTask();
         if (runTasks) {
-            logger.trace("delegating in task: {}", task);
             task.run();
         } else {
-            logger.trace("task needed, throwing exception: {}", task);
             throw new NeedsTaskException(task);
         }
     }
@@ -299,16 +293,7 @@ public class TlsChannelImpl implements ByteChannel {
     private SSLEngineResult callEngineUnwrap(ByteBufferSet dest) throws SSLException {
         inEncrypted.buffer.flip();
         try {
-            SSLEngineResult result = engine.unwrap(inEncrypted.buffer, dest.array, dest.offset, dest.length);
-            if (logger.isTraceEnabled()) {
-                logger.trace(
-                        "engine.unwrap() result [{}]. engine status: {}; inEncrypted {}; inPlain: {}",
-                        Util.resultToString(result),
-                        engine.getHandshakeStatus(),
-                        inEncrypted,
-                        dest);
-            }
-            return result;
+            return engine.unwrap(inEncrypted.buffer, dest.array, dest.offset, dest.length);
         } catch (SSLException e) {
             // something bad was received from the underlying channel, we cannot
             // continue
@@ -333,9 +318,7 @@ public class TlsChannelImpl implements ByteChannel {
     public static void callChannelRead(ReadableByteChannel readChannel, ByteBuffer buffer)
             throws IOException, EofException {
         Util.assertTrue(buffer.hasRemaining());
-        logger.trace("Reading from channel");
         int c = readChannel.read(buffer); // IO block
-        logger.trace("Read from channel; response: {}, buffer: {}", c, buffer);
         if (c == -1) {
             throw new EofException();
         }
@@ -403,16 +386,7 @@ public class TlsChannelImpl implements ByteChannel {
 
     private SSLEngineResult callEngineWrap(ByteBufferSet source) throws SSLException {
         try {
-            SSLEngineResult result = engine.wrap(source.array, source.offset, source.length, outEncrypted.buffer);
-            if (logger.isTraceEnabled()) {
-                logger.trace(
-                        "engine.wrap() result: [{}]; engine status: {}; srcBuffer: {}, outEncrypted: {}",
-                        Util.resultToString(result),
-                        result.getHandshakeStatus(),
-                        source,
-                        outEncrypted);
-            }
-            return result;
+            return engine.wrap(source.array, source.offset, source.length, outEncrypted.buffer);
         } catch (SSLException e) {
             invalid = true;
             throw e;
@@ -440,7 +414,6 @@ public class TlsChannelImpl implements ByteChannel {
 
     private static void callChannelWrite(WritableByteChannel channel, ByteBuffer src) throws IOException {
         while (src.hasRemaining()) {
-            logger.trace("calling channel.write({})", src);
             int c = channel.write(src); // IO block
             if (c == 0) {
                 /*
@@ -500,7 +473,6 @@ public class TlsChannelImpl implements ByteChannel {
                 throw new ClosedChannelException();
             }
             if (force || !negotiated) {
-                logger.trace("Calling SSLEngine.beginHandshake()");
                 engine.beginHandshake();
                 writeAndHandshake();
 
@@ -512,7 +484,6 @@ public class TlsChannelImpl implements ByteChannel {
                 try {
                     initSessionCallback.accept(engine.getSession());
                 } catch (Exception e) {
-                    logger.trace("client code threw exception in session initialization callback", e);
                     throw new TlsChannelCallbackException("session initialization callback failed", e);
                 }
                 negotiated = true;
@@ -635,8 +606,8 @@ public class TlsChannelImpl implements ByteChannel {
                         if (!closed && waitForCloseConfirmation) {
                             shutdown();
                         }
-                    } catch (Throwable e) {
-                        logger.debug("error doing TLS shutdown on close(), continuing: {}", e.getMessage());
+                    } catch (Throwable ignored) {
+
                     }
                 }
             } finally {

@@ -19,8 +19,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tlschannel.NeedsReadException;
 import tlschannel.NeedsTaskException;
 import tlschannel.NeedsWriteException;
@@ -34,8 +32,6 @@ import tlschannel.util.Util;
  * possible to run a group of asynchronous channels.
  */
 public class AsynchronousTlsChannelGroup {
-
-    private static final Logger logger = LoggerFactory.getLogger(AsynchronousTlsChannelGroup.class);
 
     /** The main executor of the group has a queue, whose size is a multiple of the number of CPUs. */
     private static final int queueLengthMultiplier = 32;
@@ -379,16 +375,16 @@ public class AsynchronousTlsChannelGroup {
                 processPendingInterests();
                 checkClosings();
             }
-        } catch (Throwable e) {
-            logger.error("error in selector loop", e);
+        } catch (Throwable ignored) {
+
         } finally {
             executor.shutdown();
             // use shutdownNow to stop delayed tasks
             timeoutExecutor.shutdownNow();
             try {
                 selector.close();
-            } catch (IOException e) {
-                logger.warn("error closing selector: {}", e.getMessage());
+            } catch (IOException ignored) {
+
             }
             checkClosings();
         }
@@ -416,8 +412,8 @@ public class AsynchronousTlsChannelGroup {
                 executor.execute(() -> {
                     try {
                         doWrite(socket, op);
-                    } catch (Throwable e) {
-                        logger.error("error in operation", e);
+                    } catch (Throwable ignored) {
+
                     }
                 });
             }
@@ -434,8 +430,8 @@ public class AsynchronousTlsChannelGroup {
                 executor.execute(() -> {
                     try {
                         doRead(socket, op);
-                    } catch (Throwable e) {
-                        logger.error("error in operation", e);
+                    } catch (Throwable ignored) {
+
                     }
                 });
             }
@@ -504,10 +500,9 @@ public class AsynchronousTlsChannelGroup {
 
     private void warnAboutNeedTask() {
         if (!loggedTaskWarning.getAndSet(true)) {
-            logger.warn(
-                    "caught {}; channels used in asynchronous groups should run tasks themselves; "
-                            + "although task is being dealt with anyway, consider configuring channels properly",
-                    NeedsTaskException.class.getName());
+            System.err.println("caught " + NeedsTaskException.class.getName()
+                    + "; channels used in asynchronous groups should run tasks themselves; "
+                    + "although task is being dealt with anyway, consider configuring channels properly");
         }
     }
 
