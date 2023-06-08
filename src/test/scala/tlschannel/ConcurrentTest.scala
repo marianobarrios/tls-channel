@@ -8,6 +8,8 @@ import org.junit.jupiter.api.{Test, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.{SocketGroup, SocketPairFactory, SslContextFactory, TestUtil}
 
+import scala.util.control.Breaks.{break, breakable}
+
 @TestInstance(Lifecycle.PER_CLASS)
 class ConcurrentTest extends StrictLogging {
 
@@ -82,19 +84,21 @@ class ConcurrentTest extends StrictLogging {
   }
 
   private def readerLoopUntilEof(socketGroup: SocketGroup, accumulator: AtomicLong): Unit = TestUtil.cannotFail {
-    logger.debug(s"Starting reader loop.")
-    val readArray = Array.ofDim[Byte](bufferSize)
-    while (true) {
-      val readBuffer = ByteBuffer.wrap(readArray, 0, bufferSize)
-      val c = socketGroup.external.read(readBuffer)
-      if (c == -1) {
-        logger.debug("Finalizing reader loop")
-        return
+    breakable {
+      logger.debug(s"Starting reader loop.")
+      val readArray = Array.ofDim[Byte](bufferSize)
+      while (true) {
+        val readBuffer = ByteBuffer.wrap(readArray, 0, bufferSize)
+        val c = socketGroup.external.read(readBuffer)
+        if (c == -1) {
+          logger.debug("Finalizing reader loop")
+          break()
+        }
+        assertTrue(c > 0, "blocking read must return a positive number")
+        accumulator.addAndGet(c)
       }
-      assertTrue(c > 0, "blocking read must return a positive number")
-      accumulator.addAndGet(c)
+      fail()
     }
-    fail()
   }
 
 }
