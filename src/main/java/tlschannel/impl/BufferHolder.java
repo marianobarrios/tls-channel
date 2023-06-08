@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import tlschannel.BufferAllocator;
 
 public class BufferHolder {
@@ -69,7 +68,9 @@ public class BufferHolder {
         }
         int newCapacity = Math.min(buffer.capacity() * 2, maxSize);
         if (logger.isLoggable(Level.FINEST)) {
-            logger.log(Level.FINEST, "enlarging buffer {0}, increasing from {1} to {2}", new Object[]{name, buffer.capacity(), newCapacity});
+            logger.log(Level.FINEST, "enlarging buffer {0}, increasing from {1} to {2}", new Object[] {
+                name, buffer.capacity(), newCapacity
+            });
         }
         resize(newCapacity);
     }
