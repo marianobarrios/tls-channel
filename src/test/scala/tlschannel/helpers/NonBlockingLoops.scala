@@ -15,6 +15,7 @@ import java.nio.channels.SelectionKey
 import java.security.MessageDigest
 import java.time.Duration
 import java.util.SplittableRandom
+import scala.jdk.CollectionConverters._
 
 object NonBlockingLoops {
 
@@ -141,7 +142,9 @@ object NonBlockingLoops {
           case e: NeedsTaskException =>
             val r: Runnable = { () =>
               val start = System.nanoTime()
-              e.getTask.run()
+              for (task <- e.getTasks.asScala) {
+                task.run()
+              }
               val elapsed = Duration.ofNanos(System.nanoTime() - start)
               selector.wakeup()
               readyTaskSockets.add(endpoint)

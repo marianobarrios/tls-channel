@@ -6,6 +6,8 @@ import java.nio.channels.ByteChannel;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -220,13 +222,22 @@ public class TlsChannelImpl implements ByteChannel {
     }
 
     private void handleTask() throws NeedsTaskException {
-        Runnable task = engine.getDelegatedTask();
+        // use a capacity of one, as that is the overwhelmingly common case
+        List<Runnable> tasks = new ArrayList<>(1);
+        {
+            Runnable task;
+            while ((task = engine.getDelegatedTask()) != null) {
+                tasks.add(task);
+            }
+        }
         if (runTasks) {
-            logger.trace("delegating in task: {}", task);
-            task.run();
+            logger.trace("delegating in tasks; number of tasks: {}", tasks.size());
+            for (Runnable task : tasks) {
+                task.run();
+            }
         } else {
-            logger.trace("task needed, throwing exception: {}", task);
-            throw new NeedsTaskException(task);
+            logger.trace("tasks needed, throwing exception; number of tasks: {}", tasks.size());
+            throw new NeedsTaskException(tasks);
         }
     }
 

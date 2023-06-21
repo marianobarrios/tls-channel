@@ -497,7 +497,9 @@ public class AsynchronousTlsChannelGroup {
                 return;
             } catch (NeedsTaskException e) {
                 warnAboutNeedTask();
-                e.getTask().run();
+                for (Runnable task : e.getTasks()) {
+                    task.run();
+                }
             }
         }
     }
@@ -557,7 +559,9 @@ public class AsynchronousTlsChannelGroup {
                 return socket.tlsChannel.read(op.bufferSet.array, op.bufferSet.offset, op.bufferSet.length);
             } catch (NeedsTaskException e) {
                 warnAboutNeedTask();
-                e.getTask().run();
+                for (Runnable task : e.getTasks()) {
+                    task.run();
+                }
             }
         }
     }

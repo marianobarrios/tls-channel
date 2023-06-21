@@ -130,8 +130,10 @@ public class NonBlockingServerWithOffLoopTasks {
             key.interestOps(SelectionKey.OP_WRITE); // overwrites previous value
         } catch (NeedsTaskException e) {
             taskExecutor.execute(() -> {
-                e.getTask().run();
-                // when the task finished, add it the the ready-set
+                for (Runnable task : e.getTasks()) {
+                    task.run();
+                }
+                // when the task finished, add it to the ready-set
                 taskReadyKeys.add(key);
                 // unblock the selector
                 selector.wakeup();
