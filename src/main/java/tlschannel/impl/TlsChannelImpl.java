@@ -221,6 +221,9 @@ public class TlsChannelImpl implements ByteChannel {
 
     private void handleTask() throws NeedsTaskException {
         Runnable task = engine.getDelegatedTask();
+        if (engine.getDelegatedTask() != null) {
+            throw new AssertionError("unexpected task: " + task);
+        }
         if (runTasks) {
             logger.trace("delegating in task: {}", task);
             task.run();
