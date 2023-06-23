@@ -27,8 +27,8 @@ dependencies {
     testImplementation 'org.scala-lang:scala3-library_3:3.3.0'
     testImplementation 'com.typesafe.scala-logging:scala-logging_3:3.9.5'
     // pinned due to netty-tcnative-boringssl-static being pinned
-    testImplementation 'io.netty:netty-buffer:4.1.73.Final'
-    testImplementation 'io.netty:netty-handler:4.1.73.Final'
+    testImplementation 'io.netty:netty-buffer:4.1.94.Final'
+    testImplementation 'io.netty:netty-handler:4.1.94.Final'
     // pinned: https://github.com/netty/netty-tcnative/issues/716
     testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.47.Final'
     // required by ScalaTest
