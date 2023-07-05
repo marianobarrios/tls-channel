@@ -155,7 +155,7 @@ public class TlsChannelImpl implements ByteChannel {
 
     // read
 
-    public long read(ByteBufferSet dest) throws IOException, NeedsTaskException {
+    public long read(ByteBufferSet dest) throws IOException {
         checkReadBuffer(dest);
         if (!dest.hasRemaining()) {
             return 0;
