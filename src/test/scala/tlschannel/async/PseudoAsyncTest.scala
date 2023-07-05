@@ -1,6 +1,5 @@
 package tlschannel.async
 
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.{DynamicTest, Test, TestFactory, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.Loops
@@ -12,7 +11,7 @@ import java.util
 import scala.jdk.CollectionConverters._
 
 @TestInstance(Lifecycle.PER_CLASS)
-class PseudoAsyncTest extends StrictLogging {
+class PseudoAsyncTest {
 
   val sslContextFactory = new SslContextFactory
 

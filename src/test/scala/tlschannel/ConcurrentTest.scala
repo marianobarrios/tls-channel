@@ -2,16 +2,18 @@ package tlschannel
 
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicLong
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.Assertions.{assertEquals, assertTrue, fail}
 import org.junit.jupiter.api.{Test, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.{SocketGroup, SocketPairFactory, SslContextFactory, TestUtil}
 
+import java.util.logging.Logger
 import scala.util.control.Breaks.{break, breakable}
 
 @TestInstance(Lifecycle.PER_CLASS)
-class ConcurrentTest extends StrictLogging {
+class ConcurrentTest {
+
+  val logger = Logger.getLogger(classOf[ConcurrentTest].getName)
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
@@ -54,7 +56,7 @@ class ConcurrentTest extends StrictLogging {
   }
 
   private def writerLoop(size: Int, char: Char, socketGroup: SocketGroup): Unit = TestUtil.cannotFail {
-    logger.debug(s"Starting writer loop, size: $size")
+    logger.fine(() => s"Starting writer loop, size: $size")
     var bytesRemaining = size
     val bufferArray = Array.fill[Byte](bufferSize)(char.toByte)
     while (bytesRemaining > 0) {
@@ -66,11 +68,11 @@ class ConcurrentTest extends StrictLogging {
         assertTrue(bytesRemaining >= 0)
       }
     }
-    logger.debug("Finalizing writer loop")
+    logger.fine("Finalizing writer loop")
   }
 
   private def readerLoop(size: Int, socketGroup: SocketGroup): Unit = TestUtil.cannotFail {
-    logger.debug(s"Starting reader loop. Size: $size")
+    logger.fine(() => s"Starting reader loop. Size: $size")
     val readArray = Array.ofDim[Byte](bufferSize)
     var bytesRemaining = size
     while (bytesRemaining > 0) {
@@ -80,18 +82,18 @@ class ConcurrentTest extends StrictLogging {
       bytesRemaining -= c
       assertTrue(bytesRemaining >= 0)
     }
-    logger.debug("Finalizing reader loop")
+    logger.fine("Finalizing reader loop")
   }
 
   private def readerLoopUntilEof(socketGroup: SocketGroup, accumulator: AtomicLong): Unit = TestUtil.cannotFail {
     breakable {
-      logger.debug(s"Starting reader loop.")
+      logger.fine("Starting reader loop.")
       val readArray = Array.ofDim[Byte](bufferSize)
       while (true) {
         val readBuffer = ByteBuffer.wrap(readArray, 0, bufferSize)
         val c = socketGroup.external.read(readBuffer)
         if (c == -1) {
-          logger.debug("Finalizing reader loop")
+          logger.fine("Finalizing reader loop")
           break()
         }
         assertTrue(c > 0, "blocking read must return a positive number")

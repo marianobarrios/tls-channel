@@ -2,13 +2,13 @@ package tlschannel.impl;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import tlschannel.BufferAllocator;
 
 public class BufferHolder {
 
-    private static final Logger logger = LoggerFactory.getLogger(BufferHolder.class);
+    private static final Logger logger = Logger.getLogger(BufferHolder.class.getName());
     private static final byte[] zeros = new byte[TlsChannelImpl.maxTlsPacketSize];
 
     public final String name;
@@ -67,7 +67,11 @@ public class BufferHolder {
                     String.format("%s buffer insufficient despite having capacity of %d", name, buffer.capacity()));
         }
         int newCapacity = Math.min(buffer.capacity() * 2, maxSize);
-        logger.trace("enlarging buffer {}, increasing from {} to {}", name, buffer.capacity(), newCapacity);
+        if (logger.isLoggable(Level.FINEST)) {
+            logger.log(Level.FINEST, "enlarging buffer {0}, increasing from {1} to {2}", new Object[] {
+                name, buffer.capacity(), newCapacity
+            });
+        }
         resize(newCapacity);
     }
 

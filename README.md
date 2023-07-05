@@ -276,11 +276,11 @@ TLS Channel requires Java 8 or newer.
 
 ### Size and Dependencies
 
-The library has only one dependency: [SLF4J](https://www.slf4j.org/). The main jar file size is below 60 KB.
+The library has no dependencies. The main jar file size is below 60 KB.
 
 ### Logging
 
-The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most widely used pluggable logging framework for the JVM. As a policy, _all_ logging events emitted by the core package are at `TRACE` level, which is below the default threshold in most logging implementations and thus completely silent by default. The optional `tlschannel.async` package can log with higher severity in exceptional circumstances, as it manages threads internally.
+The library uses [Java Logging](https://docs.oracle.com/en/java/javase/20/core/java-logging-overview.html#GUID-B83B652C-17EA-48D9-93D2-563AE1FF8EDA). As a policy, _all_ logging events emitted by the core package are at `FINEST` level, which is below the default threshold in most logging implementations and thus completely silent by default. The optional `tlschannel.async` package can log with higher severity in exceptional circumstances, as it manages threads internally.
 
 ## Similar efforts
 

@@ -1,6 +1,5 @@
 package tlschannel
 
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.{DynamicTest, TestFactory, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
@@ -9,10 +8,13 @@ import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.Loops
 
 import java.util
+import java.util.logging.Logger
 import scala.jdk.CollectionConverters._
 
 @TestInstance(Lifecycle.PER_CLASS)
-class BlockingTest extends StrictLogging {
+class BlockingTest {
+
+  val logger = Logger.getLogger(classOf[BlockingTest].getName)
 
   val sslContextFactory = new SslContextFactory
 
@@ -23,7 +25,7 @@ class BlockingTest extends StrictLogging {
   @TestFactory
   def testHalfDuplexWireRenegotiations(): util.Collection[DynamicTest] = {
     println("testHalfDuplexWireRenegotiations():")
-    val sizes = LazyList.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val tests = for ((size1, size2) <- sizes zip sizes.reverse) yield {
       DynamicTest.dynamicTest(
         s"testHalfDuplexWireRenegotiations() - size1=$size1, size2=$size2",
@@ -46,12 +48,12 @@ class BlockingTest extends StrictLogging {
   @TestFactory
   def testFullDuplex(): util.Collection[DynamicTest] = {
     println("testFullDuplex():")
-    val sizes = LazyList.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(1)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val tests = for ((size1, size2) <- sizes zip sizes.reverse) yield {
       DynamicTest.dynamicTest(
         s"testFullDuplex() - size1=$size1,size2=$size2",
         () => {
-          logger.debug(s"Testing sizes: size1=$size1,size2=$size2")
+          logger.fine(() => s"Testing sizes: size1=$size1,size2=$size2")
           val socketPair = factory.nioNio(
             internalClientChunkSize = Some(size1),
             externalClientChunkSize = Some(size2),

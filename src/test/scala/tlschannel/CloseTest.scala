@@ -2,7 +2,6 @@ package tlschannel
 
 import java.nio.ByteBuffer
 import java.nio.channels.ClosedChannelException
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.Assertions.{assertEquals, assertFalse, assertTrue}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api.{Assertions, Test, TestInstance}
@@ -11,7 +10,7 @@ import java.nio.channels.AsynchronousCloseException
 import tlschannel.helpers.{SocketPairFactory, SslContextFactory, TestUtil}
 
 @TestInstance(Lifecycle.PER_CLASS)
-class CloseTest extends StrictLogging {
+class CloseTest {
 
   val sslContextFactory = new SslContextFactory
 

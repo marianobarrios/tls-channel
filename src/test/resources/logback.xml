@@ -1,4 +1,5 @@
 <configuration>
+	<contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator"/>
 
 	<appender name="STDOUT" class="ch.qos.logback.core.FileAppender">
 		<file>log/test.log</file>

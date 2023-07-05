@@ -8,7 +8,6 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLServerSocket
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLEngine
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.Assertions.assertEquals
 
 import javax.crypto.Cipher
@@ -21,6 +20,7 @@ import tlschannel.async.AsynchronousTlsChannel
 import tlschannel.async.AsynchronousTlsChannelGroup
 import tlschannel.async.ExtendedAsynchronousByteChannel
 
+import java.util.logging.Logger
 import scala.jdk.CollectionConverters._
 import scala.util.Random
 
@@ -38,7 +38,9 @@ case class AsyncSocketGroup(external: ExtendedAsynchronousByteChannel, tls: TlsC
 class SocketPairFactory(
     val sslContext: SSLContext,
     val serverName: String = SslContextFactory.certificateCommonName
-) extends StrictLogging {
+) {
+
+  val logger = Logger.getLogger("")
 
   private val releaseBuffers = true
 
@@ -57,7 +59,7 @@ class SocketPairFactory(
   ): Optional[SSLContext] = {
     if (name.isPresent) {
       val n = name.get
-      logger.debug("ContextFactory, requested name: " + n)
+      logger.warning(() => "ContextFactory, requested name: " + n)
       if (!expectedSniHostName.matches(n)) {
         throw new IllegalArgumentException(s"Received SNI $n does not match $serverName")
       }
@@ -370,7 +372,9 @@ class SocketPairFactory(
 
 }
 
-object SocketPairFactory extends StrictLogging {
+object SocketPairFactory {
+
+  val logger = Logger.getLogger(SocketPairFactory.getClass.getName)
 
   def checkDeallocation(socketPair: SocketPair) = {
     checkBufferDeallocation(socketPair.client.tls.getPlainBufferAllocator)
@@ -383,8 +387,8 @@ object SocketPairFactory extends StrictLogging {
   }
 
   private def checkBufferDeallocation(allocator: TrackingAllocator) = {
-    logger.debug(s"allocator: ${allocator}; allocated: ${allocator.bytesAllocated()}")
-    logger.debug(s"allocator: ${allocator}; deallocated: ${allocator.bytesDeallocated()}")
+    logger.fine(() => s"allocator: $allocator; allocated: ${allocator.bytesAllocated()}")
+    logger.fine(() => s"allocator: $allocator; deallocated: ${allocator.bytesDeallocated()}")
     assertEquals(allocator.bytesDeallocated(), allocator.bytesAllocated(), " - some buffers were not deallocated")
   }
 

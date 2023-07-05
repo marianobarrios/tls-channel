@@ -4,13 +4,10 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.TrustManagerFactory
 import java.security.KeyStore
-import java.security.Security
-
-import com.typesafe.scalalogging.StrictLogging
 
 import scala.util.Using
 
-class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging {
+class SslContextFactory(val protocol: String = "TLSv1.2") {
 
   val defaultContext = {
     val sslContext = SSLContext.getInstance(protocol)
@@ -74,7 +71,7 @@ class SslContextFactory(val protocol: String = "TLSv1.2") extends StrictLogging 
 
 }
 
-object SslContextFactory extends StrictLogging {
+object SslContextFactory {
 
   val tlsMaxDataSize = math.pow(2, 14).toInt
   val certificateCommonName = "name" // must match what's in the certificates

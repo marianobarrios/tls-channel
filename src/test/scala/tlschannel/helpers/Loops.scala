@@ -3,11 +3,14 @@ package tlschannel.helpers
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.SplittableRandom
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.Assertions.{assertArrayEquals, assertEquals, assertTrue}
 import tlschannel.helpers.TestUtil.Memo
 
-object Loops extends StrictLogging {
+import java.util.logging.Logger
+
+object Loops {
+
+  val logger = Logger.getLogger(Loops.getClass.getName)
 
   val seed = 143000953L
 
@@ -66,7 +69,7 @@ object Loops extends StrictLogging {
       close: Boolean = false
   ): Unit = TestUtil.cannotFail {
 
-    logger.debug(s"Starting writer loop, size: $size, scattering: $scattering, renegotiate:$renegotiate")
+    logger.fine(() => s"Starting writer loop, size: $size, scattering: $scattering, renegotiate:$renegotiate")
     val random = new SplittableRandom(seed)
     var bytesSinceRenegotiation = 0
     var bytesRemaining = size
@@ -94,7 +97,7 @@ object Loops extends StrictLogging {
       socketGroup.tls.shutdown()
     if (close)
       socketGroup.external.close()
-    logger.debug("Finalizing writer loop")
+    logger.fine("Finalizing writer loop")
   }
 
   def readerLoop(
@@ -105,7 +108,7 @@ object Loops extends StrictLogging {
       close: Boolean = false
   ): Unit = TestUtil.cannotFail {
 
-    logger.debug(s"Starting reader loop. Size: $size, gathering: $gathering")
+    logger.fine(() => s"Starting reader loop. Size: $size, gathering: $gathering")
     val readArray = Array.ofDim[Byte](bufferSize)
     var bytesRemaining = size
     val digest = MessageDigest.getInstance(hashAlgorithm)
@@ -127,7 +130,7 @@ object Loops extends StrictLogging {
     assertArrayEquals(expectedBytesHash(size), actual)
     if (close)
       socketGroup.external.close()
-    logger.debug("Finalizing reader loop")
+    logger.fine("Finalizing reader loop")
   }
 
   private def hash(size: Int): Array[Byte] = {

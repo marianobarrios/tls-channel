@@ -1,12 +1,11 @@
 package tlschannel.util;
 
+import java.util.logging.Logger;
 import javax.net.ssl.SSLEngineResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Util {
 
-    private static final Logger logger = LoggerFactory.getLogger(Util.class);
+    private static final Logger logger = Logger.getLogger(Util.class.getName());
 
     public static void assertTrue(boolean condition) {
         if (!condition) throw new AssertionError();

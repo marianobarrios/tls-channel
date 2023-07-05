@@ -1,6 +1,5 @@
 package tlschannel
 
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.{DynamicTest, TestFactory, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.NonBlockingLoops
@@ -11,7 +10,7 @@ import scala.jdk.CollectionConverters._
 import java.util
 
 @TestInstance(Lifecycle.PER_CLASS)
-class NonBlockingTest extends StrictLogging {
+class NonBlockingTest {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
