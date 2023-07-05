@@ -1,6 +1,5 @@
 package tlschannel
 
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.{AfterAll, DynamicTest, TestFactory, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
@@ -10,12 +9,15 @@ import tlschannel.helpers.SslContextFactory
 
 import scala.jdk.CollectionConverters._
 import java.util
+import java.util.logging.Logger
 
 /** Test using a null engine (pass-through). The purpose of the test is to remove the overhead of the real
   * [[javax.net.ssl.SSLEngine]] to be able to test the overhead of the [[TlsChannel]].
   */
 @TestInstance(Lifecycle.PER_CLASS)
-class NullEngineTest extends StrictLogging {
+class NullEngineTest {
+
+  val logger = Logger.getLogger(classOf[NullEngineTest].getName)
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)
@@ -28,7 +30,7 @@ class NullEngineTest extends StrictLogging {
   @TestFactory
   def testHalfDuplexHeapBuffers(): util.Collection[DynamicTest] = {
     println("testHalfDuplexHeapBuffers():")
-    val sizes = LazyList.iterate(512)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val tests = for (size1 <- sizes) yield {
       DynamicTest.dynamicTest(
         s"testHalfDuplexHeapBuffers() - size1=$size1",
@@ -47,12 +49,12 @@ class NullEngineTest extends StrictLogging {
   @TestFactory
   def testHalfDuplexDirectBuffers(): util.Collection[DynamicTest] = {
     println("testHalfDuplexDirectBuffers():")
-    val sizes = LazyList.iterate(512)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
     val tests = for (size1 <- sizes) yield {
       DynamicTest.dynamicTest(
         s"Testing sizes: size1=$size1",
         () => {
-          logger.debug(s"Testing sizes: size1=$size1")
+          logger.fine(() => s"Testing sizes: size1=$size1")
           val socketPair =
             factory.nioNio(cipher = null, internalClientChunkSize = Some(size1), internalServerChunkSize = Some(size1))
           Loops.halfDuplex(socketPair, dataSize)

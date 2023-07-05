@@ -1,6 +1,5 @@
 package tlschannel
 
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.{AfterAll, Test, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
@@ -9,7 +8,7 @@ import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 
 @TestInstance(Lifecycle.PER_CLASS)
-class MultiNonBlockingTest extends StrictLogging {
+class MultiNonBlockingTest {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)

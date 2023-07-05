@@ -3,7 +3,6 @@ package tlschannel
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.{ServerSocketChannel, SocketChannel}
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.Assertions.{assertEquals, assertThrows}
 import org.junit.jupiter.api.{Test, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
@@ -12,7 +11,7 @@ import javax.net.ssl.SSLException
 import tlschannel.helpers.{SocketPairFactory, SslContextFactory, TestUtil}
 
 @TestInstance(Lifecycle.PER_CLASS)
-class FailTest extends StrictLogging {
+class FailTest {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)

@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
     <Match>
-        <Source name="~.*\.scala" />
+        <Source name="~.*" />
     </Match>
     <Match>
         <!-- Java 11 introduced a redundant null check in bytecode generated from try-with-resources, that
          generates false positives -->
         <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" />
+
+        <!-- Required by org.junit.jupiter.api.extension.BeforeAllCallback -->
+        <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" />
     </Match>
 </FindBugsFilter>

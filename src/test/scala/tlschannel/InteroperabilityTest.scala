@@ -5,7 +5,6 @@ import java.net.Socket
 import java.nio.channels.ByteChannel
 import javax.net.ssl.SSLSocket
 import java.nio.ByteBuffer
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.Assertions.{assertArrayEquals, assertEquals, assertNotEquals, assertTrue}
 import org.junit.jupiter.api.{Test, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
@@ -14,7 +13,7 @@ import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 
 @TestInstance(Lifecycle.PER_CLASS)
-class InteroperabilityTest extends StrictLogging {
+class InteroperabilityTest {
 
   import InteroperabilityTest._
 

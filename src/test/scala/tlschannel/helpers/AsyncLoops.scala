@@ -7,12 +7,14 @@ import java.util.SplittableRandom
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.LongAdder
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.Assertions.{assertArrayEquals, assertTrue}
 
+import java.util.logging.Logger
 import scala.util.control.Breaks
 
-object AsyncLoops extends StrictLogging {
+object AsyncLoops {
+
+  val logger = Logger.getLogger(AsyncLoops.getClass.getName)
 
   trait Endpoint {
     def remaining: Int
@@ -51,7 +53,7 @@ object AsyncLoops extends StrictLogging {
 
   def loop(socketPairs: Seq[AsyncSocketPair], dataSize: Int): Report = {
 
-    logger.debug(s"starting async loop - pair count: ${socketPairs.size}")
+    logger.fine(() => s"starting async loop - pair count: ${socketPairs.size}")
 
     var dequeueCycles = 0
     val completedReads = new LongAdder

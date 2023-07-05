@@ -6,13 +6,12 @@ import java.nio.ByteBuffer
 import javax.net.ssl.SSLEngineResult
 import javax.net.ssl.SSLEngineResult.Status
 
-import com.typesafe.scalalogging.StrictLogging
 import tlschannel.impl.{ByteBufferSet, ByteBufferUtil}
 
 /*
  * "Null" {@link SSLEngine} that does nothing to the bytesProduced.
  */
-class NullSslEngine extends SSLEngine with StrictLogging {
+class NullSslEngine extends SSLEngine {
 
   /** Internal buffers are still used to prevent any underlying optimization of the wrap/unwrap.
     */

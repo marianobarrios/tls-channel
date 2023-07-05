@@ -1,13 +1,12 @@
 package tlschannel
 
-import com.typesafe.scalalogging.StrictLogging
 import tlschannel.helpers.{Loops, SocketPairFactory, SslContextFactory}
 import java.lang.management.ManagementFactory
 
 /** Test to be run with no-op (Epsilon) GC, in order to measure GC footprint. It's in the form of a separate main method
   * in order to be run using its own VM.
   */
-object AllocationTest extends StrictLogging {
+object AllocationTest {
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext)

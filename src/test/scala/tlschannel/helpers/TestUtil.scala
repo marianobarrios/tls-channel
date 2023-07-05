@@ -1,14 +1,14 @@
 package tlschannel.helpers
 
 import java.util.SplittableRandom
-
-import com.typesafe.scalalogging.StrictLogging
 import java.util.concurrent.ConcurrentHashMap
-
+import java.util.logging.{Level, Logger}
 import scala.jdk.CollectionConverters._
 import scala.util.control.ControlThrowable
 
-object TestUtil extends StrictLogging {
+object TestUtil {
+
+  val logger = Logger.getLogger(TestUtil.getClass.getName)
 
   def cannotFail(thunk: => Unit): Unit = {
     try thunk
@@ -18,7 +18,7 @@ object TestUtil extends StrictLogging {
       case e: Throwable =>
         val lastMessage =
           s"An essential thread (${Thread.currentThread().getName}) failed unexpectedly, terminating process"
-        logger.error(lastMessage, e)
+        logger.log(Level.SEVERE, lastMessage, e)
         System.err.println(lastMessage)
         e.printStackTrace() // we are committing suicide, assure the reason gets through
         Thread.sleep(1000) // give the process some time for flushing logs

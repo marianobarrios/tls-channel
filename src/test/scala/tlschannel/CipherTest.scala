@@ -1,6 +1,5 @@
 package tlschannel
 
-import com.typesafe.scalalogging.StrictLogging
 import org.junit.jupiter.api.{DynamicTest, Test, TestFactory, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 
@@ -13,7 +12,7 @@ import java.util
 import scala.jdk.CollectionConverters._
 
 @TestInstance(Lifecycle.PER_CLASS)
-class CipherTest extends StrictLogging {
+class CipherTest {
 
   val protocols = {
     val allProtocols = SSLContext.getDefault.getSupportedSSLParameters.getProtocols.toSeq

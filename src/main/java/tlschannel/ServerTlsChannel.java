@@ -12,6 +12,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLContext;
@@ -19,8 +21,6 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.StandardConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tlschannel.impl.BufferHolder;
 import tlschannel.impl.ByteBufferSet;
 import tlschannel.impl.TlsChannelImpl;
@@ -30,7 +30,7 @@ import tlschannel.impl.TlsExplorer;
 /** A server-side {@link TlsChannel}. */
 public class ServerTlsChannel implements TlsChannel {
 
-    private static final Logger logger = LoggerFactory.getLogger(ServerTlsChannel.class);
+    private static final Logger logger = Logger.getLogger(ServerTlsChannel.class.getName());
 
     private interface SslContextStrategy {
 
@@ -59,7 +59,7 @@ public class ServerTlsChannel implements TlsChannel {
             try {
                 chosenContext = sniSslContextFactory.getSslContext(nameOpt);
             } catch (Exception e) {
-                logger.trace("client code threw exception during evaluation of server name indication", e);
+                logger.log(Level.FINEST, "client code threw exception during evaluation of server name indication", e);
                 throw new TlsChannelCallbackException("SNI callback failed", e);
             }
             return chosenContext.orElseThrow(
@@ -349,7 +349,7 @@ public class ServerTlsChannel implements TlsChannel {
                 try {
                     engine = engineFactory.apply(sslContext);
                 } catch (Exception e) {
-                    logger.trace("client threw exception in SSLEngine factory", e);
+                    logger.log(Level.FINEST, "client threw exception in SSLEngine factory", e);
                     throw new TlsChannelCallbackException("SSLEngine creation callback failed", e);
                 }
                 impl = new TlsChannelImpl(
