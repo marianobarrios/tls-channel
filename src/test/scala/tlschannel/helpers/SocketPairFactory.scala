@@ -191,12 +191,12 @@ class SocketPairFactory(
         val rawServer = serverSocket.accept()
 
         val plainClient = internalClientChunkSize match {
-          case Some(size) => new ChunkingByteChannel(rawClient, chunkSize = size)
+          case Some(size) => new ChunkingByteChannel(rawClient, size)
           case None       => rawClient
         }
 
         val plainServer = internalServerChunkSize match {
-          case Some(size) => new ChunkingByteChannel(rawServer, chunkSize = size)
+          case Some(size) => new ChunkingByteChannel(rawServer, size)
           case None       => rawServer
         }
 
