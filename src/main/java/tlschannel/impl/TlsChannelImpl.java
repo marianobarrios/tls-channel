@@ -41,6 +41,9 @@ public class TlsChannelImpl implements ByteChannel {
         }
     }
 
+    private static final NeedsReadException needsReadException = new NeedsReadException();
+    private static final NeedsWriteException needsWriteException = new NeedsWriteException();
+
     private final ReadableByteChannel readChannel;
     private final WritableByteChannel writeChannel;
     private final SSLEngine engine;
@@ -340,7 +343,7 @@ public class TlsChannelImpl implements ByteChannel {
             throw new EofException();
         }
         if (c == 0) {
-            throw new NeedsReadException();
+            throw needsReadException;
         }
     }
 
@@ -447,7 +450,7 @@ public class TlsChannelImpl implements ByteChannel {
                  * If no bytesProduced were written, it means that the socket is
                  * non-blocking and needs more buffer space, so stop the loop
                  */
-                throw new NeedsWriteException();
+                throw needsWriteException;
             }
             // blocking SocketChannels can write less than all the bytesProduced
             // just before an error, the loop forces the exception
