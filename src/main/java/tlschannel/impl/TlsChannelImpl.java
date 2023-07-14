@@ -634,7 +634,8 @@ public class TlsChannelImpl implements ByteChannel {
                             shutdown();
                         }
                     } catch (Throwable e) {
-                        logger.log(Level.FINER, "error doing TLS shutdown on close(), continuing: {0}", e.getMessage());
+                        logger.log(
+                                Level.FINEST, "error doing TLS shutdown on close(), continuing: {0}", e.getMessage());
                     }
                 }
             } finally {
