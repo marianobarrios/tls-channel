@@ -85,10 +85,10 @@ public class DirectBufferDeallocator {
     public DirectBufferDeallocator() {
         if (Util.getJavaMajorVersion() >= 9) {
             deallocator = new Java9Deallocator();
-            logger.log(Level.FINER, "initialized direct buffer deallocator for java >= 9");
+            logger.log(Level.FINEST, "initialized direct buffer deallocator for java >= 9");
         } else {
             deallocator = new Java8Deallocator();
-            logger.log(Level.FINER, "initialized direct buffer deallocator for java < 9");
+            logger.log(Level.FINEST, "initialized direct buffer deallocator for java < 9");
         }
     }
 
