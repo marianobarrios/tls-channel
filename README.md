@@ -32,7 +32,7 @@ Being an API layer, TLS Channel *delegates all cryptographic operations to SSLEn
 
 ## Rationale
 
-The world's most used encryption protocol is TLS. Created by Netscape in 1994 as SSL (Secure Socket Layer), it experimented widespread adoption, which eventually let to its standarization. TLS works on top of the Transport Control Protocol (TCP), maintaining its core abstractions: two independent byte streams, one in each direction, with ordered at-most-once delivery. It can be argued that part of the success of TLS was due to its convenient programming interface, similar to the highly successful and familiar Berkeley Sockets. Currenty, there exist a few widely-used implementations:
+The world's most used encryption protocol is TLS. Created by Netscape in 1994 as SSL (Secure Socket Layer), it experimented widespread adoption, which eventually let to its standardization. TLS works on top of the Transport Control Protocol (TCP), maintaining its core abstractions: two independent byte streams, one in each direction, with ordered at-most-once delivery. It can be argued that part of the success of TLS was due to its convenient programming interface, similar to the highly successful and familiar Berkeley Sockets. Currenty, there exist a few widely-used implementations:
 
 - The most used TLS library is [OpenSSL](https://www.openssl.org/). Written in C and (along with some forks) the *de facto* standard for C and C++. Also widely used in Python, PHP, Ruby and Node.js.
 - The Go language has its own implementation, package [crypto/tls](https://golang.org/pkg/crypto/tls/).
@@ -227,7 +227,7 @@ Complete example: [Asynchronous channel server](src/test/scala/tlschannel/exampl
 
 ## Buffers
 
-TLS Channel uses buffers for its operation. Every channel uses at least two "encrypted" buffers that hold ciphertext, one for reading from the underlying channel and the other for writing to it. Additionally, a third buffer may be needed for read operations when the user-supplied buffer is smaller than the minimum SSLEngine needs for placing the decrypted bytes.
+TLS Channel uses buffers for its operation. Every channel uses at least two ciphertext buffers that hold ciphertext, one for reading from the underlying channel and the other for writing to it. Additionally, a third plaintext buffer may be needed for read operations when the user-supplied buffer is smaller than the minimum SSLEngine needs for placing the decrypted bytes.
 
 All buffers are created from optionally user-supplied factories (instances of [BufferAllocator](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/BufferAllocator.html)). It is also possible to supply different allocators for plain and ciphertext; for example:
 
@@ -239,9 +239,9 @@ TlsChannel tlsChannel = ServerTlsChannel
     .build();
 ```
 
-This is indeed the default behavior. The rationale for the encrypted buffers is that, in the most common use case, the underlying channel is a [SocketChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/SocketChannel.html). This channel actually does native I/O operations, which are generally faster using direct buffers.
+The rationale for using direct ciphertext buffers is that, in the most common use case, the underlying channel is a [SocketChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/SocketChannel.html). This channel actually does native I/O operations, which are generally faster using direct buffers.
 
-The plain buffers are not involved in I/O, and so standard heap allocation is used by default.
+As default, heap buffers are used to maximize compatibility with different virtual machines, as direct ones are implementation dependent.
 
 ### Zeroing
 
