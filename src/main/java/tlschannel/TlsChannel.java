@@ -44,7 +44,7 @@ import javax.net.ssl.SSLSession;
 public interface TlsChannel extends ByteChannel, GatheringByteChannel, ScatteringByteChannel {
 
     BufferAllocator defaultPlainBufferAllocator = new HeapBufferAllocator();
-    BufferAllocator defaultEncryptedBufferAllocator = new DirectBufferAllocator();
+    BufferAllocator defaultEncryptedBufferAllocator = new HeapBufferAllocator();
 
     /**
      * Return a reference to the underlying {@link ByteChannel}.
