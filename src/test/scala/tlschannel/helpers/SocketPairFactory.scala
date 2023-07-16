@@ -40,7 +40,7 @@ class SocketPairFactory(
     val serverName: String = SslContextFactory.certificateCommonName
 ) {
 
-  val logger = Logger.getLogger("")
+  val logger = Logger.getLogger(classOf[SocketPairFactory].getName)
 
   private val releaseBuffers = true
 
