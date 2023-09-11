@@ -346,6 +346,7 @@ public class AsynchronousTlsChannelGroup {
         try {
             socket.registered.await();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         }
     }
