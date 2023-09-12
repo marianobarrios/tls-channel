@@ -124,7 +124,7 @@ publishing {
         tlschannel(MavenPublication) {
             groupId = 'com.github.marianobarrios'
             artifactId = 'tls-channel'
-            version = '0.7.0-SNAPSHOT'
+            version = '0.8.1'
             from components.java
             pom {
                 name = 'TLS Channel'
