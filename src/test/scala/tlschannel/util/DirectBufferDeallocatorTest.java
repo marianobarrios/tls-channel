@@ -10,8 +10,8 @@ public class DirectBufferDeallocatorTest {
 
     @Test
     public void testDirectBufferDeallocator() {
-        var deallocator = new DirectBufferDeallocator();
-        var buffer = ByteBuffer.allocateDirect(1000);
+        DirectBufferDeallocator deallocator = new DirectBufferDeallocator();
+        ByteBuffer buffer = ByteBuffer.allocateDirect(1000);
         deallocator.deallocate(buffer);
     }
 }
