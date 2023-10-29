@@ -115,7 +115,7 @@ class NullSslEngine extends SSLEngine {
 
     @Override
     public SSLEngineResult unwrap(ByteBuffer src, ByteBuffer[] dsts, int offset, int length) {
-        var dstSet = new ByteBufferSet(dsts, offset, length);
+        ByteBufferSet dstSet = new ByteBufferSet(dsts, offset, length);
         if (!src.hasRemaining()) {
             return new SSLEngineResult(Status.BUFFER_UNDERFLOW, HandshakeStatus.NOT_HANDSHAKING, 0, 0);
         }
@@ -132,7 +132,7 @@ class NullSslEngine extends SSLEngine {
 
     @Override
     public SSLEngineResult wrap(ByteBuffer[] srcs, int offset, int length, ByteBuffer dst) {
-        var srcSet = new ByteBufferSet(srcs, offset, length);
+        ByteBufferSet srcSet = new ByteBufferSet(srcs, offset, length);
         if (!srcSet.hasRemaining()) {
             return new SSLEngineResult(Status.OK, HandshakeStatus.NOT_HANDSHAKING, 0, 0);
         }
