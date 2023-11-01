@@ -3,8 +3,10 @@ plugins {
     id 'scala'
     id 'signing'
     id 'maven-publish'
-    id "com.diffplug.spotless" version "6.22.0"
-    id "com.github.spotbugs" version "5.2.1"
+    // pinned version due to Java 8 compatibility
+    id "com.diffplug.spotless" version "6.11.0"
+    // pinned version due to https://github.com/spotbugs/spotbugs/issues/2041
+    id "com.github.spotbugs" version "5.0.13"
 }
 
 compileJava {
@@ -37,8 +39,7 @@ dependencies {
 
 spotless {
     java {
-        // remove when spotless moved to this Palantir version
-        palantirJavaFormat("2.38.0")
+        palantirJavaFormat()
     }
     scala {
         scalafmt('3.7.1').configFile('.scalafmt.conf')
@@ -47,7 +48,7 @@ spotless {
 
 // There are some compatibility issues with spotless older Java versions,
 // but we don't need to cross-do style checks anyway
-if (JavaVersion.current().ordinal() < JavaVersion.VERSION_21.ordinal()) {
+if (JavaVersion.current().ordinal() < JavaVersion.VERSION_17.ordinal()) {
     tasks.findByName("spotlessScala").enabled(false)
     tasks.findByName("spotlessJava").enabled(false)
 }
