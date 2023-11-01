@@ -3,10 +3,18 @@ plugins {
     id 'scala'
     id 'signing'
     id 'maven-publish'
-    // pinned version due to Java 8 compatibility
-    id "com.diffplug.spotless" version "6.11.0"
-    // pinned version due to https://github.com/spotbugs/spotbugs/issues/2041
-    id "com.github.spotbugs" version "5.0.13"
+    id "com.diffplug.spotless" version "6.22.0"
+    id "com.github.spotbugs" version "5.2.1"
+}
+
+var javaToolchain = System.getenv('JAVA_TOOLCHAIN')
+
+java {
+    if (javaToolchain != null) {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(javaToolchain)
+        }
+    }
 }
 
 compileJava {
@@ -39,18 +47,12 @@ dependencies {
 
 spotless {
     java {
-        palantirJavaFormat()
+         // remove when spotless moved to this Palantir version
+         palantirJavaFormat("2.38.0")
     }
     scala {
         scalafmt('3.7.1').configFile('.scalafmt.conf')
     }
-}
-
-// There are some compatibility issues with spotless older Java versions,
-// but we don't need to cross-do style checks anyway
-if (JavaVersion.current().ordinal() < JavaVersion.VERSION_17.ordinal()) {
-    tasks.findByName("spotlessScala").enabled(false)
-    tasks.findByName("spotlessJava").enabled(false)
 }
 
 spotbugs {
@@ -113,9 +115,7 @@ task allocationTest(type: JavaExec) {
     jvmArgs = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseEpsilonGC']
 }
 
-if (JavaVersion.current().ordinal() >= JavaVersion.VERSION_11.ordinal()) {
-    check.dependsOn allocationTest
-}
+check.dependsOn allocationTest
 
 publishing {
     publications {
