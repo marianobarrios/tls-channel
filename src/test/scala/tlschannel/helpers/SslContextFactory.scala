@@ -7,7 +7,11 @@ import java.security.KeyStore
 
 import scala.util.Using
 
-class SslContextFactory(val protocol: String = "TLSv1.2") {
+class SslContextFactory(val protocol: String) {
+
+  def this() = {
+    this("TLSv1.2")
+  }
 
   val defaultContext = {
     val sslContext = SSLContext.getInstance(protocol)
@@ -75,5 +79,4 @@ object SslContextFactory {
 
   val tlsMaxDataSize = math.pow(2, 14).toInt
   val certificateCommonName = "name" // must match what's in the certificates
-
 }

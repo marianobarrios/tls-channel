@@ -35,10 +35,11 @@ case class AsyncSocketGroup(external: ExtendedAsynchronousByteChannel, tls: TlsC
 /** Create pairs of connected sockets (using the loopback interface). Additionally, all the raw (non-encrypted) socket
   * channel are wrapped with a chunking decorator that partitions the bytesProduced of any read or write operation.
   */
-class SocketPairFactory(
-    val sslContext: SSLContext,
-    val serverName: String = SslContextFactory.certificateCommonName
-) {
+class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
+
+  def this(sslContext: SSLContext) = {
+    this(sslContext, SslContextFactory.certificateCommonName)
+  }
 
   val logger = Logger.getLogger(classOf[SocketPairFactory].getName)
 
