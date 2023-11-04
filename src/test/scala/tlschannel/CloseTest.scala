@@ -5,6 +5,8 @@ import java.nio.channels.ClosedChannelException
 import org.junit.jupiter.api.Assertions.{assertEquals, assertFalse, assertTrue}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api.{Assertions, Test, TestInstance}
+import tlschannel.helpers.SocketPairFactory.ChunkSizeConfig
+import tlschannel.helpers.SocketPairFactory.ChuckSizes
 
 import java.nio.channels.AsynchronousCloseException
 import tlschannel.helpers.{SocketPairFactory, SslContextFactory, TestUtil}
@@ -23,8 +25,9 @@ class CloseTest {
 
   @Test
   def testTcpImmediateClose(): Unit = {
-    val socketPair =
-      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val socketPair = factory.nioNio(chunkSizeConfig =
+      Some(ChunkSizeConfig(ChuckSizes(internalBufferSize, None), ChuckSizes(internalBufferSize, None)))
+    )
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external
@@ -56,8 +59,9 @@ class CloseTest {
 
   @Test
   def testTcpClose(): Unit = {
-    val socketPair =
-      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val socketPair = factory.nioNio(chunkSizeConfig =
+      Some(ChunkSizeConfig(ChuckSizes(internalBufferSize, None), ChuckSizes(internalBufferSize, None)))
+    )
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external
@@ -94,8 +98,9 @@ class CloseTest {
 
   @Test
   def testClose(): Unit = {
-    val socketPair =
-      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val socketPair = factory.nioNio(chunkSizeConfig =
+      Some(ChunkSizeConfig(ChuckSizes(internalBufferSize, None), ChuckSizes(internalBufferSize, None)))
+    )
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external
@@ -133,8 +138,8 @@ class CloseTest {
   @Test
   def testCloseAndWait(): Unit = {
     val socketPair = factory.nioNio(
-      internalClientChunkSize = internalBufferSize,
-      internalServerChunkSize = internalBufferSize,
+      chunkSizeConfig =
+        Some(ChunkSizeConfig(ChuckSizes(internalBufferSize, None), ChuckSizes(internalBufferSize, None))),
       waitForCloseConfirmation = true
     )
     val clientGroup = socketPair.client
@@ -174,8 +179,8 @@ class CloseTest {
   @Test
   def testCloseAndWaitForever(): Unit = {
     val socketPair = factory.nioNio(
-      internalClientChunkSize = internalBufferSize,
-      internalServerChunkSize = internalBufferSize,
+      chunkSizeConfig =
+        Some(ChunkSizeConfig(ChuckSizes(internalBufferSize, None), ChuckSizes(internalBufferSize, None))),
       waitForCloseConfirmation = true
     )
     val clientGroup = socketPair.client
@@ -212,8 +217,9 @@ class CloseTest {
 
   @Test
   def testShutdownAndForget(): Unit = {
-    val socketPair =
-      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val socketPair = factory.nioNio(chunkSizeConfig =
+      Some(ChunkSizeConfig(ChuckSizes(internalBufferSize, None), ChuckSizes(internalBufferSize, None)))
+    )
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external
@@ -248,8 +254,9 @@ class CloseTest {
 
   @Test
   def testShutdownAndWait(): Unit = {
-    val socketPair =
-      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val socketPair = factory.nioNio(chunkSizeConfig =
+      Some(ChunkSizeConfig(ChuckSizes(internalBufferSize, None), ChuckSizes(internalBufferSize, None)))
+    )
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external
@@ -294,8 +301,9 @@ class CloseTest {
 
   @Test
   def testShutdownAndWaitForever(): Unit = {
-    val socketPair =
-      factory.nioNio(internalClientChunkSize = internalBufferSize, internalServerChunkSize = internalBufferSize)
+    val socketPair = factory.nioNio(chunkSizeConfig =
+      Some(ChunkSizeConfig(ChuckSizes(internalBufferSize, None), ChuckSizes(internalBufferSize, None)))
+    )
     val clientGroup = socketPair.client
     val serverGroup = socketPair.server
     val client = clientGroup.external

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.Loops
+import tlschannel.helpers.SocketPairFactory.{ChuckSizes, ChunkSizeConfig}
 import tlschannel.helpers.SslContextFactory
 
 import scala.jdk.CollectionConverters._
@@ -36,7 +37,15 @@ class NullEngineTest {
         s"testHalfDuplexHeapBuffers() - size1=$size1",
         () => {
           val socketPair =
-            factory.nioNio(cipher = null, internalClientChunkSize = Some(size1), internalServerChunkSize = Some(size1))
+            factory.nioNio(
+              cipher = null,
+              chunkSizeConfig = Some(
+                ChunkSizeConfig(
+                  ChuckSizes(Some(size1), None),
+                  ChuckSizes(Some(size1), None)
+                )
+              )
+            )
           Loops.halfDuplex(socketPair, dataSize)
           println(f"-eng-> $size1%5d -net-> $size1%5d -eng->")
         }
@@ -56,7 +65,15 @@ class NullEngineTest {
         () => {
           logger.fine(() => s"Testing sizes: size1=$size1")
           val socketPair =
-            factory.nioNio(cipher = null, internalClientChunkSize = Some(size1), internalServerChunkSize = Some(size1))
+            factory.nioNio(
+              cipher = null,
+              chunkSizeConfig = Some(
+                ChunkSizeConfig(
+                  ChuckSizes(Some(size1), None),
+                  ChuckSizes(Some(size1), None)
+                )
+              )
+            )
           Loops.halfDuplex(socketPair, dataSize)
           println(f"-eng-> $size1%5d -net-> $size1%5d -eng->")
         }

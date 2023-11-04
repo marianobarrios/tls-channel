@@ -24,33 +24,12 @@ class AllocationTest {
 
         MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
 
-        SocketPair socketPair1 = factory.nioNio(
-                Option.apply(null),
-                Option.apply(null),
-                Option.apply(null),
-                Option.apply(null),
-                Option.apply(null),
-                true,
-                false,
-                Option.apply(null));
-        SocketPair socketPair2 = factory.nioNio(
-                Option.apply(null),
-                Option.apply(null),
-                Option.apply(null),
-                Option.apply(null),
-                Option.apply(null),
-                true,
-                false,
-                Option.apply(null));
-        SocketPair socketPair3 = factory.nioNio(
-                Option.apply(null),
-                Option.apply(null),
-                Option.apply(null),
-                Option.apply(null),
-                Option.apply(null),
-                true,
-                false,
-                Option.apply(null));
+        SocketPair socketPair1 =
+                factory.nioNio(Option.apply(null), Option.apply(null), true, false, Option.apply(null));
+        SocketPair socketPair2 =
+                factory.nioNio(Option.apply(null), Option.apply(null), true, false, Option.apply(null));
+        SocketPair socketPair3 =
+                factory.nioNio(Option.apply(null), Option.apply(null), true, false, Option.apply(null));
 
         // do a "warm-up" loop, in order to not count anything statically allocated
         Loops.halfDuplex(socketPair1, 10000, false, false);

@@ -19,7 +19,7 @@ class NullMultiNonBlockingTest {
 
   @Test
   def testRunTasksInNonBlockingLoop(): Unit = {
-    val pairs = factory.nioNioN(cipher = null, totalConnections, None, None)
+    val pairs = factory.nioNioN(cipher = null, totalConnections)
     val report = NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
     Assertions.assertEquals(0, report.asyncTasksRun)
   }

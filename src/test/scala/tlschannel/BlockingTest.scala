@@ -6,6 +6,8 @@ import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.Loops
+import tlschannel.helpers.SocketPairFactory.ChunkSizeConfig
+import tlschannel.helpers.SocketPairFactory.ChuckSizes
 
 import java.util
 import java.util.logging.Logger
@@ -31,10 +33,12 @@ class BlockingTest {
         s"testHalfDuplexWireRenegotiations() - size1=$size1, size2=$size2",
         () => {
           val socketPair = factory.nioNio(
-            internalClientChunkSize = Some(size1),
-            externalClientChunkSize = Some(size2),
-            internalServerChunkSize = Some(size1),
-            externalServerChunkSize = Some(size2)
+            chunkSizeConfig = Some(
+              ChunkSizeConfig(
+                ChuckSizes(Some(size1), Some(size2)),
+                ChuckSizes(Some(size1), Some(size2))
+              )
+            )
           )
           Loops.halfDuplex(socketPair, dataSize, renegotiation = true)
           println(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d")
@@ -54,11 +58,13 @@ class BlockingTest {
         s"testFullDuplex() - size1=$size1,size2=$size2",
         () => {
           logger.fine(() => s"Testing sizes: size1=$size1,size2=$size2")
-          val socketPair = factory.nioNio(
-            internalClientChunkSize = Some(size1),
-            externalClientChunkSize = Some(size2),
-            internalServerChunkSize = Some(size1),
-            externalServerChunkSize = Some(size2)
+          val socketPair = factory.nioNio(chunkSizeConfig =
+            Some(
+              ChunkSizeConfig(
+                ChuckSizes(Some(size1), Some(size2)),
+                ChuckSizes(Some(size1), Some(size2))
+              )
+            )
           )
           Loops.fullDuplex(socketPair, dataSize)
           println(f"$size1%5d -eng-> $size2%5d -net-> $size1%5d -eng-> $size2%5d")

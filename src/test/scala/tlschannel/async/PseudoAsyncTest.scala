@@ -4,6 +4,7 @@ import org.junit.jupiter.api.{DynamicTest, Test, TestFactory, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.Loops
 import tlschannel.helpers.SocketPairFactory
+import tlschannel.helpers.SocketPairFactory.{ChuckSizes, ChunkSizeConfig}
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 
@@ -29,10 +30,8 @@ class PseudoAsyncTest {
         s"testHalfDuplex() - size1=$size1, size2=$size2",
         () => {
           val socketPair = factory.nioNio(
-            internalClientChunkSize = Some(size1),
-            externalClientChunkSize = Some(size2),
-            internalServerChunkSize = Some(size1),
-            externalServerChunkSize = Some(size2),
+            chunkSizeConfig =
+              Some(ChunkSizeConfig(ChuckSizes(Some(size1), Some(size2)), ChuckSizes(Some(size1), Some(size2)))),
             pseudoAsyncGroup = Some(channelGroup)
           )
           Loops.halfDuplex(socketPair, dataSize)
@@ -51,10 +50,8 @@ class PseudoAsyncTest {
         s"testFullDuplex() - size1=$size1, size2=$size2",
         () => {
           val socketPair = factory.nioNio(
-            internalClientChunkSize = Some(size1),
-            externalClientChunkSize = Some(size2),
-            internalServerChunkSize = Some(size1),
-            externalServerChunkSize = Some(size2),
+            chunkSizeConfig =
+              Some(ChunkSizeConfig(ChuckSizes(Some(size1), Some(size2)), ChuckSizes(Some(size1), Some(size2)))),
             pseudoAsyncGroup = Some(channelGroup)
           )
           Loops.fullDuplex(socketPair, dataSize)

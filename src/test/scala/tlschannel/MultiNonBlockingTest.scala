@@ -19,7 +19,7 @@ class MultiNonBlockingTest {
   @Test
   def testTaskLoop(): Unit = {
     println("testTasksInExecutorWithRenegotiation():")
-    val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = true)
+    val pairs = factory.nioNioN(None, totalConnections, None, runTasks = true)
     val report = NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
     assertEquals(0, report.asyncTasksRun)
     report.print()
@@ -29,7 +29,7 @@ class MultiNonBlockingTest {
   @Test
   def testTasksInExecutor(): Unit = {
     println("testTasksInExecutorWithRenegotiation():")
-    val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = false)
+    val pairs = factory.nioNioN(None, totalConnections, None, runTasks = false)
     val report = NonBlockingLoops.loop(pairs, dataSize, renegotiate = false)
     report.print()
   }
@@ -38,7 +38,7 @@ class MultiNonBlockingTest {
   @Test
   def testTasksInLoopWithRenegotiation(): Unit = {
     println("testTasksInExecutorWithRenegotiation():")
-    val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = true)
+    val pairs = factory.nioNioN(None, totalConnections, None, runTasks = true)
     val report = NonBlockingLoops.loop(pairs, dataSize, renegotiate = true)
     assertEquals(0, report.asyncTasksRun)
     report.print()
@@ -48,7 +48,7 @@ class MultiNonBlockingTest {
   @Test
   def testTasksInExecutorWithRenegotiation(): Unit = {
     println("testTasksInExecutorWithRenegotiation():")
-    val pairs = factory.nioNioN(None, totalConnections, None, None, None, None, runTasks = false)
+    val pairs = factory.nioNioN(None, totalConnections, None, runTasks = false)
     val report = NonBlockingLoops.loop(pairs, dataSize, renegotiate = true)
     report.print()
   }

@@ -4,8 +4,11 @@ import org.junit.jupiter.api.{DynamicTest, TestFactory, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.NonBlockingLoops
 import tlschannel.helpers.SocketPairFactory
+import tlschannel.helpers.SocketPairFactory.ChunkSizeConfig
+import tlschannel.helpers.SocketPairFactory.ChuckSizes
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
+
 import scala.jdk.CollectionConverters._
 import java.util
 
@@ -24,11 +27,13 @@ class NonBlockingTest {
       DynamicTest.dynamicTest(
         s"testSelectorLoop() - size1=$size1, size2=$size2",
         () => {
-          val socketPair = factory.nioNio(
-            internalClientChunkSize = Some(size1),
-            externalClientChunkSize = Some(size2),
-            internalServerChunkSize = Some(size1),
-            externalServerChunkSize = Some(size2)
+          val socketPair = factory.nioNio(chunkSizeConfig =
+            Some(
+              ChunkSizeConfig(
+                ChuckSizes(Some(size1), Some(size2)),
+                ChuckSizes(Some(size1), Some(size2))
+              )
+            )
           )
           val report = NonBlockingLoops.loop(Seq(socketPair), dataSize, renegotiate = true)
           println(f"** $size1%d -eng-> $size2%d -net-> $size1%d -eng-> $size2%d **")

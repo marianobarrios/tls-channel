@@ -37,6 +37,8 @@ case class AsyncSocketGroup(external: ExtendedAsynchronousByteChannel, tls: TlsC
   */
 class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
 
+  import SocketPairFactory._
+
   def this(sslContext: SSLContext) = {
     this(sslContext, SslContextFactory.certificateCommonName)
   }
@@ -152,10 +154,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
 
   def nioNio(
       cipher: Option[String] = None,
-      externalClientChunkSize: Option[Int] = None,
-      internalClientChunkSize: Option[Int] = None,
-      externalServerChunkSize: Option[Int] = None,
-      internalServerChunkSize: Option[Int] = None,
+      chunkSizeConfig: Option[ChunkSizeConfig] = None,
       runTasks: Boolean = true,
       waitForCloseConfirmation: Boolean = false,
       pseudoAsyncGroup: Option[AsynchronousTlsChannelGroup] = None
@@ -163,10 +162,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
     nioNioN(
       cipher,
       1,
-      externalClientChunkSize,
-      internalClientChunkSize,
-      externalServerChunkSize,
-      internalServerChunkSize,
+      chunkSizeConfig,
       runTasks,
       waitForCloseConfirmation,
       pseudoAsyncGroup
@@ -176,10 +172,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
   def nioNioN(
       cipher: Option[String] = None,
       qtty: Int,
-      externalClientChunkSize: Option[Int] = None,
-      internalClientChunkSize: Option[Int] = None,
-      externalServerChunkSize: Option[Int] = None,
-      internalServerChunkSize: Option[Int] = None,
+      chunkSizeConfig: Option[ChunkSizeConfig] = None,
       runTasks: Boolean = true,
       waitForCloseConfirmation: Boolean = false,
       pseudoAsyncGroup: Option[AsynchronousTlsChannelGroup] = None
@@ -193,14 +186,24 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
         val rawClient = SocketChannel.open(address)
         val rawServer = serverSocket.accept()
 
-        val plainClient = internalClientChunkSize match {
-          case Some(size) => new ChunkingByteChannel(rawClient, size)
-          case None       => rawClient
+        val plainClient = chunkSizeConfig match {
+          case Some(config) =>
+            config.clientChuckSize.internalSize match {
+              case Some(size) => new ChunkingByteChannel(rawClient, size)
+              case None       => rawClient
+            }
+          case None =>
+            rawClient
         }
 
-        val plainServer = internalServerChunkSize match {
-          case Some(size) => new ChunkingByteChannel(rawServer, size)
-          case None       => rawServer
+        val plainServer = chunkSizeConfig match {
+          case Some(config) =>
+            config.serverChunkSize.internalSize match {
+              case Some(size) => new ChunkingByteChannel(rawServer, size)
+              case None       => rawServer
+            }
+          case None =>
+            rawServer
         }
 
         val clientEngine = if (cipher == null) {
@@ -255,13 +258,24 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
             serverChannel
         }
 
-        val externalClient = externalClientChunkSize match {
-          case Some(size) => new ChunkingByteChannel(clientAsyncChannel, chunkSize = size)
-          case None       => clientChannel
+        val externalClient = chunkSizeConfig match {
+          case Some(config) =>
+            config.clientChuckSize.externalSize match {
+              case Some(size) => new ChunkingByteChannel(clientAsyncChannel, chunkSize = size)
+              case None       => clientChannel
+            }
+          case None =>
+            clientChannel
         }
-        val externalServer = externalServerChunkSize match {
-          case Some(size) => new ChunkingByteChannel(serverAsyncChannel, chunkSize = size)
-          case None       => serverChannel
+
+        val externalServer = chunkSizeConfig match {
+          case Some(config) =>
+            config.serverChunkSize.externalSize match {
+              case Some(size) => new ChunkingByteChannel(serverAsyncChannel, chunkSize = size)
+              case None       => serverChannel
+            }
+          case None =>
+            serverChannel
         }
 
         val clientPair = SocketGroup(externalClient, clientChannel, rawClient)
@@ -399,5 +413,9 @@ object SocketPairFactory {
     val exp = math.log(uniform) * (-1 / labmda)
     math.max(exp.toInt, 1)
   }
+
+  case class ChunkSizeConfig(clientChuckSize: ChuckSizes, serverChunkSize: ChuckSizes)
+
+  case class ChuckSizes(internalSize: Option[Int], externalSize: Option[Int])
 
 }
