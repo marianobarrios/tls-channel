@@ -17,7 +17,7 @@ package tlschannel;
 public class NeedsTaskException extends TlsChannelFlowControlException {
 
     private static final long serialVersionUID = -936451835836926915L;
-    private transient final Runnable task;
+    private final transient Runnable task;
 
     public NeedsTaskException(Runnable task) {
         this.task = task;

@@ -58,7 +58,7 @@ class AllocationTest {
         long before = memoryBean.getHeapMemoryUsage().getUsed();
         Loops.halfDuplex(socketPair2, dataSize, false, false);
         Loops.halfDuplex(socketPair3, dataSize, true, false);
-        var after = memoryBean.getHeapMemoryUsage().getUsed();
+        long after = memoryBean.getHeapMemoryUsage().getUsed();
 
         System.out.printf("memory allocation test finished - used heap: %.0f KB\n", (after - before) / 1024.0);
     }
