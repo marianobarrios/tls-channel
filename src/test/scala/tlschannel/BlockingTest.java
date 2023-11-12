@@ -1,10 +1,7 @@
 package tlschannel;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.TestInstance;
@@ -16,6 +13,8 @@ import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SocketPairFactory.ChuckSizes;
 import tlschannel.helpers.SocketPairFactory.ChunkSizeConfig;
 import tlschannel.helpers.SslContextFactory;
+import tlschannel.util.ListUtils;
+import tlschannel.util.StreamUtils;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class BlockingTest {
@@ -28,9 +27,9 @@ public class BlockingTest {
     @TestFactory
     public Collection<DynamicTest> testHalfDuplexWireRenegotiations() {
         System.out.println("testHalfDuplexWireRenegotiations():");
-        List<Integer> sizes = Stream.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize() * 2, x -> x * 2)
+        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize() * 2, x -> x * 2)
                 .collect(Collectors.toList());
-        List<Integer> reversedSizes = sizes.reversed();
+        List<Integer> reversedSizes = ListUtils.reversed(sizes);
         List<DynamicTest> ret = new ArrayList<>();
         for (int i = 0; i < sizes.size(); i++) {
             int size1 = sizes.get(i);
@@ -56,9 +55,9 @@ public class BlockingTest {
     @TestFactory
     public Collection<DynamicTest> testFullDuplex() {
         System.out.println("testFullDuplex():");
-        List<Integer> sizes = Stream.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize() * 2, x -> x * 2)
+        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize() * 2, x -> x * 2)
                 .collect(Collectors.toList());
-        List<Integer> reversedSizes = sizes.reversed();
+        List<Integer> reversedSizes = ListUtils.reversed(sizes);
         List<DynamicTest> ret = new ArrayList<>();
         for (int i = 0; i < sizes.size(); i++) {
             int size1 = sizes.get(i);
