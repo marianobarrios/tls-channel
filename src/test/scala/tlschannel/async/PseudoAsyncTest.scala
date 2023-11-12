@@ -1,12 +1,11 @@
 package tlschannel.async
 
-import org.junit.jupiter.api.{DynamicTest, Test, TestFactory, TestInstance}
+import org.junit.jupiter.api.{DynamicTest, TestFactory, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.Loops
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SocketPairFactory.{ChuckSizes, ChunkSizeConfig}
 import tlschannel.helpers.SslContextFactory
-import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 
 import java.util
 import scala.jdk.CollectionConverters._
@@ -24,7 +23,7 @@ class PseudoAsyncTest {
   // test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
   @TestFactory
   def testHalfDuplex(): util.Collection[DynamicTest] = {
-    val sizes = LazyList.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(1)(_ * 2).takeWhile(_ < SslContextFactory.tlsMaxDataSize * 2)
     val tests = for ((size1, size2) <- sizes zip sizes.reverse) yield {
       DynamicTest.dynamicTest(
         s"testHalfDuplex() - size1=$size1, size2=$size2",
@@ -44,7 +43,7 @@ class PseudoAsyncTest {
   // test a full-duplex interaction, without any renegotiation
   @TestFactory
   def testFullDuplex(): util.Collection[DynamicTest] = {
-    val sizes = LazyList.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(1)(_ * 2).takeWhile(_ < SslContextFactory.tlsMaxDataSize * 2)
     val tests = for ((size1, size2) <- sizes zip sizes.reverse) yield {
       DynamicTest.dynamicTest(
         s"testFullDuplex() - size1=$size1, size2=$size2",

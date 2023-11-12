@@ -2,7 +2,6 @@ package tlschannel
 
 import org.junit.jupiter.api.{AfterAll, DynamicTest, TestFactory, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
-import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.Loops
 import tlschannel.helpers.SocketPairFactory.{ChuckSizes, ChunkSizeConfig}
@@ -31,7 +30,7 @@ class NullEngineTest {
   @TestFactory
   def testHalfDuplexHeapBuffers(): util.Collection[DynamicTest] = {
     println("testHalfDuplexHeapBuffers():")
-    val sizes = LazyList.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(512)(_ * 2).takeWhile(_ < SslContextFactory.tlsMaxDataSize * 2)
     val tests = for (size1 <- sizes) yield {
       DynamicTest.dynamicTest(
         s"testHalfDuplexHeapBuffers() - size1=$size1",
@@ -58,7 +57,7 @@ class NullEngineTest {
   @TestFactory
   def testHalfDuplexDirectBuffers(): util.Collection[DynamicTest] = {
     println("testHalfDuplexDirectBuffers():")
-    val sizes = LazyList.iterate(512)(_ * 3).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(512)(_ * 2).takeWhile(_ < SslContextFactory.tlsMaxDataSize * 2)
     val tests = for (size1 <- sizes) yield {
       DynamicTest.dynamicTest(
         s"Testing sizes: size1=$size1",

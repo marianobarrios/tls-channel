@@ -26,20 +26,6 @@ object TestUtil {
     }
   }
 
-  implicit class LazyListWithTakeWhileInclusive[A](stream: LazyList[A]) {
-    def takeWhileInclusive(p: A => Boolean) = {
-      var done = false
-      def newPredicate(a: A): Boolean = {
-        if (done)
-          return false
-        if (!p(a))
-          done = true
-        true
-      }
-      stream.takeWhile(newPredicate)
-    }
-  }
-
   def removeAndCollect[A](iterator: java.util.Iterator[A]): Seq[A] = {
     val builder = Seq.newBuilder[A]
     while (iterator.hasNext) {

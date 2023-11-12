@@ -7,7 +7,6 @@ import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SocketPairFactory.ChunkSizeConfig
 import tlschannel.helpers.SocketPairFactory.ChuckSizes
 import tlschannel.helpers.SslContextFactory
-import tlschannel.helpers.TestUtil.LazyListWithTakeWhileInclusive
 
 import scala.jdk.CollectionConverters._
 import java.util
@@ -22,7 +21,7 @@ class NonBlockingTest {
   @TestFactory
   def testSelectorLoop(): util.Collection[DynamicTest] = {
     println("testSelectorLoop():")
-    val sizes = LazyList.iterate(1)(_ * 4).takeWhileInclusive(_ <= SslContextFactory.tlsMaxDataSize)
+    val sizes = LazyList.iterate(1)(_ * 2).takeWhile(_ < SslContextFactory.tlsMaxDataSize * 2)
     val tests = for ((size1, size2) <- sizes zip sizes.reverse) yield {
       DynamicTest.dynamicTest(
         s"testSelectorLoop() - size1=$size1, size2=$size2",
