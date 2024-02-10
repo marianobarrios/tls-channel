@@ -23,6 +23,12 @@ compileJava {
     options.compilerArgs.add('-Xlint')
 }
 
+compileTestJava {
+    sourceCompatibility = '8'
+    targetCompatibility = '8'
+    options.compilerArgs.add('-Xlint')
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
