@@ -44,7 +44,7 @@ dependencies {
     testImplementation 'io.netty:netty-buffer:4.1.73.Final'
     testImplementation 'io.netty:netty-handler:4.1.73.Final'
     // pinned: https://github.com/netty/netty-tcnative/issues/716
-    testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.47.Final'
+    testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.65.Final'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
