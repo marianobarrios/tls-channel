@@ -6,7 +6,7 @@
   "packageRules": [
     {
       "matchPackagePatterns": [".*"],
-      "minimumReleaseAge": 7
+      "minimumReleaseAge": "7"
     },
     {
       "matchPackagePatterns": ["^ch.qos.logback"],
