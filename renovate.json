@@ -2,10 +2,16 @@
   "extends": [
     "config:base"
   ],
+  "internalChecksFilter": "strict",
   "packageRules": [
     {
       "matchPackagePatterns": [".*"],
-      "stabilityDays": 3
+      "minimumReleaseAge": 7
+    },
+    {
+      "matchPackagePatterns": ["^ch.qos.logback"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ]
 }
