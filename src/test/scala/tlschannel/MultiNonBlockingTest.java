@@ -46,7 +46,7 @@ public class MultiNonBlockingTest {
     @Test
     public void testTasksInLoopWithRenegotiation() {
         System.out.println("testTasksInExecutorWithRenegotiation():");
-        Seq<tlschannel.helpers.SocketPair> pairs = factory.nioNioN(
+        Seq<SocketPair> pairs = factory.nioNioN(
                 Option.apply(null), totalConnections, Option.apply(null), true, false, Option.apply(null));
         NonBlockingLoops.Report report = NonBlockingLoops.loop(pairs, dataSize, true);
         assertEquals(0, report.asyncTasksRun());
@@ -57,7 +57,7 @@ public class MultiNonBlockingTest {
     @Test
     public void testTasksInExecutorWithRenegotiation() {
         System.out.println("testTasksInExecutorWithRenegotiation():");
-        Seq<tlschannel.helpers.SocketPair> pairs = factory.nioNioN(
+        Seq<SocketPair> pairs = factory.nioNioN(
                 Option.apply(null), totalConnections, Option.apply(null), false, false, Option.apply(null));
         NonBlockingLoops.Report report = NonBlockingLoops.loop(pairs, dataSize, true);
         report.print();
