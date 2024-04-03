@@ -103,6 +103,9 @@ public class TlsChannelImpl implements ByteChannel {
     private final Lock readLock = new ReentrantLock();
     private final Lock writeLock = new ReentrantLock();
 
+    /** Whether the handshake was already started once. */
+    private boolean handWasTouched;
+
     private volatile boolean negotiated = false;
 
     /**
@@ -498,8 +501,11 @@ public class TlsChannelImpl implements ByteChannel {
                 throw new ClosedChannelException();
             }
             if (force || !negotiated) {
-                logger.log(Level.FINEST, "Calling SSLEngine.beginHandshake()");
-                engine.beginHandshake();
+                if (!handWasTouched) {
+                    logger.log(Level.FINEST, "Calling SSLEngine.beginHandshake()");
+                    engine.beginHandshake();
+                    handWasTouched = true;
+                }
                 writeAndHandshake();
 
                 if (engine.getSession().getProtocol().startsWith("DTLS")) {
