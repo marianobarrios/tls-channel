@@ -8,6 +8,7 @@ import tlschannel.helpers.SocketPairFactory.{ChuckSizes, ChunkSizeConfig}
 import tlschannel.helpers.SslContextFactory
 
 import java.util
+import java.util.Optional
 import scala.jdk.CollectionConverters._
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -29,8 +30,12 @@ class PseudoAsyncTest {
         s"testHalfDuplex() - size1=$size1, size2=$size2",
         () => {
           val socketPair = factory.nioNio(
-            chunkSizeConfig =
-              Some(ChunkSizeConfig(ChuckSizes(Some(size1), Some(size2)), ChuckSizes(Some(size1), Some(size2)))),
+            chunkSizeConfig = Some(
+              ChunkSizeConfig(
+                ChuckSizes(Optional.of(size1), Optional.of(size2)),
+                ChuckSizes(Optional.of(size1), Optional.of(size2))
+              )
+            ),
             pseudoAsyncGroup = Some(channelGroup)
           )
           Loops.halfDuplex(socketPair, dataSize)
@@ -49,8 +54,12 @@ class PseudoAsyncTest {
         s"testFullDuplex() - size1=$size1, size2=$size2",
         () => {
           val socketPair = factory.nioNio(
-            chunkSizeConfig =
-              Some(ChunkSizeConfig(ChuckSizes(Some(size1), Some(size2)), ChuckSizes(Some(size1), Some(size2)))),
+            chunkSizeConfig = Some(
+              ChunkSizeConfig(
+                ChuckSizes(Optional.of(size1), Optional.of(size2)),
+                ChuckSizes(Optional.of(size1), Optional.of(size2))
+              )
+            ),
             pseudoAsyncGroup = Some(channelGroup)
           )
           Loops.fullDuplex(socketPair, dataSize)

@@ -1,9 +1,6 @@
 package tlschannel;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
@@ -43,8 +40,8 @@ public class NonBlockingTest {
                         SocketPair socketPair = factory.nioNio(
                                 Option.apply(null),
                                 Some.apply(new ChunkSizeConfig(
-                                        new ChuckSizes(Some.apply(size1), Some.apply(size2)),
-                                        new ChuckSizes(Some.apply(size1), Some.apply(size2)))),
+                                        new ChuckSizes(Optional.of(size1), Optional.of(size2)),
+                                        new ChuckSizes(Optional.of(size1), Optional.of(size2)))),
                                 true,
                                 false,
                                 Option.apply(null));

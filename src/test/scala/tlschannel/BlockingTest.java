@@ -39,8 +39,8 @@ public class BlockingTest {
                         SocketPair socketPair = factory.nioNio(
                                 Option.apply(null),
                                 Option.apply(new ChunkSizeConfig(
-                                        new ChuckSizes(Option.apply(size1), Option.apply(size2)),
-                                        new ChuckSizes(Option.apply(size1), Option.apply(size2)))),
+                                        new ChuckSizes(Optional.of(size1), Optional.of(size2)),
+                                        new ChuckSizes(Optional.of(size1), Optional.of(size2)))),
                                 true,
                                 false,
                                 Option.apply(null));
@@ -67,8 +67,8 @@ public class BlockingTest {
                         SocketPair socketPair = factory.nioNio(
                                 Option.apply(null),
                                 Option.apply(new ChunkSizeConfig(
-                                        new ChuckSizes(Option.apply(size1), Option.apply(size2)),
-                                        new ChuckSizes(Option.apply(size1), Option.apply(size2)))),
+                                        new ChuckSizes(Optional.of(size1), Optional.of(size2)),
+                                        new ChuckSizes(Optional.of(size1), Optional.of(size2)))),
                                 true,
                                 false,
                                 Option.apply(null));

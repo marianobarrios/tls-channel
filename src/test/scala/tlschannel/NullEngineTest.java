@@ -3,6 +3,7 @@ package tlschannel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.net.ssl.SSLEngine;
 import org.junit.jupiter.api.AfterAll;
@@ -48,8 +49,8 @@ public class NullEngineTest {
                 SocketGroups.SocketPair socketPair = factory.nioNio(
                         null,
                         Some.apply(new ChunkSizeConfig(
-                                new ChuckSizes(Some.apply(size1), Option.apply(null)),
-                                new ChuckSizes(Some.apply(size1), Option.apply(null)))),
+                                new ChuckSizes(Optional.of(size1), Optional.empty()),
+                                new ChuckSizes(Optional.of(size1), Optional.empty()))),
                         true,
                         false,
                         Option.apply(null));
@@ -73,8 +74,8 @@ public class NullEngineTest {
                 SocketGroups.SocketPair socketPair = factory.nioNio(
                         null,
                         Some.apply(new ChunkSizeConfig(
-                                new ChuckSizes(Some.apply(size1), Option.apply(null)),
-                                new ChuckSizes(Some.apply(size1), Option.apply(null)))),
+                                new ChuckSizes(Optional.of(size1), Optional.empty()),
+                                new ChuckSizes(Optional.of(size1), Optional.empty()))),
                         true,
                         false,
                         Option.apply(null));
