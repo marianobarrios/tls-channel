@@ -179,9 +179,11 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
 
         val plainClient = chunkSizeConfig match {
           case Some(config) =>
-            config.clientChuckSize.internalSize match {
-              case Some(size) => new ChunkingByteChannel(rawClient, size)
-              case None       => rawClient
+            val internalSize = config.clientChuckSize.internalSize
+            if (internalSize.isPresent) {
+              new ChunkingByteChannel(rawClient, internalSize.get)
+            } else {
+              rawClient
             }
           case None =>
             rawClient
@@ -189,9 +191,11 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
 
         val plainServer = chunkSizeConfig match {
           case Some(config) =>
-            config.serverChunkSize.internalSize match {
-              case Some(size) => new ChunkingByteChannel(rawServer, size)
-              case None       => rawServer
+            val internalSize = config.serverChunkSize.internalSize
+            if (internalSize.isPresent) {
+              new ChunkingByteChannel(rawServer, internalSize.get)
+            } else {
+              rawServer
             }
           case None =>
             rawServer
@@ -251,9 +255,11 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
 
         val externalClient = chunkSizeConfig match {
           case Some(config) =>
-            config.clientChuckSize.externalSize match {
-              case Some(size) => new ChunkingByteChannel(clientAsyncChannel, chunkSize = size)
-              case None       => clientChannel
+            val size = config.clientChuckSize.externalSize
+            if (size.isPresent) {
+              new ChunkingByteChannel(clientAsyncChannel, size.get)
+            } else {
+              clientChannel
             }
           case None =>
             clientChannel
@@ -261,9 +267,11 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
 
         val externalServer = chunkSizeConfig match {
           case Some(config) =>
-            config.serverChunkSize.externalSize match {
-              case Some(size) => new ChunkingByteChannel(serverAsyncChannel, chunkSize = size)
-              case None       => serverChannel
+            val size = config.serverChunkSize.externalSize
+            if (size.isPresent) {
+              new ChunkingByteChannel(serverAsyncChannel, size.get)
+            } else {
+              serverChannel
             }
           case None =>
             serverChannel
@@ -407,6 +415,6 @@ object SocketPairFactory {
 
   case class ChunkSizeConfig(clientChuckSize: ChuckSizes, serverChunkSize: ChuckSizes)
 
-  case class ChuckSizes(internalSize: Option[Int], externalSize: Option[Int])
+  case class ChuckSizes(internalSize: Optional[Integer], externalSize: Optional[Integer])
 
 }

@@ -70,67 +70,53 @@ public class ConcurrentTest {
     }
 
     private void writerLoop(int size, char ch, SocketGroup socketGroup) {
-        TestUtil.cannotFail(() -> {
-            try {
-                logger.fine(() -> String.format("Starting writer loop, size: %s", size));
-                int bytesRemaining = size;
-                byte[] bufferArray = new byte[bufferSize];
-                Arrays.fill(bufferArray, (byte) ch);
-                while (bytesRemaining > 0) {
-                    ByteBuffer buffer = ByteBuffer.wrap(bufferArray, 0, Math.min(bufferSize, bytesRemaining));
-                    while (buffer.hasRemaining()) {
-                        int c = socketGroup.external.write(buffer);
-                        assertTrue(c > 0, "blocking write must return a positive number");
-                        bytesRemaining -= c;
-                        assertTrue(bytesRemaining >= 0);
-                    }
+        TestJavaUtil.cannotFail(() -> {
+            logger.fine(() -> String.format("Starting writer loop, size: %s", size));
+            int bytesRemaining = size;
+            byte[] bufferArray = new byte[bufferSize];
+            Arrays.fill(bufferArray, (byte) ch);
+            while (bytesRemaining > 0) {
+                ByteBuffer buffer = ByteBuffer.wrap(bufferArray, 0, Math.min(bufferSize, bytesRemaining));
+                while (buffer.hasRemaining()) {
+                    int c = socketGroup.external.write(buffer);
+                    assertTrue(c > 0, "blocking write must return a positive number");
+                    bytesRemaining -= c;
+                    assertTrue(bytesRemaining >= 0);
                 }
-                logger.fine("Finalizing writer loop");
-                return null;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
+            logger.fine("Finalizing writer loop");
         });
     }
 
     private void readerLoop(int size, SocketGroup socketGroup) {
-        TestUtil.cannotFail(() -> {
-            try {
-                logger.fine(() -> String.format("Starting reader loop, size: %s", size));
-                byte[] readArray = new byte[bufferSize];
-                int bytesRemaining = size;
-                while (bytesRemaining > 0) {
-                    ByteBuffer readBuffer = ByteBuffer.wrap(readArray, 0, Math.min(bufferSize, bytesRemaining));
-                    int c = socketGroup.external.read(readBuffer);
-                    assertTrue(c > 0, "blocking read must return a positive number");
-                    bytesRemaining -= c;
-                    assertTrue(bytesRemaining >= 0);
-                }
-                logger.fine("Finalizing reader loop");
-                return null;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        TestJavaUtil.cannotFail(() -> {
+            logger.fine(() -> String.format("Starting reader loop, size: %s", size));
+            byte[] readArray = new byte[bufferSize];
+            int bytesRemaining = size;
+            while (bytesRemaining > 0) {
+                ByteBuffer readBuffer = ByteBuffer.wrap(readArray, 0, Math.min(bufferSize, bytesRemaining));
+                int c = socketGroup.external.read(readBuffer);
+                assertTrue(c > 0, "blocking read must return a positive number");
+                bytesRemaining -= c;
+                assertTrue(bytesRemaining >= 0);
             }
+            logger.fine("Finalizing reader loop");
         });
     }
 
     private void readerLoopUntilEof(SocketGroup socketGroup, AtomicLong accumulator) {
-        TestUtil.cannotFail(() -> {
-            try {
-                logger.fine("Starting reader loop");
-                byte[] readArray = new byte[bufferSize];
-                while (true) {
-                    ByteBuffer readBuffer = ByteBuffer.wrap(readArray, 0, bufferSize);
-                    int c = socketGroup.external.read(readBuffer);
-                    if (c == -1) {
-                        logger.fine("Finalizing reader loop");
-                        return null;
-                    }
-                    assertTrue(c > 0, "blocking read must return a positive number");
-                    accumulator.addAndGet(c);
+        TestJavaUtil.cannotFail(() -> {
+            logger.fine("Starting reader loop");
+            byte[] readArray = new byte[bufferSize];
+            while (true) {
+                ByteBuffer readBuffer = ByteBuffer.wrap(readArray, 0, bufferSize);
+                int c = socketGroup.external.read(readBuffer);
+                if (c == -1) {
+                    logger.fine("Finalizing reader loop");
+                    return;
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                assertTrue(c > 0, "blocking read must return a positive number");
+                accumulator.addAndGet(c);
             }
         });
     }
