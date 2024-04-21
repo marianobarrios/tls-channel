@@ -1,21 +1,16 @@
 package tlschannel
 
 import scala.util.Random
-import java.net.Socket
-import java.nio.channels.ByteChannel
-import javax.net.ssl.SSLSocket
-import java.nio.ByteBuffer
 import org.junit.jupiter.api.Assertions.{assertArrayEquals, assertEquals, assertNotEquals, assertTrue}
 import org.junit.jupiter.api.{Test, TestInstance}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import tlschannel.helpers.TestUtil
 import tlschannel.helpers.SslContextFactory
 import tlschannel.helpers.SocketPairFactory
+import tlschannel.util.InteroperabilityUtils._
 
 @TestInstance(Lifecycle.PER_CLASS)
 class InteroperabilityTest {
-
-  import InteroperabilityTest._
 
   val sslContextFactory = new SslContextFactory
   val factory = new SocketPairFactory(sslContextFactory.defaultContext, SslContextFactory.certificateCommonName)
@@ -23,13 +18,13 @@ class InteroperabilityTest {
   def oldNio() = {
     val (client, server) = factory.oldNio(None)
     val clientPair = (new SSLSocketWriter(client), new SocketReader(client))
-    val serverPair = (new TlsSocketChannelWriter(server.tls), new ByteChannelReader(server.tls))
+    val serverPair = (new TlsChannelWriter(server.tls), new ByteChannelReader(server.tls))
     (clientPair, serverPair)
   }
 
   def nioOld() = {
     val (client, server) = factory.nioOld()
-    val clientPair = (new TlsSocketChannelWriter(client.tls), new ByteChannelReader(client.tls))
+    val clientPair = (new TlsChannelWriter(client.tls), new ByteChannelReader(client.tls))
     val serverPair = (new SSLSocketWriter(server), new SocketReader(server))
     (clientPair, serverPair)
   }
@@ -162,53 +157,6 @@ class InteroperabilityTest {
   def testOldToNioFullDuplex(): Unit = {
     val ((clientWriter, clientReader), (serverWriter, serverReader)) = oldNio()
     fullDuplexStream(serverWriter, clientReader, clientWriter, serverReader)
-  }
-
-}
-
-object InteroperabilityTest {
-
-  trait Reader {
-    def read(array: Array[Byte], offset: Int, length: Int): Int
-    def close(): Unit
-  }
-
-  class SocketReader(socket: Socket) extends Reader {
-    private val is = socket.getInputStream
-    def read(array: Array[Byte], offset: Int, length: Int) = is.read(array, offset, length)
-    def close() = socket.close()
-  }
-
-  class ByteChannelReader(socket: ByteChannel) extends Reader {
-    def read(array: Array[Byte], offset: Int, length: Int) = socket.read(ByteBuffer.wrap(array, offset, length))
-    def close() = socket.close()
-  }
-
-  trait Writer {
-    def renegotiate(): Unit
-    def write(array: Array[Byte], offset: Int, length: Int): Unit
-    def close(): Unit
-  }
-
-  class SSLSocketWriter(socket: SSLSocket) extends Writer {
-    private val os = socket.getOutputStream
-    def write(array: Array[Byte], offset: Int, length: Int) = os.write(array, offset, length)
-    def renegotiate() = socket.startHandshake()
-    def close() = socket.close()
-  }
-
-  class TlsSocketChannelWriter(val socket: TlsChannel) extends Writer {
-
-    def write(array: Array[Byte], offset: Int, length: Int) = {
-      val buffer = ByteBuffer.wrap(array, offset, length)
-      while (buffer.remaining() > 0) {
-        val c = socket.write(buffer)
-        assertNotEquals(0, c, "blocking write cannot return 0")
-      }
-    }
-
-    def renegotiate(): Unit = socket.renegotiate()
-    def close() = socket.close()
   }
 
 }
