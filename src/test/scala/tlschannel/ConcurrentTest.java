@@ -2,6 +2,7 @@ package tlschannel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static tlschannel.helpers.SocketGroups.*;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -31,15 +32,11 @@ public class ConcurrentTest {
     @Test
     public void testWriteSide() throws IOException {
         SocketPair socketPair = factory.nioNio(Option.apply(null), Option.apply(null), true, false, Option.apply(null));
-        Thread clientWriterThread1 =
-                new Thread(() -> writerLoop(dataSize, 'a', socketPair.client()), "client-writer-1");
-        Thread clientWriterThread2 =
-                new Thread(() -> writerLoop(dataSize, 'b', socketPair.client()), "client-writer-2");
-        Thread clientWriterThread3 =
-                new Thread(() -> writerLoop(dataSize, 'c', socketPair.client()), "client-writer-3");
-        Thread clientWriterThread4 =
-                new Thread(() -> writerLoop(dataSize, 'd', socketPair.client()), "client-writer-4");
-        Thread serverReaderThread = new Thread(() -> readerLoop(dataSize * 4, socketPair.server()), "server-reader");
+        Thread clientWriterThread1 = new Thread(() -> writerLoop(dataSize, 'a', socketPair.client), "client-writer-1");
+        Thread clientWriterThread2 = new Thread(() -> writerLoop(dataSize, 'b', socketPair.client), "client-writer-2");
+        Thread clientWriterThread3 = new Thread(() -> writerLoop(dataSize, 'c', socketPair.client), "client-writer-3");
+        Thread clientWriterThread4 = new Thread(() -> writerLoop(dataSize, 'd', socketPair.client), "client-writer-4");
+        Thread serverReaderThread = new Thread(() -> readerLoop(dataSize * 4, socketPair.server), "server-reader");
         Stream.of(
                         serverReaderThread,
                         clientWriterThread1,
@@ -49,7 +46,7 @@ public class ConcurrentTest {
                 .forEach(t -> t.start());
         Stream.of(clientWriterThread1, clientWriterThread2, clientWriterThread3, clientWriterThread4)
                 .forEach(t -> joinInterruptible(t));
-        socketPair.client().external().close();
+        socketPair.client.external.close();
         joinInterruptible(serverReaderThread);
         SocketPairFactory.checkDeallocation(socketPair);
     }
@@ -58,15 +55,15 @@ public class ConcurrentTest {
     @Test
     public void testReadSide() throws IOException {
         SocketPair socketPair = factory.nioNio(Option.apply(null), Option.apply(null), true, false, Option.apply(null));
-        Thread clientWriterThread = new Thread(() -> writerLoop(dataSize, 'a', socketPair.client()), "client-writer");
+        Thread clientWriterThread = new Thread(() -> writerLoop(dataSize, 'a', socketPair.client), "client-writer");
         AtomicLong totalRead = new AtomicLong();
         Thread serverReaderThread1 =
-                new Thread(() -> readerLoopUntilEof(socketPair.server(), totalRead), "server-reader-1");
+                new Thread(() -> readerLoopUntilEof(socketPair.server, totalRead), "server-reader-1");
         Thread serverReaderThread2 =
-                new Thread(() -> readerLoopUntilEof(socketPair.server(), totalRead), "server-reader-2");
+                new Thread(() -> readerLoopUntilEof(socketPair.server, totalRead), "server-reader-2");
         Stream.of(serverReaderThread1, serverReaderThread2, clientWriterThread).forEach(t -> t.start());
         joinInterruptible(clientWriterThread);
-        socketPair.client().external().close();
+        socketPair.client.external.close();
         Stream.of(serverReaderThread1, serverReaderThread2).forEach(t -> joinInterruptible(t));
         SocketPairFactory.checkDeallocation(socketPair);
         assertEquals(dataSize, totalRead.get());
@@ -82,7 +79,7 @@ public class ConcurrentTest {
                 while (bytesRemaining > 0) {
                     ByteBuffer buffer = ByteBuffer.wrap(bufferArray, 0, Math.min(bufferSize, bytesRemaining));
                     while (buffer.hasRemaining()) {
-                        int c = socketGroup.external().write(buffer);
+                        int c = socketGroup.external.write(buffer);
                         assertTrue(c > 0, "blocking write must return a positive number");
                         bytesRemaining -= c;
                         assertTrue(bytesRemaining >= 0);
@@ -104,7 +101,7 @@ public class ConcurrentTest {
                 int bytesRemaining = size;
                 while (bytesRemaining > 0) {
                     ByteBuffer readBuffer = ByteBuffer.wrap(readArray, 0, Math.min(bufferSize, bytesRemaining));
-                    int c = socketGroup.external().read(readBuffer);
+                    int c = socketGroup.external.read(readBuffer);
                     assertTrue(c > 0, "blocking read must return a positive number");
                     bytesRemaining -= c;
                     assertTrue(bytesRemaining >= 0);
@@ -124,7 +121,7 @@ public class ConcurrentTest {
                 byte[] readArray = new byte[bufferSize];
                 while (true) {
                     ByteBuffer readBuffer = ByteBuffer.wrap(readArray, 0, bufferSize);
-                    int c = socketGroup.external().read(readBuffer);
+                    int c = socketGroup.external.read(readBuffer);
                     if (c == -1) {
                         logger.fine("Finalizing reader loop");
                         return null;

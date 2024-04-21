@@ -5,7 +5,7 @@ import java.security.MessageDigest
 import java.util.SplittableRandom
 import org.junit.jupiter.api.Assertions.{assertArrayEquals, assertEquals, assertTrue}
 import tlschannel.helpers.TestUtil.Memo
-
+import tlschannel.helpers.SocketGroups._
 import java.util.logging.Logger
 
 object Loops {

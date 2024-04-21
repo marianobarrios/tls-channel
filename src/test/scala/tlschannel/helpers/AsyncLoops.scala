@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.LongAdder
 import org.junit.jupiter.api.Assertions.{assertArrayEquals, assertTrue}
+import tlschannel.helpers.SocketGroups.{AsyncSocketGroup, AsyncSocketPair}
 
 import java.util.logging.Logger
 import scala.util.control.Breaks
@@ -63,9 +64,9 @@ object AsyncLoops {
 
     val endpointQueue = new LinkedBlockingQueue[Endpoint]
     val dataHash = Loops.expectedBytesHash(dataSize)
-    val endpoints = for (AsyncSocketPair(client, server) <- socketPairs) yield {
-      val clientEndpoint = WriterEndpoint(client, remaining = dataSize)
-      val serverEndpoint = ReaderEndpoint(server, remaining = dataSize)
+    val endpoints = for (pair <- socketPairs) yield {
+      val clientEndpoint = WriterEndpoint(pair.client, remaining = dataSize)
+      val serverEndpoint = ReaderEndpoint(pair.server, remaining = dataSize)
       (clientEndpoint, serverEndpoint)
     }
 

@@ -10,7 +10,6 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.LongAdder
-import tlschannel.helpers.AsyncSocketPair
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 
@@ -35,10 +34,10 @@ class AsyncTimeoutTest extends AsyncTestBase {
       val socketPairCount = 50
       val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
       val latch = new CountDownLatch(socketPairCount * 2)
-      for (AsyncSocketPair(client, server) <- socketPairs) {
+      for (pair <- socketPairs) {
         val writeBuffer = ByteBuffer.allocate(bufferSize)
         val clientDone = new AtomicBoolean
-        client.external.write(
+        pair.client.external.write(
           writeBuffer,
           50,
           TimeUnit.MILLISECONDS,
@@ -62,7 +61,7 @@ class AsyncTimeoutTest extends AsyncTestBase {
         )
         val readBuffer = ByteBuffer.allocate(bufferSize)
         val serverDone = new AtomicBoolean
-        server.external.read(
+        pair.server.external.read(
           readBuffer,
           100,
           TimeUnit.MILLISECONDS,
@@ -86,9 +85,9 @@ class AsyncTimeoutTest extends AsyncTestBase {
         )
       }
       latch.await()
-      for (AsyncSocketPair(client, server) <- socketPairs) {
-        client.external.close()
-        server.external.close()
+      for (pair <- socketPairs) {
+        pair.client.external.close()
+        pair.server.external.close()
       }
     }
 
@@ -116,11 +115,11 @@ class AsyncTimeoutTest extends AsyncTestBase {
     for (_ <- 1 to repetitions) {
       val socketPairCount = 50
       val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
-      val futures = for (AsyncSocketPair(client, server) <- socketPairs) yield {
+      val futures = for (pair <- socketPairs) yield {
         val writeBuffer = ByteBuffer.allocate(bufferSize)
-        val writeFuture = client.external.write(writeBuffer)
+        val writeFuture = pair.client.external.write(writeBuffer)
         val readBuffer = ByteBuffer.allocate(bufferSize)
-        val readFuture = server.external.read(readBuffer)
+        val readFuture = pair.server.external.read(readBuffer)
         (writeFuture, readFuture)
       }
 
@@ -132,9 +131,9 @@ class AsyncTimeoutTest extends AsyncTestBase {
           successfulReadCancellations += 1
         }
       }
-      for (AsyncSocketPair(client, server) <- socketPairs) {
-        client.external.close()
-        server.external.close()
+      for (pair <- socketPairs) {
+        pair.client.external.close()
+        pair.server.external.close()
       }
     }
     shutdownChannelGroup(channelGroup)

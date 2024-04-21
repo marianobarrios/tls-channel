@@ -8,7 +8,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import scala.Option;
 import scala.collection.immutable.Seq;
 import tlschannel.helpers.NonBlockingLoops;
-import tlschannel.helpers.SocketPair;
+import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SslContextFactory;
 

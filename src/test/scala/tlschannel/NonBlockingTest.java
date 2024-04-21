@@ -13,7 +13,7 @@ import scala.Option;
 import scala.Some;
 import scala.jdk.javaapi.CollectionConverters;
 import tlschannel.helpers.NonBlockingLoops;
-import tlschannel.helpers.SocketPair;
+import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SocketPairFactory.ChuckSizes;
 import tlschannel.helpers.SocketPairFactory.ChunkSizeConfig;
