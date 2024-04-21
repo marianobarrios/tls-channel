@@ -13,6 +13,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import scala.Option;
 import scala.Some;
 import tlschannel.helpers.Loops;
+import tlschannel.helpers.SocketGroups;
 import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SocketPairFactory.ChuckSizes;
 import tlschannel.helpers.SocketPairFactory.ChunkSizeConfig;
@@ -44,7 +45,7 @@ public class NullEngineTest {
         List<DynamicTest> tests = new ArrayList<>();
         for (int size1 : sizes) {
             DynamicTest test = DynamicTest.dynamicTest(String.format("Testing sizes: size1=%s", size1), () -> {
-                tlschannel.helpers.SocketPair socketPair = factory.nioNio(
+                SocketGroups.SocketPair socketPair = factory.nioNio(
                         null,
                         Some.apply(new ChunkSizeConfig(
                                 new ChuckSizes(Some.apply(size1), Option.apply(null)),
@@ -69,7 +70,7 @@ public class NullEngineTest {
         List<DynamicTest> tests = new ArrayList<>();
         for (int size1 : sizes) {
             DynamicTest test = DynamicTest.dynamicTest(String.format("Testing sizes: size1=%s", size1), () -> {
-                tlschannel.helpers.SocketPair socketPair = factory.nioNio(
+                SocketGroups.SocketPair socketPair = factory.nioNio(
                         null,
                         Some.apply(new ChunkSizeConfig(
                                 new ChuckSizes(Some.apply(size1), Option.apply(null)),

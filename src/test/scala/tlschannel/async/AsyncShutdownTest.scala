@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions.{assertEquals, assertFalse, assertTrue}
 
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
-import tlschannel.helpers.AsyncSocketPair
 import tlschannel.helpers.SocketPairFactory
 import tlschannel.helpers.SslContextFactory
 import org.junit.jupiter.api.{Test, TestInstance}
@@ -24,11 +23,11 @@ class AsyncShutdownTest extends AsyncTestBase {
     val channelGroup = new AsynchronousTlsChannelGroup()
     val socketPairCount = 50
     val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
-    for (AsyncSocketPair(client, server) <- socketPairs) {
+    for (pair <- socketPairs) {
       val writeBuffer = ByteBuffer.allocate(bufferSize)
-      client.external.write(writeBuffer)
+      pair.client.external.write(writeBuffer)
       val readBuffer = ByteBuffer.allocate(bufferSize)
-      server.external.read(readBuffer)
+      pair.server.external.read(readBuffer)
     }
 
     assertFalse(channelGroup.isTerminated)
@@ -50,11 +49,11 @@ class AsyncShutdownTest extends AsyncTestBase {
     val channelGroup = new AsynchronousTlsChannelGroup()
     val socketPairCount = 50
     val socketPairs = factory.asyncN(null, channelGroup, socketPairCount, runTasks = true)
-    for (AsyncSocketPair(client, server) <- socketPairs) {
+    for (pair <- socketPairs) {
       val writeBuffer = ByteBuffer.allocate(bufferSize)
-      client.external.write(writeBuffer)
+      pair.client.external.write(writeBuffer)
       val readBuffer = ByteBuffer.allocate(bufferSize)
-      server.external.read(readBuffer)
+      pair.server.external.read(readBuffer)
     }
 
     assertFalse(channelGroup.isTerminated)
@@ -68,9 +67,9 @@ class AsyncShutdownTest extends AsyncTestBase {
       assertFalse(channelGroup.isTerminated)
     }
 
-    for (AsyncSocketPair(client, server) <- socketPairs) {
-      client.external.close()
-      server.external.close()
+    for (pair <- socketPairs) {
+      pair.client.external.close()
+      pair.server.external.close()
     }
 
     {

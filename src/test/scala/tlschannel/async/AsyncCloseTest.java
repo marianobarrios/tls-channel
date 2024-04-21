@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import tlschannel.helpers.AsyncSocketPair;
+import tlschannel.helpers.SocketGroups.AsyncSocketPair;
 import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SslContextFactory;
 
@@ -40,9 +40,9 @@ public class AsyncCloseTest implements AsyncTestBase {
             AsyncSocketPair socketPair = factory.async(null, channelGroup, true, false);
 
             ByteBuffer readBuffer = ByteBuffer.allocate(bufferSize);
-            Future<Integer> readFuture = socketPair.server().external().read(readBuffer);
+            Future<Integer> readFuture = socketPair.server.external.read(readBuffer);
 
-            socketPair.server().external().close();
+            socketPair.server.external.close();
 
             try {
                 readFuture.get(1000, TimeUnit.MILLISECONDS);
@@ -61,7 +61,7 @@ public class AsyncCloseTest implements AsyncTestBase {
                 Assertions.fail(e);
             }
 
-            socketPair.client().external().close();
+            socketPair.client.external.close();
             shutdownChannelGroup(channelGroup);
             assertChannelGroupConsistency(channelGroup);
             assertEquals(0, channelGroup.getSuccessfulReadCount());
@@ -78,10 +78,10 @@ public class AsyncCloseTest implements AsyncTestBase {
             AsyncSocketPair socketPair = factory.async(null, channelGroup, true, false);
 
             ByteBuffer readBuffer = ByteBuffer.allocate(bufferSize);
-            Future<Integer> readFuture = socketPair.server().external().read(readBuffer);
+            Future<Integer> readFuture = socketPair.server.external.read(readBuffer);
 
             // important: closing the raw socket
-            socketPair.server().plain().close();
+            socketPair.server.plain.close();
 
             try {
                 readFuture.get(1000, TimeUnit.MILLISECONDS);
@@ -100,7 +100,7 @@ public class AsyncCloseTest implements AsyncTestBase {
                 Assertions.fail(e);
             }
 
-            socketPair.client().external().close();
+            socketPair.client.external.close();
             shutdownChannelGroup(channelGroup);
             assertChannelGroupConsistency(channelGroup);
             assertEquals(0, channelGroup.getSuccessfulReadCount());

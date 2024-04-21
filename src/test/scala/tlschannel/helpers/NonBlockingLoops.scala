@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.{assertArrayEquals, assertTrue}
 import tlschannel.NeedsWriteException
 import tlschannel.NeedsReadException
 import tlschannel.NeedsTaskException
+import tlschannel.helpers.SocketGroups.{SocketGroup, SocketPair}
 
 import java.util.concurrent.atomic.LongAdder
 import scala.util.Random
@@ -61,15 +62,15 @@ object NonBlockingLoops {
 
     val readyTaskSockets = new ConcurrentLinkedQueue[Endpoint]
 
-    val endpoints = for (SocketPair(client, server) <- socketPairs) yield {
-      client.plain.configureBlocking(false)
-      server.plain.configureBlocking(false)
+    val endpoints = for (pair <- socketPairs) yield {
+      pair.client.plain.configureBlocking(false)
+      pair.server.plain.configureBlocking(false)
 
-      val clientEndpoint = WriterEndpoint(client, key = null, remaining = dataSize)
-      val serverEndpoint = ReaderEndpoint(server, key = null, remaining = dataSize)
+      val clientEndpoint = WriterEndpoint(pair.client, key = null, remaining = dataSize)
+      val serverEndpoint = ReaderEndpoint(pair.server, key = null, remaining = dataSize)
 
-      clientEndpoint.key = client.plain.register(selector, SelectionKey.OP_WRITE, clientEndpoint)
-      serverEndpoint.key = server.plain.register(selector, SelectionKey.OP_READ, serverEndpoint)
+      clientEndpoint.key = pair.client.plain.register(selector, SelectionKey.OP_WRITE, clientEndpoint)
+      serverEndpoint.key = pair.server.plain.register(selector, SelectionKey.OP_READ, serverEndpoint)
       (clientEndpoint, serverEndpoint)
     }
 

@@ -11,26 +11,17 @@ import javax.net.ssl.SSLEngine
 import org.junit.jupiter.api.Assertions.assertEquals
 
 import javax.crypto.Cipher
-import java.nio.channels.ByteChannel
 import java.util.Optional
 import javax.net.ssl.SNIHostName
 import javax.net.ssl.SNIServerName
 import tlschannel._
 import tlschannel.async.AsynchronousTlsChannel
 import tlschannel.async.AsynchronousTlsChannelGroup
-import tlschannel.async.ExtendedAsynchronousByteChannel
-
 import java.util.logging.Logger
 import scala.jdk.CollectionConverters._
 import scala.util.Random
 
-case class SocketPair(client: SocketGroup, server: SocketGroup)
-
-case class AsyncSocketPair(client: AsyncSocketGroup, server: AsyncSocketGroup)
-
-case class SocketGroup(external: ByteChannel, tls: TlsChannel, plain: SocketChannel)
-
-case class AsyncSocketGroup(external: ExtendedAsynchronousByteChannel, tls: TlsChannel, plain: SocketChannel)
+import tlschannel.helpers.SocketGroups._
 
 /** Create pairs of connected sockets (using the loopback interface). Additionally, all the raw (non-encrypted) socket
   * channel are wrapped with a chunking decorator that partitions the bytesProduced of any read or write operation.
@@ -136,7 +127,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
       .newBuilder(rawServer, nameOpt => sslContextFactory(clientSniHostName, sslContext)(nameOpt))
       .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
       .build()
-    (client, SocketGroup(server, server, rawServer))
+    (client, new SocketGroup(server, server, rawServer))
   }
 
   def nioOld(cipher: Option[String] = None): (SocketGroup, SSLSocket) = {
@@ -149,7 +140,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
     val client = ClientTlsChannel
       .newBuilder(rawClient, createClientSslEngine(cipher, chosenPort))
       .build()
-    (SocketGroup(client, client, rawClient), server)
+    (new SocketGroup(client, client, rawClient), server)
   }
 
   def nioNio(
@@ -278,9 +269,9 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
             serverChannel
         }
 
-        val clientPair = SocketGroup(externalClient, clientChannel, rawClient)
-        val serverPair = SocketGroup(externalServer, serverChannel, rawServer)
-        SocketPair(clientPair, serverPair)
+        val clientPair = new SocketGroup(externalClient, clientChannel, rawClient)
+        val serverPair = new SocketGroup(externalServer, serverChannel, rawServer)
+        new SocketPair(clientPair, serverPair)
       }
     } finally {
       serverSocket.close()
@@ -356,9 +347,9 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
         val clientAsyncChannel = new AsynchronousTlsChannel(channelGroup, clientChannel, rawClient)
         val serverAsyncChannel = new AsynchronousTlsChannel(channelGroup, serverChannel, rawServer)
 
-        val clientPair = AsyncSocketGroup(clientAsyncChannel, clientChannel, rawClient)
-        val serverPair = AsyncSocketGroup(serverAsyncChannel, serverChannel, rawServer)
-        AsyncSocketPair(clientPair, serverPair)
+        val clientPair = new AsyncSocketGroup(clientAsyncChannel, clientChannel, rawClient)
+        val serverPair = new AsyncSocketGroup(serverAsyncChannel, serverChannel, rawServer)
+        new AsyncSocketPair(clientPair, serverPair)
       }
     } finally {
       serverSocket.close()

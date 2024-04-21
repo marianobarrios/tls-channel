@@ -4,7 +4,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import scala.Option;
 import tlschannel.helpers.Loops;
-import tlschannel.helpers.SocketPair;
+import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SslContextFactory;
 

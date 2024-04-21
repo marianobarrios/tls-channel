@@ -15,7 +15,7 @@ import scala.Option;
 import scala.Some;
 import scala.jdk.CollectionConverters;
 import tlschannel.helpers.Loops;
-import tlschannel.helpers.SocketPair;
+import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SslContextFactory;
 
@@ -54,8 +54,8 @@ public class CipherTest {
                                     Some.apply(cipher), Option.apply(null), true, false, Option.apply(null));
                             Loops.halfDuplex(socketPair, dataSize, protocol.compareTo("TLSv1.2") < 0, false);
                             String actualProtocol = socketPair
-                                    .client()
-                                    .tls()
+                                    .client
+                                    .tls
                                     .getSslEngine()
                                     .getSession()
                                     .getProtocol();
@@ -82,8 +82,8 @@ public class CipherTest {
                                     Some.apply(cipher), Option.apply(null), true, false, Option.apply(null));
                             Loops.fullDuplex(socketPair, dataSize);
                             String actualProtocol = socketPair
-                                    .client()
-                                    .tls()
+                                    .client
+                                    .tls
                                     .getSslEngine()
                                     .getSession()
                                     .getProtocol();
