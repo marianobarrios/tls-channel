@@ -17,10 +17,10 @@ import javax.net.ssl.SNIServerName
 import tlschannel._
 import tlschannel.async.AsynchronousTlsChannel
 import tlschannel.async.AsynchronousTlsChannelGroup
+
 import java.util.logging.Logger
 import scala.jdk.CollectionConverters._
 import scala.util.Random
-
 import tlschannel.helpers.SocketGroups._
 
 /** Create pairs of connected sockets (using the loopback interface). Additionally, all the raw (non-encrypted) socket
@@ -101,7 +101,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
     socket
   }
 
-  def oldOld(cipher: Option[String] = None): (SSLSocket, SSLSocket) = {
+  def oldOld(cipher: Option[String] = None): OldOldSocketPair = {
     val serverSocket = createSslServerSocket(cipher)
     val chosenPort = serverSocket.getLocalPort
     val client = createSslSocket(cipher, localhost, chosenPort, requestedHost = serverName)
@@ -110,10 +110,10 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
     client.setSSLParameters(sslParameters)
     val server = serverSocket.accept().asInstanceOf[SSLSocket]
     serverSocket.close()
-    (client, server)
+    new OldOldSocketPair(client, server)
   }
 
-  def oldNio(cipher: Option[String] = None): (SSLSocket, SocketGroup) = {
+  def oldNio(cipher: Option[String] = None): OldNioSocketPair = {
     val serverSocket = ServerSocketChannel.open()
     serverSocket.bind(new InetSocketAddress(localhost, 0 /* find free port */ ))
     val chosenPort = serverSocket.getLocalAddress.asInstanceOf[InetSocketAddress].getPort
@@ -127,10 +127,10 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
       .newBuilder(rawServer, nameOpt => sslContextFactory(clientSniHostName, sslContext)(nameOpt))
       .withEngineFactory(fixedCipherServerSslEngineFactory(cipher) _)
       .build()
-    (client, new SocketGroup(server, server, rawServer))
+    new OldNioSocketPair(client, new SocketGroup(server, server, rawServer))
   }
 
-  def nioOld(cipher: Option[String] = None): (SocketGroup, SSLSocket) = {
+  def nioOld(cipher: Option[String] = None): NioOldSocketPair = {
     val serverSocket = createSslServerSocket(cipher)
     val chosenPort = serverSocket.getLocalPort
     val address = new InetSocketAddress(localhost, chosenPort)
@@ -140,7 +140,7 @@ class SocketPairFactory(val sslContext: SSLContext, val serverName: String) {
     val client = ClientTlsChannel
       .newBuilder(rawClient, createClientSslEngine(cipher, chosenPort))
       .build()
-    (new SocketGroup(client, client, rawClient), server)
+    new NioOldSocketPair(new SocketGroup(client, client, rawClient), server)
   }
 
   def nioNio(

@@ -2,10 +2,41 @@ package tlschannel.helpers;
 
 import java.nio.channels.ByteChannel;
 import java.nio.channels.SocketChannel;
+import javax.net.ssl.SSLSocket;
 import tlschannel.TlsChannel;
 import tlschannel.async.ExtendedAsynchronousByteChannel;
 
 public class SocketGroups {
+
+    public static class OldOldSocketPair {
+        public final SSLSocket client;
+        public final SSLSocket server;
+
+        public OldOldSocketPair(SSLSocket client, SSLSocket server) {
+            this.client = client;
+            this.server = server;
+        }
+    }
+
+    public static class OldNioSocketPair {
+        public final SSLSocket client;
+        public final SocketGroup server;
+
+        public OldNioSocketPair(SSLSocket client, SocketGroup server) {
+            this.client = client;
+            this.server = server;
+        }
+    }
+
+    public static class NioOldSocketPair {
+        public final SocketGroup client;
+        public final SSLSocket server;
+
+        public NioOldSocketPair(SocketGroup client, SSLSocket server) {
+            this.client = client;
+            this.server = server;
+        }
+    }
 
     public static class SocketPair {
         public final SocketGroup client;
