@@ -2,11 +2,12 @@ package tlschannel.async;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import scala.Option;
-import scala.collection.immutable.Seq;
+import scala.jdk.javaapi.CollectionConverters;
 import tlschannel.helpers.AsyncLoops;
 import tlschannel.helpers.SocketGroups.AsyncSocketPair;
 import tlschannel.helpers.SocketPairFactory;
@@ -21,13 +22,13 @@ public class AsyncTest implements AsyncTestBase {
 
     // real engine - run tasks
     @Test
-    public void testRunTasks() {
+    public void testRunTasks() throws Throwable {
         System.out.println("testRunTasks():");
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         int dataSize = 5 * 1024 * 1024;
         System.out.printf("data size: %d\n", dataSize);
-        Seq<AsyncSocketPair> socketPairs =
-                factory.asyncN(Option.apply(null), channelGroup, socketPairCount, true, false);
+        List<AsyncSocketPair> socketPairs = CollectionConverters.asJava(
+                factory.asyncN(Option.apply(null), channelGroup, socketPairCount, true, false));
         AsyncLoops.Report report = AsyncLoops.loop(socketPairs, dataSize);
 
         shutdownChannelGroup(channelGroup);
@@ -41,13 +42,13 @@ public class AsyncTest implements AsyncTestBase {
 
     // real engine - do not run tasks
     @Test
-    public void testNotRunTasks() {
+    public void testNotRunTasks() throws Throwable {
         System.out.println("testNotRunTasks():");
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         int dataSize = 2 * 1024 * 1024;
         System.out.printf("data size: %d\n", dataSize);
-        Seq<AsyncSocketPair> socketPairs =
-                factory.asyncN(Option.apply(null), channelGroup, socketPairCount, false, false);
+        List<AsyncSocketPair> socketPairs = CollectionConverters.asJava(
+                factory.asyncN(Option.apply(null), channelGroup, socketPairCount, false, false));
         AsyncLoops.Report report = AsyncLoops.loop(socketPairs, dataSize);
 
         shutdownChannelGroup(channelGroup);
@@ -64,12 +65,13 @@ public class AsyncTest implements AsyncTestBase {
 
     // null engine
     @Test
-    public void testNullEngine() {
+    public void testNullEngine() throws Throwable {
         System.out.println("testNullEngine():");
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         int dataSize = 12 * 1024 * 1024;
         System.out.printf("data size: %d\n", dataSize);
-        Seq<AsyncSocketPair> socketPairs = factory.asyncN(null, channelGroup, socketPairCount, true, false);
+        List<AsyncSocketPair> socketPairs =
+                CollectionConverters.asJava(factory.asyncN(null, channelGroup, socketPairCount, true, false));
         AsyncLoops.Report report = AsyncLoops.loop(socketPairs, dataSize);
 
         shutdownChannelGroup(channelGroup);
