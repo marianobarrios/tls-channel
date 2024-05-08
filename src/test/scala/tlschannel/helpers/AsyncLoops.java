@@ -28,8 +28,8 @@ public class AsyncLoops {
 
     private static class WriterEndpoint implements Endpoint {
         private final AsyncSocketGroup socketGroup;
-        private final SplittableRandom random = new SplittableRandom(Loops.seed());
-        private final ByteBuffer buffer = ByteBuffer.allocate(Loops.bufferSize());
+        private final SplittableRandom random = new SplittableRandom(Loops.seed);
+        private final ByteBuffer buffer = ByteBuffer.allocate(Loops.bufferSize);
         private int remaining;
         private Optional<Throwable> exception = Optional.empty();
 
@@ -51,7 +51,7 @@ public class AsyncLoops {
 
     private static class ReaderEndpoint implements Endpoint {
         private final AsyncSocketGroup socketGroup;
-        private final ByteBuffer buffer = ByteBuffer.allocate(Loops.bufferSize());
+        private final ByteBuffer buffer = ByteBuffer.allocate(Loops.bufferSize);
         private final MessageDigest digest;
         private int remaining;
         private Optional<Throwable> exception = Optional.empty();
@@ -60,7 +60,7 @@ public class AsyncLoops {
             this.socketGroup = socketGroup;
             this.remaining = remaining;
             try {
-                digest = MessageDigest.getInstance(Loops.hashAlgorithm());
+                digest = MessageDigest.getInstance(Loops.hashAlgorithm);
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException(e);
             }
@@ -112,7 +112,7 @@ public class AsyncLoops {
         LongAdder failedWrites = new LongAdder();
 
         LinkedBlockingQueue<Endpoint> endpointQueue = new LinkedBlockingQueue<>();
-        byte[] dataHash = Loops.expectedBytesHash().apply(dataSize);
+        byte[] dataHash = Loops.expectedBytesHash.apply(dataSize);
 
         List<WriterEndpoint> clientEndpoints = socketPairs.stream()
                 .map(p -> new WriterEndpoint(p.client, dataSize))
