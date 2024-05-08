@@ -27,7 +27,7 @@ public class BlockingTest {
     @TestFactory
     public Collection<DynamicTest> testHalfDuplexWireRenegotiations() {
         System.out.println("testHalfDuplexWireRenegotiations():");
-        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize() * 2, x -> x * 2)
+        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize * 2, x -> x * 2)
                 .collect(Collectors.toList());
         List<Integer> reversedSizes = ListUtils.reversed(sizes);
         List<DynamicTest> ret = new ArrayList<>();
@@ -55,7 +55,7 @@ public class BlockingTest {
     @TestFactory
     public Collection<DynamicTest> testFullDuplex() {
         System.out.println("testFullDuplex():");
-        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize() * 2, x -> x * 2)
+        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize * 2, x -> x * 2)
                 .collect(Collectors.toList());
         List<Integer> reversedSizes = ListUtils.reversed(sizes);
         List<DynamicTest> ret = new ArrayList<>();

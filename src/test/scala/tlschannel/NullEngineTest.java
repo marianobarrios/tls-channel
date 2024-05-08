@@ -41,7 +41,7 @@ public class NullEngineTest {
     @TestFactory
     public Collection<DynamicTest> testHalfDuplexHeapBuffers() {
         System.out.println("testHalfDuplexHeapBuffers():");
-        List<Integer> sizes = StreamUtils.iterate(512, x -> x < SslContextFactory.tlsMaxDataSize() * 2, x -> x * 2)
+        List<Integer> sizes = StreamUtils.iterate(512, x -> x < SslContextFactory.tlsMaxDataSize * 2, x -> x * 2)
                 .collect(Collectors.toList());
         List<DynamicTest> tests = new ArrayList<>();
         for (int size1 : sizes) {
@@ -66,7 +66,7 @@ public class NullEngineTest {
     @TestFactory
     public Collection<DynamicTest> testHalfDuplexDirectBuffers() {
         System.out.println("testHalfDuplexDirectBuffers():");
-        List<Integer> sizes = StreamUtils.iterate(512, x -> x < SslContextFactory.tlsMaxDataSize() * 2, x -> x * 2)
+        List<Integer> sizes = StreamUtils.iterate(512, x -> x < SslContextFactory.tlsMaxDataSize * 2, x -> x * 2)
                 .collect(Collectors.toList());
         List<DynamicTest> tests = new ArrayList<>();
         for (int size1 : sizes) {

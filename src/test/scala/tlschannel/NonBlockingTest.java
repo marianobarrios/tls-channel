@@ -28,7 +28,7 @@ public class NonBlockingTest {
     @TestFactory
     public Collection<DynamicTest> testSelectorLoop() {
         System.out.println("testSelectorLoop():");
-        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize() * 2, x -> x * 2)
+        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize * 2, x -> x * 2)
                 .collect(Collectors.toList());
         List<Integer> reversedSizes = ListUtils.reversed(sizes);
         List<DynamicTest> ret = new ArrayList<>();
