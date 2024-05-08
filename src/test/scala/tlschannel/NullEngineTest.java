@@ -82,6 +82,7 @@ public class NullEngineTest {
                 Loops.halfDuplex(socketPair, dataSize, false, false);
                 System.out.printf("-eng-> %5d -net-> %5d -eng->\n", size1, size1);
             });
+            tests.add(test);
         }
         return tests;
     }
