@@ -20,11 +20,11 @@ public class InteroperabilityTest {
 
     private final SslContextFactory sslContextFactory = new SslContextFactory();
     private final SocketPairFactory factory =
-            new SocketPairFactory(sslContextFactory.defaultContext(), SslContextFactory.certificateCommonName());
+            new SocketPairFactory(sslContextFactory.defaultContext(), SslContextFactory.certificateCommonName);
 
     private final Random random = new Random();
 
-    private final int dataSize = SslContextFactory.tlsMaxDataSize() * 10;
+    private final int dataSize = SslContextFactory.tlsMaxDataSize * 10;
 
     private final byte[] data = new byte[dataSize];
 

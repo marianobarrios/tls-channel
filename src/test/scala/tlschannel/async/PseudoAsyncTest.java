@@ -32,7 +32,7 @@ public class PseudoAsyncTest {
     // test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
     @TestFactory
     public Collection<DynamicTest> testHalfDuplex() {
-        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize() * 2, x -> x * 2)
+        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize * 2, x -> x * 2)
                 .collect(Collectors.toList());
         List<Integer> reversedSizes = ListUtils.reversed(sizes);
         List<DynamicTest> ret = new ArrayList<>();
@@ -58,7 +58,7 @@ public class PseudoAsyncTest {
     // test a full-duplex interaction, without any renegotiation
     @TestFactory
     public Collection<DynamicTest> testFullDuplex() {
-        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize() * 2, x -> x * 2)
+        List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize * 2, x -> x * 2)
                 .collect(Collectors.toList());
         List<Integer> reversedSizes = ListUtils.reversed(sizes);
         List<DynamicTest> ret = new ArrayList<>();

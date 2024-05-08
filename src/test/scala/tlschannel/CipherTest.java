@@ -13,7 +13,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import scala.Option;
 import scala.Some;
-import scala.jdk.CollectionConverters;
 import tlschannel.helpers.Loops;
 import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
@@ -44,8 +43,7 @@ public class CipherTest {
         List<DynamicTest> tests = new ArrayList<>();
         for (String protocol : protocols) {
             SslContextFactory ctxFactory = new SslContextFactory(protocol);
-            for (String cipher :
-                    CollectionConverters.SeqHasAsJava(ctxFactory.allCiphers()).asJava()) {
+            for (String cipher : ctxFactory.getAllCiphers()) {
                 tests.add(DynamicTest.dynamicTest(
                         String.format("testHalfDuplexWithRenegotiation() - protocol: %s, cipher: %s", protocol, cipher),
                         () -> {
@@ -73,8 +71,7 @@ public class CipherTest {
         List<DynamicTest> tests = new ArrayList<>();
         for (String protocol : protocols) {
             SslContextFactory ctxFactory = new SslContextFactory(protocol);
-            for (String cipher :
-                    CollectionConverters.SeqHasAsJava(ctxFactory.allCiphers()).asJava()) {
+            for (String cipher : ctxFactory.getAllCiphers()) {
                 tests.add(DynamicTest.dynamicTest(
                         String.format("testFullDuplex() - protocol: %s, cipher: %s", protocol, cipher), () -> {
                             SocketPairFactory socketFactory = new SocketPairFactory(ctxFactory.defaultContext());
