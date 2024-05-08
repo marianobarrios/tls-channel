@@ -1,5 +1,7 @@
 package tlschannel.helpers;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,5 +37,18 @@ public class TestJavaUtil {
                 System.exit(1);
             }
         };
+    }
+
+    public static class Memo<I, O> {
+        private final ConcurrentHashMap<I, O> cache = new ConcurrentHashMap<>();
+        private final Function<I, O> f;
+
+        public Memo(Function<I, O> f) {
+            this.f = f;
+        }
+
+        public O apply(I i) {
+            return cache.computeIfAbsent(i, f);
+        }
     }
 }

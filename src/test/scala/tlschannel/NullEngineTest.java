@@ -34,7 +34,7 @@ public class NullEngineTest {
 
     {
         // heat cache
-        Loops.expectedBytesHash().apply(dataSize);
+        Loops.expectedBytesHash.apply(dataSize);
     }
 
     // null engine - half duplex - heap buffers
