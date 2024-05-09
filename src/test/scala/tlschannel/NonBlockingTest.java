@@ -6,8 +6,6 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
-import scala.Some;
 import tlschannel.helpers.NonBlockingLoops;
 import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
@@ -37,13 +35,13 @@ public class NonBlockingTest {
             ret.add(DynamicTest.dynamicTest(
                     String.format("testSelectorLoop() - size1=%d, size2=%d", size1, size2), () -> {
                         SocketPair socketPair = factory.nioNio(
-                                Option.apply(null),
-                                Some.apply(new ChunkSizeConfig(
+                                Optional.empty(),
+                                Optional.of(new ChunkSizeConfig(
                                         new ChuckSizes(Optional.of(size1), Optional.of(size2)),
                                         new ChuckSizes(Optional.of(size1), Optional.of(size2)))),
                                 true,
                                 false,
-                                Option.apply(null));
+                                Optional.empty());
 
                         NonBlockingLoops.Report report =
                                 NonBlockingLoops.loop(Collections.singletonList(socketPair), dataSize, true);

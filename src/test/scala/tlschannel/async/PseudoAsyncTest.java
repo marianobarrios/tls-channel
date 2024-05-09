@@ -9,7 +9,6 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
 import tlschannel.helpers.Loops;
 import tlschannel.helpers.SocketGroups;
 import tlschannel.helpers.SocketPairFactory;
@@ -42,13 +41,13 @@ public class PseudoAsyncTest {
             ret.add(DynamicTest.dynamicTest(
                     String.format("testHalfDuplex() - size1=%s, size2=%s", size1, size2), () -> {
                         SocketGroups.SocketPair socketPair = factory.nioNio(
-                                Option.apply(null),
-                                Option.apply(new ChunkSizeConfig(
+                                Optional.empty(),
+                                Optional.of(new ChunkSizeConfig(
                                         new ChuckSizes(Optional.of(size1), Optional.of(size2)),
                                         new ChuckSizes(Optional.of(size1), Optional.of(size2)))),
                                 true,
                                 false,
-                                Option.apply(channelGroup));
+                                Optional.of(channelGroup));
                         Loops.halfDuplex(socketPair, dataSize, false, false);
                     }));
         }
@@ -68,13 +67,13 @@ public class PseudoAsyncTest {
             ret.add(DynamicTest.dynamicTest(
                     String.format("testFullDuplex() - size1=%s, size2=%s", size1, size2), () -> {
                         SocketGroups.SocketPair socketPair = factory.nioNio(
-                                Option.apply(null),
-                                Option.apply(new ChunkSizeConfig(
+                                Optional.empty(),
+                                Optional.of(new ChunkSizeConfig(
                                         new ChuckSizes(Optional.of(size1), Optional.of(size2)),
                                         new ChuckSizes(Optional.of(size1), Optional.of(size2)))),
                                 true,
                                 false,
-                                Option.apply(channelGroup));
+                                Optional.of(channelGroup));
                         Loops.fullDuplex(socketPair, dataSize);
                     }));
         }

@@ -1,18 +1,13 @@
 package tlschannel;
 
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.net.ssl.SSLContext;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
-import scala.Some;
 import tlschannel.helpers.Loops;
 import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
@@ -49,7 +44,7 @@ public class CipherTest {
                         () -> {
                             SocketPairFactory socketFactory = new SocketPairFactory(ctxFactory.defaultContext());
                             SocketPair socketPair = socketFactory.nioNio(
-                                    Some.apply(cipher), Option.apply(null), true, false, Option.apply(null));
+                                    Optional.of(cipher), Optional.empty(), true, false, Optional.empty());
                             Loops.halfDuplex(socketPair, dataSize, protocol.compareTo("TLSv1.2") < 0, false);
                             String actualProtocol = socketPair
                                     .client
@@ -76,7 +71,7 @@ public class CipherTest {
                         String.format("testFullDuplex() - protocol: %s, cipher: %s", protocol, cipher), () -> {
                             SocketPairFactory socketFactory = new SocketPairFactory(ctxFactory.defaultContext());
                             SocketPair socketPair = socketFactory.nioNio(
-                                    Some.apply(cipher), Option.apply(null), true, false, Option.apply(null));
+                                    Optional.of(cipher), Optional.empty(), true, false, Optional.empty());
                             Loops.fullDuplex(socketPair, dataSize);
                             String actualProtocol = socketPair
                                     .client

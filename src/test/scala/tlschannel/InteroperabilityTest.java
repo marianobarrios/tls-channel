@@ -8,11 +8,11 @@ import static tlschannel.util.InteroperabilityUtils.*;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
 import tlschannel.helpers.*;
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -112,7 +112,7 @@ public class InteroperabilityTest {
     // "old-io -> old-io (half duplex)
     @Test
     public void testOldToOldHalfDuplex() throws IOException, InterruptedException {
-        SocketGroups.OldOldSocketPair sockerPair = factory.oldOld(Option.apply(null));
+        SocketGroups.OldOldSocketPair sockerPair = factory.oldOld(Optional.empty());
         halfDuplexStream(
                 new SSLSocketWriter(sockerPair.server),
                 new SocketReader(sockerPair.client),
@@ -123,7 +123,7 @@ public class InteroperabilityTest {
     // old-io -> old-io (full duplex)
     @Test
     public void testOldToOldFullDuplex() throws IOException, InterruptedException {
-        SocketGroups.OldOldSocketPair sockerPair = factory.oldOld(Option.apply(null));
+        SocketGroups.OldOldSocketPair sockerPair = factory.oldOld(Optional.empty());
         fullDuplexStream(
                 new SSLSocketWriter(sockerPair.server),
                 new SocketReader(sockerPair.client),
@@ -136,7 +136,7 @@ public class InteroperabilityTest {
     // nio -> old-io (half duplex)
     @Test
     public void testNioToOldHalfDuplex() throws IOException, InterruptedException {
-        SocketGroups.NioOldSocketPair socketPair = factory.nioOld(Option.apply(null));
+        SocketGroups.NioOldSocketPair socketPair = factory.nioOld(Optional.empty());
         halfDuplexStream(
                 new SSLSocketWriter(socketPair.server),
                 new ByteChannelReader(socketPair.client.tls),
@@ -147,7 +147,7 @@ public class InteroperabilityTest {
     // nio -> old-io (full duplex)
     @Test
     public void testNioToOldFullDuplex() throws IOException, InterruptedException {
-        SocketGroups.NioOldSocketPair socketPair = factory.nioOld(Option.apply(null));
+        SocketGroups.NioOldSocketPair socketPair = factory.nioOld(Optional.empty());
         fullDuplexStream(
                 new SSLSocketWriter(socketPair.server),
                 new ByteChannelReader(socketPair.client.tls),
@@ -160,7 +160,7 @@ public class InteroperabilityTest {
     // old-io -> nio (half duplex)
     @Test
     public void testOldToNioHalfDuplex() throws IOException, InterruptedException {
-        SocketGroups.OldNioSocketPair socketPair = factory.oldNio(Option.apply(null));
+        SocketGroups.OldNioSocketPair socketPair = factory.oldNio(Optional.empty());
         halfDuplexStream(
                 new TlsChannelWriter(socketPair.server.tls),
                 new SocketReader(socketPair.client),
@@ -171,7 +171,7 @@ public class InteroperabilityTest {
     // old-io -> nio (full duplex)
     @Test
     public void testOldToNioFullDuplex() throws IOException, InterruptedException {
-        SocketGroups.OldNioSocketPair socketPair = factory.oldNio(Option.apply(null));
+        SocketGroups.OldNioSocketPair socketPair = factory.oldNio(Optional.empty());
         fullDuplexStream(
                 new TlsChannelWriter(socketPair.server.tls),
                 new SocketReader(socketPair.client),

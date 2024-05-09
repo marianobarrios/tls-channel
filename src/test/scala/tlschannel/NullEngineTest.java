@@ -11,8 +11,6 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
-import scala.Some;
 import tlschannel.helpers.Loops;
 import tlschannel.helpers.SocketGroups;
 import tlschannel.helpers.SocketPairFactory;
@@ -48,12 +46,12 @@ public class NullEngineTest {
             DynamicTest test = DynamicTest.dynamicTest(String.format("Testing sizes: size1=%s", size1), () -> {
                 SocketGroups.SocketPair socketPair = factory.nioNio(
                         null,
-                        Some.apply(new ChunkSizeConfig(
+                        Optional.of(new ChunkSizeConfig(
                                 new ChuckSizes(Optional.of(size1), Optional.empty()),
                                 new ChuckSizes(Optional.of(size1), Optional.empty()))),
                         true,
                         false,
-                        Option.apply(null));
+                        Optional.empty());
                 Loops.halfDuplex(socketPair, dataSize, false, false);
                 System.out.printf("-eng-> %5d -net-> %5d -eng->\n", size1, size1);
             });
@@ -73,12 +71,12 @@ public class NullEngineTest {
             DynamicTest test = DynamicTest.dynamicTest(String.format("Testing sizes: size1=%s", size1), () -> {
                 SocketGroups.SocketPair socketPair = factory.nioNio(
                         null,
-                        Some.apply(new ChunkSizeConfig(
+                        Optional.of(new ChunkSizeConfig(
                                 new ChuckSizes(Optional.of(size1), Optional.empty()),
                                 new ChuckSizes(Optional.of(size1), Optional.empty()))),
                         true,
                         false,
-                        Option.apply(null));
+                        Optional.empty());
                 Loops.halfDuplex(socketPair, dataSize, false, false);
                 System.out.printf("-eng-> %5d -net-> %5d -eng->\n", size1, size1);
             });

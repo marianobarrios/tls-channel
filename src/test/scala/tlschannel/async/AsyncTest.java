@@ -3,11 +3,10 @@ package tlschannel.async;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
-import scala.jdk.javaapi.CollectionConverters;
 import tlschannel.helpers.AsyncLoops;
 import tlschannel.helpers.SocketGroups.AsyncSocketPair;
 import tlschannel.helpers.SocketPairFactory;
@@ -27,8 +26,8 @@ public class AsyncTest implements AsyncTestBase {
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         int dataSize = 5 * 1024 * 1024;
         System.out.printf("data size: %d\n", dataSize);
-        List<AsyncSocketPair> socketPairs = CollectionConverters.asJava(
-                factory.asyncN(Option.apply(null), channelGroup, socketPairCount, true, false));
+        List<AsyncSocketPair> socketPairs =
+                factory.asyncN(Optional.empty(), channelGroup, socketPairCount, true, false);
         AsyncLoops.Report report = AsyncLoops.loop(socketPairs, dataSize);
 
         shutdownChannelGroup(channelGroup);
@@ -47,8 +46,8 @@ public class AsyncTest implements AsyncTestBase {
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         int dataSize = 2 * 1024 * 1024;
         System.out.printf("data size: %d\n", dataSize);
-        List<AsyncSocketPair> socketPairs = CollectionConverters.asJava(
-                factory.asyncN(Option.apply(null), channelGroup, socketPairCount, false, false));
+        List<AsyncSocketPair> socketPairs =
+                factory.asyncN(Optional.empty(), channelGroup, socketPairCount, false, false);
         AsyncLoops.Report report = AsyncLoops.loop(socketPairs, dataSize);
 
         shutdownChannelGroup(channelGroup);
@@ -70,8 +69,7 @@ public class AsyncTest implements AsyncTestBase {
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         int dataSize = 12 * 1024 * 1024;
         System.out.printf("data size: %d\n", dataSize);
-        List<AsyncSocketPair> socketPairs =
-                CollectionConverters.asJava(factory.asyncN(null, channelGroup, socketPairCount, true, false));
+        List<AsyncSocketPair> socketPairs = factory.asyncN(null, channelGroup, socketPairCount, true, false);
         AsyncLoops.Report report = AsyncLoops.loop(socketPairs, dataSize);
 
         shutdownChannelGroup(channelGroup);

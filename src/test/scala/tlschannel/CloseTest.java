@@ -14,8 +14,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
-import scala.Some;
 import tlschannel.helpers.*;
 import tlschannel.helpers.SocketPairFactory.ChuckSizes;
 import tlschannel.helpers.SocketPairFactory.ChunkSizeConfig;
@@ -36,13 +34,13 @@ public class CloseTest {
     @Test
     void testTcpImmediateClose() throws InterruptedException, IOException {
         SocketGroups.SocketPair socketPair = factory.nioNio(
-                Option.apply(null),
-                Some.apply(new ChunkSizeConfig(
+                Optional.empty(),
+                Optional.of(new ChunkSizeConfig(
                         new ChuckSizes(internalBufferSize, Optional.empty()),
                         new ChuckSizes(internalBufferSize, Optional.empty()))),
                 true,
                 false,
-                Option.apply(null));
+                Optional.empty());
         SocketGroups.SocketGroup clientGroup = socketPair.client;
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
@@ -75,13 +73,13 @@ public class CloseTest {
     @Test
     void testTcpClose() throws InterruptedException, IOException {
         SocketGroups.SocketPair socketPair = factory.nioNio(
-                Option.apply(null),
-                Some.apply(new ChunkSizeConfig(
+                Optional.empty(),
+                Optional.of(new ChunkSizeConfig(
                         new ChuckSizes(internalBufferSize, Optional.empty()),
                         new ChuckSizes(internalBufferSize, Optional.empty()))),
                 true,
                 false,
-                Option.apply(null));
+                Optional.empty());
         SocketGroups.SocketGroup clientGroup = socketPair.client;
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
@@ -119,13 +117,13 @@ public class CloseTest {
     @Test
     void testClose() throws InterruptedException {
         SocketGroups.SocketPair socketPair = factory.nioNio(
-                Option.apply(null),
-                Some.apply(new ChunkSizeConfig(
+                Optional.empty(),
+                Optional.of(new ChunkSizeConfig(
                         new ChuckSizes(internalBufferSize, Optional.empty()),
                         new ChuckSizes(internalBufferSize, Optional.empty()))),
                 true,
                 false,
-                Option.apply(null));
+                Optional.empty());
         SocketGroups.SocketGroup clientGroup = socketPair.client;
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
@@ -163,13 +161,13 @@ public class CloseTest {
     @Test
     void testCloseAndWait() throws InterruptedException {
         SocketGroups.SocketPair socketPair = factory.nioNio(
-                Option.apply(null),
-                Some.apply(new ChunkSizeConfig(
+                Optional.empty(),
+                Optional.of(new ChunkSizeConfig(
                         new ChuckSizes(internalBufferSize, Optional.empty()),
                         new ChuckSizes(internalBufferSize, Optional.empty()))),
                 true,
                 true,
-                Option.apply(null));
+                Optional.empty());
         SocketGroups.SocketGroup clientGroup = socketPair.client;
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
@@ -207,13 +205,13 @@ public class CloseTest {
     @Test
     void testCloseAndWaitForever() throws IOException, InterruptedException {
         SocketGroups.SocketPair socketPair = factory.nioNio(
-                Option.apply(null),
-                Some.apply(new ChunkSizeConfig(
+                Optional.empty(),
+                Optional.of(new ChunkSizeConfig(
                         new ChuckSizes(internalBufferSize, Optional.empty()),
                         new ChuckSizes(internalBufferSize, Optional.empty()))),
                 true,
                 true,
-                Option.apply(null));
+                Optional.empty());
         SocketGroups.SocketGroup clientGroup = socketPair.client;
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
@@ -249,13 +247,13 @@ public class CloseTest {
     @Test
     void testShutdownAndForget() throws InterruptedException, IOException {
         SocketGroups.SocketPair socketPair = factory.nioNio(
-                Option.apply(null),
-                Some.apply(new ChunkSizeConfig(
+                Optional.empty(),
+                Optional.of(new ChunkSizeConfig(
                         new ChuckSizes(internalBufferSize, Optional.empty()),
                         new ChuckSizes(internalBufferSize, Optional.empty()))),
                 true,
                 false,
-                Option.apply(null));
+                Optional.empty());
         SocketGroups.SocketGroup clientGroup = socketPair.client;
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
@@ -291,13 +289,13 @@ public class CloseTest {
     @Test
     void testShutdownAndWait() throws IOException, InterruptedException {
         SocketGroups.SocketPair socketPair = factory.nioNio(
-                Option.apply(null),
-                Some.apply(new ChunkSizeConfig(
+                Optional.empty(),
+                Optional.of(new ChunkSizeConfig(
                         new ChuckSizes(internalBufferSize, Optional.empty()),
                         new ChuckSizes(internalBufferSize, Optional.empty()))),
                 true,
                 false,
-                Option.apply(null));
+                Optional.empty());
         SocketGroups.SocketGroup clientGroup = socketPair.client;
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
@@ -343,13 +341,13 @@ public class CloseTest {
     @Test
     void testShutdownAndWaitForever() throws InterruptedException, IOException {
         SocketGroups.SocketPair socketPair = factory.nioNio(
-                Option.apply(null),
-                Some.apply(new ChunkSizeConfig(
+                Optional.empty(),
+                Optional.of(new ChunkSizeConfig(
                         new ChuckSizes(internalBufferSize, Optional.empty()),
                         new ChuckSizes(internalBufferSize, Optional.empty()))),
                 true,
                 false,
-                Option.apply(null));
+                Optional.empty());
         SocketGroups.SocketGroup clientGroup = socketPair.client;
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;

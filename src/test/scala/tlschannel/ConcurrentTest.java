@@ -7,13 +7,13 @@ import static tlschannel.helpers.SocketGroups.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
 import tlschannel.helpers.*;
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -31,7 +31,7 @@ public class ConcurrentTest {
     // write-side thread safety
     @Test
     public void testWriteSide() throws IOException {
-        SocketPair socketPair = factory.nioNio(Option.apply(null), Option.apply(null), true, false, Option.apply(null));
+        SocketPair socketPair = factory.nioNio(Optional.empty(), Optional.empty(), true, false, Optional.empty());
         Thread clientWriterThread1 = new Thread(() -> writerLoop(dataSize, 'a', socketPair.client), "client-writer-1");
         Thread clientWriterThread2 = new Thread(() -> writerLoop(dataSize, 'b', socketPair.client), "client-writer-2");
         Thread clientWriterThread3 = new Thread(() -> writerLoop(dataSize, 'c', socketPair.client), "client-writer-3");
@@ -54,7 +54,7 @@ public class ConcurrentTest {
     // read-size thread-safety
     @Test
     public void testReadSide() throws IOException {
-        SocketPair socketPair = factory.nioNio(Option.apply(null), Option.apply(null), true, false, Option.apply(null));
+        SocketPair socketPair = factory.nioNio(Optional.empty(), Optional.empty(), true, false, Optional.empty());
         Thread clientWriterThread = new Thread(() -> writerLoop(dataSize, 'a', socketPair.client), "client-writer");
         AtomicLong totalRead = new AtomicLong();
         Thread serverReaderThread1 =
