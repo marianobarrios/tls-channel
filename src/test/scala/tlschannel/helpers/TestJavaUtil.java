@@ -1,11 +1,24 @@
 package tlschannel.helpers;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 public class TestJavaUtil {
+
+    public static <A> Stream<A> removeAndCollect(Iterator<A> iterator) {
+        List<A> builder = new ArrayList<>();
+        while (iterator.hasNext()) {
+            builder.add(iterator.next());
+            iterator.remove();
+        }
+        return builder.stream();
+    }
 
     @FunctionalInterface
     public interface ExceptionalRunnable {

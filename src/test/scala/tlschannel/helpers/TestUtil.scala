@@ -7,15 +7,6 @@ object TestUtil {
 
   val logger = Logger.getLogger(TestUtil.getClass.getName)
 
-  def removeAndCollect[A](iterator: java.util.Iterator[A]): Seq[A] = {
-    val builder = Seq.newBuilder[A]
-    while (iterator.hasNext) {
-      builder += iterator.next()
-      iterator.remove()
-    }
-    builder.result()
-  }
-
   def nextBytes(random: SplittableRandom, bytes: Array[Byte]): Unit = {
     nextBytes(random, bytes, bytes.length)
   }
