@@ -3,13 +3,14 @@ package tlschannel.helpers;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.SplittableRandom;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-public class TestJavaUtil {
+public class TestUtil {
 
     public static <A> Stream<A> removeAndCollect(Iterator<A> iterator) {
         List<A> builder = new ArrayList<>();
@@ -25,7 +26,7 @@ public class TestJavaUtil {
         void run() throws Exception;
     }
 
-    private static final Logger logger = Logger.getLogger(TestJavaUtil.class.getName());
+    private static final Logger logger = Logger.getLogger(TestUtil.class.getName());
 
     public static void cannotFail(ExceptionalRunnable exceptionalRunnable) {
         cannotFailRunnable(exceptionalRunnable).run();
@@ -62,6 +63,24 @@ public class TestJavaUtil {
 
         public O apply(I i) {
             return cache.computeIfAbsent(i, f);
+        }
+    }
+
+    public static void nextBytes(SplittableRandom random, byte[] bytes) {
+        nextBytes(random, bytes, bytes.length);
+    }
+
+    public static void nextBytes(SplittableRandom random, byte[] bytes, int len) {
+        int i = 0;
+        while (i < len) {
+            int rnd = random.nextInt();
+            int n = Math.min(len - i, Integer.SIZE / java.lang.Byte.SIZE);
+            while (n > 0) {
+                bytes[i] = (byte) rnd;
+                rnd >>= java.lang.Byte.SIZE;
+                n -= 1;
+                i += 1;
+            }
         }
     }
 }

@@ -102,7 +102,7 @@ public class Loops {
             boolean scattering,
             boolean shutdown,
             boolean close) {
-        TestJavaUtil.cannotFail(() -> {
+        TestUtil.cannotFail(() -> {
             logger.fine(() -> String.format(
                     "Starting writer loop, size: %s, scattering: %s, renegotiate: %s", size, scattering, renegotiate));
             SplittableRandom random = new SplittableRandom(seed);
@@ -138,7 +138,7 @@ public class Loops {
     public static void readerLoop(
             int size, SocketGroup socketGroup, boolean gathering, boolean readEof, boolean close) {
 
-        TestJavaUtil.cannotFail(() -> {
+        TestUtil.cannotFail(() -> {
             logger.fine(() -> String.format("Starting reader loop. Size: $size, gathering: %s", gathering));
             byte[] readArray = new byte[bufferSize];
             int bytesRemaining = size;
@@ -183,7 +183,7 @@ public class Loops {
         }
     }
 
-    public static final Function<Integer, byte[]> expectedBytesHash = new TestJavaUtil.Memo<>(Loops::hash)::apply;
+    public static final Function<Integer, byte[]> expectedBytesHash = new TestUtil.Memo<>(Loops::hash)::apply;
 
     private static ByteBuffer[] multiWrap(ByteBuffer buffer) {
         return new ByteBuffer[] {ByteBuffer.allocate(0), buffer, ByteBuffer.allocate(0)};

@@ -35,7 +35,7 @@ public class InteroperabilityTest {
     private final int margin = random.nextInt(100);
 
     private void writerLoop(Writer writer, boolean renegotiate) {
-        TestJavaUtil.cannotFail(() -> {
+        TestUtil.cannotFail(() -> {
             int remaining = dataSize;
             while (remaining > 0) {
                 if (renegotiate) writer.renegotiate();
@@ -47,7 +47,7 @@ public class InteroperabilityTest {
     }
 
     private void readerLoop(Reader reader) {
-        TestJavaUtil.cannotFail(() -> {
+        TestUtil.cannotFail(() -> {
             byte[] receivedData = new byte[dataSize + margin];
             int remaining = dataSize;
             while (remaining > 0) {

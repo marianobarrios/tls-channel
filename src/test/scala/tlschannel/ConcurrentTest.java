@@ -70,7 +70,7 @@ public class ConcurrentTest {
     }
 
     private void writerLoop(int size, char ch, SocketGroup socketGroup) {
-        TestJavaUtil.cannotFail(() -> {
+        TestUtil.cannotFail(() -> {
             logger.fine(() -> String.format("Starting writer loop, size: %s", size));
             int bytesRemaining = size;
             byte[] bufferArray = new byte[bufferSize];
@@ -89,7 +89,7 @@ public class ConcurrentTest {
     }
 
     private void readerLoop(int size, SocketGroup socketGroup) {
-        TestJavaUtil.cannotFail(() -> {
+        TestUtil.cannotFail(() -> {
             logger.fine(() -> String.format("Starting reader loop, size: %s", size));
             byte[] readArray = new byte[bufferSize];
             int bytesRemaining = size;
@@ -105,7 +105,7 @@ public class ConcurrentTest {
     }
 
     private void readerLoopUntilEof(SocketGroup socketGroup, AtomicLong accumulator) {
-        TestJavaUtil.cannotFail(() -> {
+        TestUtil.cannotFail(() -> {
             logger.fine("Starting reader loop");
             byte[] readArray = new byte[bufferSize];
             while (true) {

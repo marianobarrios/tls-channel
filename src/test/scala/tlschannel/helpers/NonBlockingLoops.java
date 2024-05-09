@@ -181,8 +181,7 @@ public class NonBlockingLoops {
                 selector.select(); // block
 
                 for (Endpoint endpoint : Stream.concat(
-                                getSelectedEndpoints(selector),
-                                TestJavaUtil.removeAndCollect(readyTaskSockets.iterator()))
+                                getSelectedEndpoints(selector), TestUtil.removeAndCollect(readyTaskSockets.iterator()))
                         .collect(Collectors.toList())) {
                     try {
                         if (endpoint instanceof WriterEndpoint) {
