@@ -2,7 +2,7 @@ package tlschannel;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import scala.Option;
+import java.util.Optional;
 import tlschannel.helpers.Loops;
 import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
@@ -24,12 +24,9 @@ class AllocationTest {
 
         MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
 
-        SocketPair socketPair1 =
-                factory.nioNio(Option.apply(null), Option.apply(null), true, false, Option.apply(null));
-        SocketPair socketPair2 =
-                factory.nioNio(Option.apply(null), Option.apply(null), true, false, Option.apply(null));
-        SocketPair socketPair3 =
-                factory.nioNio(Option.apply(null), Option.apply(null), true, false, Option.apply(null));
+        SocketPair socketPair1 = factory.nioNio(Optional.empty(), Optional.empty(), true, false, Optional.empty());
+        SocketPair socketPair2 = factory.nioNio(Optional.empty(), Optional.empty(), true, false, Optional.empty());
+        SocketPair socketPair3 = factory.nioNio(Optional.empty(), Optional.empty(), true, false, Optional.empty());
 
         // do a "warm-up" loop, in order to not count anything statically allocated
         Loops.halfDuplex(socketPair1, 10000, false, false);

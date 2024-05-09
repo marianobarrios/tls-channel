@@ -1,9 +1,9 @@
 package tlschannel;
 
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
 import tlschannel.helpers.Loops;
 import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
@@ -19,7 +19,7 @@ public class ScatteringTest {
 
     @Test
     public void testHalfDuplex() {
-        SocketPair socketPair = factory.nioNio(Option.apply(null), Option.apply(null), true, false, Option.apply(null));
+        SocketPair socketPair = factory.nioNio(Optional.empty(), Optional.empty(), true, false, Optional.empty());
         Loops.halfDuplex(socketPair, dataSize, true, false);
     }
 }

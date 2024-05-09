@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.jdk.javaapi.CollectionConverters;
 import tlschannel.helpers.SocketGroups;
 import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SslContextFactory;
@@ -30,7 +29,7 @@ public class AsyncShutdownTest implements AsyncTestBase {
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         int socketPairCount = 50;
         List<SocketGroups.AsyncSocketPair> socketPairs =
-                CollectionConverters.asJava(factory.asyncN(null, channelGroup, socketPairCount, true, false));
+                factory.asyncN(null, channelGroup, socketPairCount, true, false);
         for (SocketGroups.AsyncSocketPair pair : socketPairs) {
             ByteBuffer writeBuffer = ByteBuffer.allocate(bufferSize);
             pair.client.external.write(writeBuffer);
@@ -57,7 +56,7 @@ public class AsyncShutdownTest implements AsyncTestBase {
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         int socketPairCount = 50;
         List<SocketGroups.AsyncSocketPair> socketPairs =
-                CollectionConverters.asJava(factory.asyncN(null, channelGroup, socketPairCount, true, false));
+                factory.asyncN(null, channelGroup, socketPairCount, true, false);
         for (SocketGroups.AsyncSocketPair pair : socketPairs) {
             ByteBuffer writeBuffer = ByteBuffer.allocate(bufferSize);
             pair.client.external.write(writeBuffer);

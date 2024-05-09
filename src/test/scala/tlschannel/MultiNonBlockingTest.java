@@ -3,12 +3,11 @@ package tlschannel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
-import scala.jdk.CollectionConverters;
 import tlschannel.helpers.NonBlockingLoops;
 import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
@@ -26,9 +25,8 @@ public class MultiNonBlockingTest {
     @Test
     public void testTaskLoop() {
         System.out.println("testTasksInExecutorWithRenegotiation():");
-        List<SocketPair> pairs = CollectionConverters.SeqHasAsJava(factory.nioNioN(
-                        Option.apply(null), totalConnections, Option.apply(null), true, false, Option.apply(null)))
-                .asJava();
+        List<SocketPair> pairs =
+                factory.nioNioN(Optional.empty(), totalConnections, Optional.empty(), true, false, Optional.empty());
         NonBlockingLoops.Report report = NonBlockingLoops.loop(pairs, dataSize, false);
         assertEquals(0, report.asyncTasksRun);
         report.print();
@@ -38,9 +36,8 @@ public class MultiNonBlockingTest {
     @Test
     public void testTasksInExecutor() {
         System.out.println("testTasksInExecutorWithRenegotiation():");
-        List<SocketPair> pairs = CollectionConverters.SeqHasAsJava(factory.nioNioN(
-                        Option.apply(null), totalConnections, Option.apply(null), false, false, Option.apply(null)))
-                .asJava();
+        List<SocketPair> pairs =
+                factory.nioNioN(Optional.empty(), totalConnections, Optional.empty(), false, false, Optional.empty());
         NonBlockingLoops.Report report = NonBlockingLoops.loop(pairs, dataSize, false);
         report.print();
     }
@@ -49,9 +46,8 @@ public class MultiNonBlockingTest {
     @Test
     public void testTasksInLoopWithRenegotiation() {
         System.out.println("testTasksInExecutorWithRenegotiation():");
-        List<SocketPair> pairs = CollectionConverters.SeqHasAsJava(factory.nioNioN(
-                        Option.apply(null), totalConnections, Option.apply(null), true, false, Option.apply(null)))
-                .asJava();
+        List<SocketPair> pairs =
+                factory.nioNioN(Optional.empty(), totalConnections, Optional.empty(), true, false, Optional.empty());
         NonBlockingLoops.Report report = NonBlockingLoops.loop(pairs, dataSize, true);
         assertEquals(0, report.asyncTasksRun);
         report.print();
@@ -61,9 +57,8 @@ public class MultiNonBlockingTest {
     @Test
     public void testTasksInExecutorWithRenegotiation() {
         System.out.println("testTasksInExecutorWithRenegotiation():");
-        List<SocketPair> pairs = CollectionConverters.SeqHasAsJava(factory.nioNioN(
-                        Option.apply(null), totalConnections, Option.apply(null), false, false, Option.apply(null)))
-                .asJava();
+        List<SocketPair> pairs =
+                factory.nioNioN(Optional.empty(), totalConnections, Optional.empty(), false, false, Optional.empty());
         NonBlockingLoops.Report report = NonBlockingLoops.loop(pairs, dataSize, true);
         report.print();
     }

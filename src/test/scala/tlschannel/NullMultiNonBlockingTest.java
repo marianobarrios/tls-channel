@@ -1,13 +1,12 @@
 package tlschannel;
 
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
-import scala.jdk.CollectionConverters;
 import tlschannel.helpers.NonBlockingLoops;
 import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
@@ -26,9 +25,8 @@ public class NullMultiNonBlockingTest {
 
     @Test
     public void testRunTasksInNonBlockingLoop() {
-        List<SocketPair> pairs = CollectionConverters.SeqHasAsJava(
-                        factory.nioNioN(null, totalConnections, Option.apply(null), true, false, Option.apply(null)))
-                .asJava();
+        List<SocketPair> pairs =
+                factory.nioNioN(null, totalConnections, Optional.empty(), true, false, Optional.empty());
         NonBlockingLoops.Report report = NonBlockingLoops.loop(pairs, dataSize, false);
         Assertions.assertEquals(0, report.asyncTasksRun);
     }

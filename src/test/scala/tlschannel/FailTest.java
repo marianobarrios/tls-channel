@@ -8,11 +8,11 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.Optional;
 import javax.net.ssl.SSLException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import scala.Option;
 import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SslContextFactory;
 import tlschannel.helpers.TestJavaUtil;
@@ -26,17 +26,17 @@ public class FailTest {
     @Test
     public void testPlanToTls() throws IOException, InterruptedException {
         ServerSocketChannel serverSocket = ServerSocketChannel.open();
-        serverSocket.bind(new InetSocketAddress(factory.localhost(), 0 /* find free port */));
+        serverSocket.bind(new InetSocketAddress(factory.localhost, 0 /* find free port */));
         int chosenPort = ((InetSocketAddress) serverSocket.getLocalAddress()).getPort();
-        InetSocketAddress address = new InetSocketAddress(factory.localhost(), chosenPort);
+        InetSocketAddress address = new InetSocketAddress(factory.localhost, chosenPort);
         SocketChannel clientChannel = SocketChannel.open(address);
         SocketChannel rawServer = serverSocket.accept();
-        factory.createClientSslEngine(Option.empty(), chosenPort);
+        factory.createClientSslEngine(Optional.empty(), chosenPort);
         ServerTlsChannel.Builder serverChannelBuilder = ServerTlsChannel.newBuilder(
                         rawServer,
-                        nameOpt ->
-                                factory.sslContextFactory(factory.clientSniHostName(), factory.sslContext(), nameOpt))
-                .withEngineFactory(sslContext -> factory.fixedCipherServerSslEngineFactory(Option.empty(), sslContext));
+                        nameOpt -> factory.sslContextFactory(factory.clientSniHostName, factory.sslContext, nameOpt))
+                .withEngineFactory(
+                        sslContext -> factory.fixedCipherServerSslEngineFactory(Optional.empty(), sslContext));
 
         ServerTlsChannel serverChannel = serverChannelBuilder.build();
 
