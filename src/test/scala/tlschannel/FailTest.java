@@ -15,7 +15,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SslContextFactory;
-import tlschannel.helpers.TestJavaUtil;
+import tlschannel.helpers.TestUtil;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public class FailTest {
@@ -41,7 +41,7 @@ public class FailTest {
         ServerTlsChannel serverChannel = serverChannelBuilder.build();
 
         Runnable serverFn = () -> {
-            TestJavaUtil.cannotFail(() -> {
+            TestUtil.cannotFail(() -> {
                 ByteBuffer buffer = ByteBuffer.allocate(10000);
                 assertThrows(SSLException.class, () -> serverChannel.read(buffer));
                 try {

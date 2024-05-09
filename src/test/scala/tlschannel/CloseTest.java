@@ -45,13 +45,13 @@ public class CloseTest {
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
         ByteChannel server = serverGroup.external;
-        Runnable clientFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable clientFn = TestUtil.cannotFailRunnable(() -> {
             clientGroup.plain.close();
             assertFalse(clientGroup.tls.shutdownSent());
             assertFalse(clientGroup.tls.shutdownReceived());
             Assertions.assertThrows(ClosedChannelException.class, () -> client.write(ByteBuffer.wrap(data)));
         });
-        Runnable serverFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable serverFn = TestUtil.cannotFailRunnable(() -> {
             ByteBuffer buffer = ByteBuffer.allocate(1);
             assertEquals(-1, server.read(buffer));
             assertFalse(serverGroup.tls.shutdownReceived());
@@ -84,14 +84,14 @@ public class CloseTest {
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
         ByteChannel server = serverGroup.external;
-        Runnable clientFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable clientFn = TestUtil.cannotFailRunnable(() -> {
             client.write(ByteBuffer.wrap(data));
             clientGroup.plain.close();
             assertFalse(clientGroup.tls.shutdownSent());
             assertFalse(clientGroup.tls.shutdownReceived());
             Assertions.assertThrows(ClosedChannelException.class, () -> client.write(ByteBuffer.wrap(data)));
         });
-        Runnable serverFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable serverFn = TestUtil.cannotFailRunnable(() -> {
             ByteBuffer buffer = ByteBuffer.allocate(1);
             assertEquals(1, server.read(buffer));
             buffer.flip();
@@ -128,14 +128,14 @@ public class CloseTest {
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
         ByteChannel server = serverGroup.external;
-        Runnable clientFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable clientFn = TestUtil.cannotFailRunnable(() -> {
             client.write(ByteBuffer.wrap(data));
             client.close();
             assertTrue(clientGroup.tls.shutdownSent());
             assertFalse(clientGroup.tls.shutdownReceived());
             Assertions.assertThrows(ClosedChannelException.class, () -> client.write(ByteBuffer.wrap(data)));
         });
-        Runnable serverFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable serverFn = TestUtil.cannotFailRunnable(() -> {
             ByteBuffer buffer = ByteBuffer.allocate(1);
             assertEquals(1, server.read(buffer));
             buffer.flip();
@@ -172,14 +172,14 @@ public class CloseTest {
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
         ByteChannel server = serverGroup.external;
-        Runnable clientFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable clientFn = TestUtil.cannotFailRunnable(() -> {
             client.write(ByteBuffer.wrap(data));
             client.close();
             assertTrue(clientGroup.tls.shutdownReceived());
             assertTrue(clientGroup.tls.shutdownSent());
             Assertions.assertThrows(ClosedChannelException.class, () -> client.write(ByteBuffer.wrap(data)));
         });
-        Runnable serverFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable serverFn = TestUtil.cannotFailRunnable(() -> {
             ByteBuffer buffer = ByteBuffer.allocate(1);
             assertEquals(1, server.read(buffer));
             buffer.flip();
@@ -216,11 +216,11 @@ public class CloseTest {
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
         ByteChannel server = serverGroup.external;
-        Runnable clientFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable clientFn = TestUtil.cannotFailRunnable(() -> {
             client.write(ByteBuffer.wrap(data));
             client.close();
         });
-        Runnable serverFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable serverFn = TestUtil.cannotFailRunnable(() -> {
             ByteBuffer buffer = ByteBuffer.allocate(1);
             assertEquals(1, server.read(buffer));
             buffer.flip();
@@ -258,14 +258,14 @@ public class CloseTest {
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
         ByteChannel server = serverGroup.external;
-        Runnable clientFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable clientFn = TestUtil.cannotFailRunnable(() -> {
             client.write(ByteBuffer.wrap(data));
             assertFalse(clientGroup.tls.shutdown());
             assertFalse(clientGroup.tls.shutdownReceived());
             assertTrue(clientGroup.tls.shutdownSent());
             Assertions.assertThrows(ClosedChannelException.class, () -> client.write(ByteBuffer.wrap(data)));
         });
-        Runnable serverFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable serverFn = TestUtil.cannotFailRunnable(() -> {
             ByteBuffer buffer = ByteBuffer.allocate(1);
             assertEquals(1, server.read(buffer));
             buffer.flip();
@@ -300,7 +300,7 @@ public class CloseTest {
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
         ByteChannel server = serverGroup.external;
-        Runnable clientFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable clientFn = TestUtil.cannotFailRunnable(() -> {
             client.write(ByteBuffer.wrap(data));
             // send first close_notify
             assertFalse(clientGroup.tls.shutdown());
@@ -312,7 +312,7 @@ public class CloseTest {
             assertTrue(clientGroup.tls.shutdownReceived());
             assertTrue(clientGroup.tls.shutdownSent());
         });
-        Runnable serverFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable serverFn = TestUtil.cannotFailRunnable(() -> {
             ByteBuffer buffer = ByteBuffer.allocate(1);
             assertEquals(1, server.read(buffer));
             buffer.flip();
@@ -352,7 +352,7 @@ public class CloseTest {
         SocketGroups.SocketGroup serverGroup = socketPair.server;
         ByteChannel client = clientGroup.external;
         ByteChannel server = serverGroup.external;
-        Runnable clientFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable clientFn = TestUtil.cannotFailRunnable(() -> {
             client.write(ByteBuffer.wrap(data));
             // send first close_notify
             assertFalse(clientGroup.tls.shutdown());
@@ -362,7 +362,7 @@ public class CloseTest {
             // wait for second close_notify
             Assertions.assertThrows(AsynchronousCloseException.class, () -> clientGroup.tls.shutdown());
         });
-        Runnable serverFn = TestJavaUtil.cannotFailRunnable(() -> {
+        Runnable serverFn = TestUtil.cannotFailRunnable(() -> {
             ByteBuffer buffer = ByteBuffer.allocate(1);
             assertEquals(1, server.read(buffer));
             buffer.flip();
