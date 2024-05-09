@@ -8,7 +8,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import scala.Option;
 import scala.Some;
-import scala.jdk.javaapi.CollectionConverters;
 import tlschannel.helpers.NonBlockingLoops;
 import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
@@ -46,11 +45,8 @@ public class NonBlockingTest {
                                 false,
                                 Option.apply(null));
 
-                        NonBlockingLoops.Report report = NonBlockingLoops.loop(
-                                CollectionConverters.asScala(Collections.singletonList(socketPair))
-                                        .toSeq(),
-                                dataSize,
-                                true);
+                        NonBlockingLoops.Report report =
+                                NonBlockingLoops.loop(Collections.singletonList(socketPair), dataSize, true);
                         System.out.printf("%5d -eng-> %5d -net-> %5d -eng-> %5d\n", size1, size2, size1, size2);
                         report.print();
                     }));
