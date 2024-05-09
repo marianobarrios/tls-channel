@@ -10,17 +10,13 @@ import java.nio.channels.Selector;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.SplittableRandom;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import scala.util.Random;
 import tlschannel.NeedsReadException;
 import tlschannel.NeedsTaskException;
 import tlschannel.NeedsWriteException;
@@ -186,7 +182,6 @@ public class NonBlockingLoops {
                     try {
                         if (endpoint instanceof WriterEndpoint) {
                             WriterEndpoint writer = (WriterEndpoint) endpoint;
-                            // rewriting do-while loop in a way compatible with Scala 23
                             do {
                                 if (renegotiationCount < maxRenegotiations) {
                                     if (random.nextBoolean()) {
@@ -212,7 +207,6 @@ public class NonBlockingLoops {
 
                         } else if (endpoint instanceof ReaderEndpoint) {
                             ReaderEndpoint reader = (ReaderEndpoint) endpoint;
-                            // rewriting do-while loop in a way compatible with Scala 23
                             do {
                                 reader.buffer.clear();
                                 int c = reader.socketGroup.external.read(reader.buffer);
