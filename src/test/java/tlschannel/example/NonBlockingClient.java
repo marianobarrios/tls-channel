@@ -45,8 +45,8 @@ public class NonBlockingClient {
             ClientTlsChannel.Builder builder = ClientTlsChannel.newBuilder(rawChannel, sslContext);
 
             // instantiate TlsChannel
-            try (TlsChannel tlsChannel = builder.build()) {
-
+            TlsChannel tlsChannel = builder.build();
+            try {
                 mainloop:
                 while (true) {
 
@@ -68,7 +68,6 @@ public class NonBlockingClient {
                             }
 
                         } else if (key.isReadable() || key.isWritable()) {
-
                             try {
                                 if (!requestSent) {
                                     // do HTTP request
@@ -76,7 +75,6 @@ public class NonBlockingClient {
                                     if (requestBuffer.remaining() == 0) {
                                         requestSent = true;
                                     }
-
                                 } else {
                                     // handle HTTP response
                                     int c = tlsChannel.read(responseBuffer);
@@ -101,6 +99,8 @@ public class NonBlockingClient {
                         }
                     }
                 }
+            } finally {
+                tlsChannel.close();
             }
         }
     }
