@@ -276,7 +276,7 @@ TLS Channel requires Java 8 or newer.
 
 ### Size and Dependencies
 
-The library has no dependencies. The main jar file size is below 60 KB.
+The library has no dependencies. The main jar file size is below 65 KiB.
 
 ### Logging
 
