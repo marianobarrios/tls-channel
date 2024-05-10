@@ -20,10 +20,11 @@ import tlschannel.helpers.SslContextFactory;
 @TestInstance(Lifecycle.PER_CLASS)
 public class NullMultiNonBlockingTest {
 
+    private static final int dataSize = 10 * 1024 * 1024;
+    private static final int totalConnections = 50;
+
     private final SslContextFactory sslContextFactory = new SslContextFactory();
     private final SocketPairFactory factory = new SocketPairFactory(sslContextFactory.defaultContext());
-    private final int dataSize = 10 * 1024 * 1024;
-    private final int totalConnections = 50;
 
     @Test
     public void testRunTasksInNonBlockingLoop() {

@@ -132,14 +132,13 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
             return CompletableFuture.completedFuture(0);
         }
         FutureReadResult future = new FutureReadResult();
-        ReadOperation op = group.startRead(
+        future.op = group.startRead(
                 registeredSocket,
                 new ByteBufferSet(dst),
                 0,
                 TimeUnit.MILLISECONDS,
                 c -> future.complete((int) c),
                 future::completeExceptionally);
-        future.op = op;
         return future;
     }
 
@@ -209,14 +208,13 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
             return CompletableFuture.completedFuture(0);
         }
         FutureWriteResult future = new FutureWriteResult();
-        WriteOperation op = group.startWrite(
+        future.op = group.startWrite(
                 registeredSocket,
                 new ByteBufferSet(src),
                 0,
                 TimeUnit.MILLISECONDS,
                 c -> future.complete((int) c),
                 future::completeExceptionally);
-        future.op = op;
         return future;
     }
 
@@ -229,7 +227,7 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
     }
 
     /**
-     * Tells whether or not this channel is open.
+     * Tells whether this channel is open.
      *
      * @return <code>true</code> if, and only if, this channel is open
      */
