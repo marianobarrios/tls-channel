@@ -26,6 +26,8 @@ public class SocketPairFactory {
 
     private static final Logger logger = Logger.getLogger(SocketPairFactory.class.getName());
 
+    public static final String NULL_CIPHER = "null-cipher";
+
     private static final int maxAllowedKeyLength;
 
     static {
@@ -247,7 +249,7 @@ public class SocketPairFactory {
                 }
 
                 SSLEngine clientEngine;
-                if (cipher == null) {
+                if (cipher.equals(Optional.of(NULL_CIPHER))) {
                     clientEngine = new NullSslEngine();
                 } else {
                     clientEngine = createClientSslEngine(cipher, chosenPort);
@@ -262,7 +264,7 @@ public class SocketPairFactory {
                         .build();
 
                 ServerTlsChannel.Builder serverChannelBuilder;
-                if (cipher == null) {
+                if (cipher.equals(Optional.of(NULL_CIPHER))) {
                     serverChannelBuilder = ServerTlsChannel.newBuilder(plainServer, new NullSslContext());
                 } else {
                     serverChannelBuilder = ServerTlsChannel.newBuilder(
@@ -363,7 +365,7 @@ public class SocketPairFactory {
                 rawServer.configureBlocking(false);
 
                 SSLEngine clientEngine;
-                if (cipher == null) {
+                if (cipher.equals(Optional.of(NULL_CIPHER))) {
                     clientEngine = new NullSslEngine();
                 } else {
                     clientEngine = createClientSslEngine(cipher, chosenPort);
@@ -380,7 +382,7 @@ public class SocketPairFactory {
                         .build();
 
                 ServerTlsChannel.Builder serverChannelBuilder;
-                if (cipher == null) {
+                if (cipher.equals(Optional.of(NULL_CIPHER))) {
                     serverChannelBuilder = ServerTlsChannel.newBuilder(
                             new RandomChunkingByteChannel(rawServer, SocketPairFactory::getChunkingSize),
                             new NullSslContext());

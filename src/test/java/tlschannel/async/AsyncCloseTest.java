@@ -2,10 +2,12 @@ package tlschannel.async;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static tlschannel.helpers.SocketPairFactory.NULL_CIPHER;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -37,7 +39,7 @@ public class AsyncCloseTest implements AsyncTestBase {
     public void testClosingWhileReading() throws IOException, InterruptedException {
         for (int i = 0; i < repetitions; i++) {
             AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
-            AsyncSocketPair socketPair = factory.async(null, channelGroup, true, false);
+            AsyncSocketPair socketPair = factory.async(Optional.of(NULL_CIPHER), channelGroup, true, false);
 
             ByteBuffer readBuffer = ByteBuffer.allocate(bufferSize);
             Future<Integer> readFuture = socketPair.server.external.read(readBuffer);
@@ -75,7 +77,7 @@ public class AsyncCloseTest implements AsyncTestBase {
     public void testRawClosingWhileReading() throws IOException, InterruptedException {
         for (int i = 0; i < repetitions; i++) {
             AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
-            AsyncSocketPair socketPair = factory.async(null, channelGroup, true, false);
+            AsyncSocketPair socketPair = factory.async(Optional.of(NULL_CIPHER), channelGroup, true, false);
 
             ByteBuffer readBuffer = ByteBuffer.allocate(bufferSize);
             Future<Integer> readFuture = socketPair.server.external.read(readBuffer);

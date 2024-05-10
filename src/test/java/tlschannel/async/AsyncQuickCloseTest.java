@@ -2,10 +2,12 @@ package tlschannel.async;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static tlschannel.helpers.SocketPairFactory.NULL_CIPHER;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.junit.jupiter.api.Assertions;
@@ -36,7 +38,8 @@ public class AsyncQuickCloseTest implements AsyncTestBase {
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         for (int i = 1; i <= repetitions; i++) {
             // create (and register) channels and close immediately
-            tlschannel.helpers.SocketGroups.AsyncSocketPair socketPair = factory.async(null, channelGroup, true, false);
+            tlschannel.helpers.SocketGroups.AsyncSocketPair socketPair =
+                    factory.async(Optional.of(NULL_CIPHER), channelGroup, true, false);
             socketPair.server.external.close();
             socketPair.client.external.close();
 
@@ -62,7 +65,8 @@ public class AsyncQuickCloseTest implements AsyncTestBase {
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         for (int i = 1; i <= repetitions; i++) {
             // create (and register) channels and close immediately
-            tlschannel.helpers.SocketGroups.AsyncSocketPair socketPair = factory.async(null, channelGroup, true, false);
+            tlschannel.helpers.SocketGroups.AsyncSocketPair socketPair =
+                    factory.async(Optional.of(NULL_CIPHER), channelGroup, true, false);
             socketPair.server.plain.close();
             socketPair.client.plain.close();
 

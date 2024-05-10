@@ -1,5 +1,7 @@
 package tlschannel;
 
+import static tlschannel.helpers.SocketPairFactory.NULL_CIPHER;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -45,7 +47,7 @@ public class NullEngineTest {
         for (int size1 : sizes) {
             DynamicTest test = DynamicTest.dynamicTest(String.format("Testing sizes: size1=%s", size1), () -> {
                 SocketGroups.SocketPair socketPair = factory.nioNio(
-                        null,
+                        Optional.of(NULL_CIPHER),
                         Optional.of(new ChunkSizeConfig(
                                 new ChuckSizes(Optional.of(size1), Optional.empty()),
                                 new ChuckSizes(Optional.of(size1), Optional.empty()))),
@@ -70,7 +72,7 @@ public class NullEngineTest {
         for (int size1 : sizes) {
             DynamicTest test = DynamicTest.dynamicTest(String.format("Testing sizes: size1=%s", size1), () -> {
                 SocketGroups.SocketPair socketPair = factory.nioNio(
-                        null,
+                        Optional.of(NULL_CIPHER),
                         Optional.of(new ChunkSizeConfig(
                                 new ChuckSizes(Optional.of(size1), Optional.empty()),
                                 new ChuckSizes(Optional.of(size1), Optional.empty()))),
