@@ -1,6 +1,6 @@
 # TLS Channel
 
-TLS Channel is a library that implements a [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html) interface over a [TLS](https://tools.ietf.org/html/rfc5246) (Transport Layer Security) connection. It delegates all cryptographic operations to the standard Java TLS implementation: [SSLEngine](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLEngine.html); effectively hiding it behind an easy-to-use streaming API, that allows to securitize JVM applications with minimal added complexity.
+TLS Channel is a library that implements a [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html) interface over a [TLS](https://tools.ietf.org/html/rfc5246) (Transport Layer Security) connection. It delegates all cryptographic operations to the standard Java TLS implementation: [SSLEngine](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLEngine.html); effectively hiding it behind an easy-to-use streaming API, that allows to secure JVM applications with minimal added complexity.
 
 In other words, a simple library that allows the programmer to implement TLS using the same standard socket API used for plaintext, just like OpenSSL does for C, only for Java, filling a specially painful missing feature of the standard library.
 
@@ -95,7 +95,7 @@ I/O framework | [XNIO](http://xnio.jboss.org/) | [org.xnio.ssl.JsseStreamConduit
 HTTP server | [Tomcat](http://tomcat.apache.org/) | [org.apache.tomcat.util.net.SecureNio2Channel](http://svn.apache.org/viewvc/tomcat/trunk/java/org/apache/tomcat/util/net/SecureNio2Channel.java?view=markup)
 HTTP server | [OpenJDK](http://openjdk.java.net/) | [sun.net.httpserver.SSLStreams](http://cr.openjdk.java.net/~ohair/openjdk7/jdk7-build-copyright/webrev/jdk/src/share/classes/sun/net/httpserver/SSLStreams.java.html)
 HTTP client/server | [Apache HttpComponents](https://hc.apache.org/) | [org.apache.http.impl.nio.reactor.SSLIOSession](https://apache.googlesource.com/httpcore/+/trunk/httpcore5/src/main/java/org/apache/hc/core5/reactor/ssl/SSLIOSession.java)
-HTTP server | [Jetty](Jetty) | [org.eclipse.jetty.io.ssl.SslConnection](https://github.com/eclipse/jetty.project/blob/master/jetty-io/src/main/java/org/eclipse/jetty/io/ssl/SslConnection.java)
+HTTP server | [Jetty](https://eclipse.dev/jetty/) | [org.eclipse.jetty.io.ssl.SslConnection](https://github.com/eclipse/jetty.project/blob/master/jetty-io/src/main/java/org/eclipse/jetty/io/ssl/SslConnection.java)
 Distributed file system | [XtreemFS](http://www.xtreemfs.org/) | [org.xtreemfs.foundation.pbrpc.channels.SSLChannelIO](https://github.com/xtreemfs/xtreemfs/blob/master/java/xtreemfs-foundation/src/main/java/org/xtreemfs/foundation/pbrpc/channels/SSLChannelIO.java)
 Tor client | [Orchid](https://subgraph.com/orchid/index.en.html) | [com.subgraph.orchid.sockets.sslengine.SSLEngineManager](https://github.com/subgraph/Orchid/blob/master/src/com/subgraph/orchid/sockets/sslengine/SSLEngineManager.java)
 
@@ -123,8 +123,8 @@ Typical usage involved creating either a [ClientTlsChannel](https://oss.sonatype
 
 Complete examples:
 
-- [Simple blocking client](src/test/scala/tlschannel/example/SimpleBlockingClient.java)
-- [Simple blocking server](src/test/scala/tlschannel/example/SimpleBlockingServer.java)
+- [Simple blocking client](src/test/java/tlschannel/example/SimpleBlockingClient.java)
+- [Simple blocking server](src/test/java/tlschannel/example/SimpleBlockingServer.java)
 
 ### Non-blocking
 
@@ -149,8 +149,8 @@ try {
 
 Complete examples: 
 
-- [Non-blocking client](src/test/scala/tlschannel/example/NonBlockingClient.java)
-- [Non-blocking server](src/test/scala/tlschannel/example/NonBlockingServer.java)
+- [Non-blocking client](src/test/java/tlschannel/example/NonBlockingClient.java)
+- [Non-blocking server](src/test/java/tlschannel/example/NonBlockingServer.java)
 
 ### Off-loop tasks
 
@@ -184,7 +184,7 @@ try {
 }
 ```
 
-Complete example: [non-blocking server with off-loop tasks](src/test/scala/tlschannel/example/NonBlockingServerWithOffLoopTasks.java)
+Complete example: [non-blocking server with off-loop tasks](src/test/java/tlschannel/example/NonBlockingServerWithOffLoopTasks.java)
 
 ### Server Name Indication – server side
 
@@ -204,7 +204,7 @@ TlsChannel tlsChannel = ServerTlsChannel
     .build();
 ```
 
-Complete example: [SNI-aware server](src/test/scala/tlschannel/example/SniBlockingServer.java)
+Complete example: [SNI-aware server](src/test/java/tlschannel/example/SniBlockingServer.java)
 
 ### AsynchronousByteChannel
 
@@ -223,7 +223,7 @@ asyncTlsChannel.read(res, null, new CompletionHandler<Integer, Object>() {
 };
 ```
 
-Complete example: [Asynchronous channel server](src/test/scala/tlschannel/example/AsynchronousChannelServer.java)
+Complete example: [Asynchronous channel server](src/test/java/tlschannel/example/AsynchronousChannelServer.java)
 
 ## Buffers
 

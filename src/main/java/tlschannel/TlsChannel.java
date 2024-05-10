@@ -13,7 +13,7 @@ import javax.net.ssl.SSLSession;
  *
  * <p>Instances that implement this interface delegate all cryptographic operations to the standard
  * Java TLS implementation: SSLEngine; effectively hiding it behind an easy-to-use streaming API,
- * that allows to securitize JVM applications with minimal added complexity.
+ * that allows to secure JVM applications with minimal added complexity.
  *
  * <p>In other words, an interface that allows the programmer to have TLS using the same standard
  * socket API used for plaintext, just like OpenSSL does for C, only for Java.

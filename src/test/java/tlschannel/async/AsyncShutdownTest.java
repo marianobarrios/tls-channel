@@ -20,10 +20,10 @@ import tlschannel.helpers.SslContextFactory;
 @TestInstance(Lifecycle.PER_CLASS)
 public class AsyncShutdownTest implements AsyncTestBase {
 
+    private static final int bufferSize = 10;
+
     private final SslContextFactory sslContextFactory = new SslContextFactory();
     private final SocketPairFactory factory = new SocketPairFactory(sslContextFactory.defaultContext());
-
-    int bufferSize = 10;
 
     @Test
     public void testImmediateShutdown() throws InterruptedException {
