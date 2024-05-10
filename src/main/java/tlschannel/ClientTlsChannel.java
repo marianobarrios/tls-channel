@@ -56,7 +56,7 @@ public class ClientTlsChannel implements TlsChannel {
     }
 
     /**
-     * Create a new {@link Builder}, configured with a underlying {@link Channel} and a fixed {@link
+     * Create a new {@link Builder}, configured with an underlying {@link Channel} and a fixed {@link
      * SSLEngine}.
      *
      * @param underlying a reference to the underlying {@link ByteChannel}
@@ -68,7 +68,7 @@ public class ClientTlsChannel implements TlsChannel {
     }
 
     /**
-     * Create a new {@link Builder}, configured with a underlying {@link Channel} and a {@link
+     * Create a new {@link Builder}, configured with an underlying {@link Channel} and a {@link
      * SSLContext}.
      *
      * @param underlying a reference to the underlying {@link ByteChannel}

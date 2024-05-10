@@ -47,7 +47,7 @@ public class NonBlockingClient {
             // instantiate TlsChannel
             TlsChannel tlsChannel = builder.build();
             try {
-                mainloop:
+                mainLoop:
                 while (true) {
 
                     // loop blocks here
@@ -85,7 +85,7 @@ public class NonBlockingClient {
                                     }
                                     if (c < 0) {
                                         tlsChannel.close();
-                                        break mainloop;
+                                        break mainLoop;
                                     }
                                 }
                             } catch (NeedsReadException e) {

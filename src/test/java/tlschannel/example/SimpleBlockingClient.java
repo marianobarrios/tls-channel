@@ -44,7 +44,7 @@ public class SimpleBlockingClient {
                     // empty
                 }
                 res.flip();
-                System.out.println(utf8.decode(res).toString());
+                System.out.println(utf8.decode(res));
             }
         }
     }

@@ -112,23 +112,23 @@ public class InteroperabilityTest {
     // "old-io -> old-io (half duplex)
     @Test
     public void testOldToOldHalfDuplex() throws IOException, InterruptedException {
-        SocketGroups.OldOldSocketPair sockerPair = factory.oldOld(Optional.empty());
+        SocketGroups.OldOldSocketPair socketPair = factory.oldOld(Optional.empty());
         halfDuplexStream(
-                new SSLSocketWriter(sockerPair.server),
-                new SocketReader(sockerPair.client),
-                new SSLSocketWriter(sockerPair.client),
-                new SocketReader(sockerPair.server));
+                new SSLSocketWriter(socketPair.server),
+                new SocketReader(socketPair.client),
+                new SSLSocketWriter(socketPair.client),
+                new SocketReader(socketPair.server));
     }
 
     // old-io -> old-io (full duplex)
     @Test
     public void testOldToOldFullDuplex() throws IOException, InterruptedException {
-        SocketGroups.OldOldSocketPair sockerPair = factory.oldOld(Optional.empty());
+        SocketGroups.OldOldSocketPair socketPair = factory.oldOld(Optional.empty());
         fullDuplexStream(
-                new SSLSocketWriter(sockerPair.server),
-                new SocketReader(sockerPair.client),
-                new SSLSocketWriter(sockerPair.client),
-                new SocketReader(sockerPair.server));
+                new SSLSocketWriter(socketPair.server),
+                new SocketReader(socketPair.client),
+                new SSLSocketWriter(socketPair.client),
+                new SocketReader(socketPair.server));
     }
 
     // NIO -> OLD IO

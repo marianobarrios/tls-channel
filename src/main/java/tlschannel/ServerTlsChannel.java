@@ -132,7 +132,7 @@ public class ServerTlsChannel implements TlsChannel {
     }
 
     /**
-     * Create a new {@link Builder}, configured with a underlying {@link Channel} and a fixed {@link
+     * Create a new {@link Builder}, configured with an underlying {@link Channel} and a fixed {@link
      * SSLContext}, which will be used to create the {@link SSLEngine}.
      *
      * @param underlying a reference to the underlying {@link ByteChannel}
@@ -144,9 +144,9 @@ public class ServerTlsChannel implements TlsChannel {
     }
 
     /**
-     * Create a new {@link Builder}, configured with a underlying {@link Channel} and a custom {@link
+     * Create a new {@link Builder}, configured with an underlying {@link Channel} and a custom {@link
      * SSLContext} factory, which will be used to create the context (in turn used to create the
-     * {@link SSLEngine}, as a function of the SNI received at the TLS connection start.
+     * {@link SSLEngine}), as a function of the SNI received at the TLS connection start.
      *
      * <p><b>Implementation note:</b><br>
      * Due to limitations of {@link SSLEngine}, configuring a {@link ServerTlsChannel} to select the
@@ -220,7 +220,7 @@ public class ServerTlsChannel implements TlsChannel {
     /**
      * Return the used {@link SSLContext}.
      *
-     * @return if context if present, of null if the TLS connection as not been initializer, or the
+     * @return context if present, or null if the TLS connection as not been initializer, or the
      *     SNI not received yet.
      */
     public SSLContext getSslContext() {

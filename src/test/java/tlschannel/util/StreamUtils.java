@@ -28,7 +28,7 @@ public class StreamUtils {
      * }</pre>
      *
      * <p>The resulting sequence may be empty if the {@code hasNext} predicate
-     * does not hold on the seed value.  Otherwise the first element will be the
+     * does not hold on the seed value. Otherwise, the first element will be the
      * supplied {@code seed} value, the next element (if present) will be the
      * result of applying the {@code next} function to the {@code seed} value,
      * and so on iteratively until the {@code hasNext} predicate indicates that

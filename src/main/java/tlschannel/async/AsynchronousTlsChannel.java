@@ -46,7 +46,7 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
     /**
      * Initializes a new instance of this class.
      *
-     * @param channelGroup group to associate new new channel to
+     * @param channelGroup group to associate new channel to
      * @param tlsChannel existing TLS channel to be used asynchronously
      * @param socketChannel underlying socket
      * @throws ClosedChannelException if any of the underlying channels are closed.

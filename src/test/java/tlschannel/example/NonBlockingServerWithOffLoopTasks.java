@@ -39,9 +39,9 @@ public class NonBlockingServerWithOffLoopTasks {
 
     private static final Charset utf8 = StandardCharsets.UTF_8;
 
-    private static Executor taskExecutor =
+    private static final Executor taskExecutor =
             Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    private static Set<SelectionKey> taskReadyKeys = ConcurrentHashMap.newKeySet();
+    private static final Set<SelectionKey> taskReadyKeys = ConcurrentHashMap.newKeySet();
 
     public static void main(String[] args) throws IOException, GeneralSecurityException {
 
@@ -131,7 +131,7 @@ public class NonBlockingServerWithOffLoopTasks {
         } catch (NeedsTaskException e) {
             taskExecutor.execute(() -> {
                 e.getTask().run();
-                // when the task finished, add it the the ready-set
+                // when the task finished, add it to the ready-set
                 taskReadyKeys.add(key);
                 // unblock the selector
                 selector.wakeup();

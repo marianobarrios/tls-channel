@@ -48,7 +48,7 @@ public class AsynchronousTlsChannelGroup {
         final SocketChannel socketChannel;
 
         /**
-         * Used to wait until the channel is effectively in the selector (which happens asynchronously
+         * Used to wait until the channel is effectively in the selector (which happens asynchronously)
          * to the initial registration.
          */
         final CountDownLatch registered = new CountDownLatch(1);
@@ -185,7 +185,7 @@ public class AsynchronousTlsChannelGroup {
         selectorThread.start();
     }
 
-    /** Creates an instance of this class, using as many thread as available processors. */
+    /** Creates an instance of this class, using as many threads as available processors. */
     public AsynchronousTlsChannelGroup() {
         this(Runtime.getRuntime().availableProcessors());
     }
@@ -356,7 +356,7 @@ public class AsynchronousTlsChannelGroup {
             while (shutdown == Shutdown.No
                     || shutdown == Shutdown.Wait && (!pendingRegistrations.isEmpty() || !registrations.isEmpty())) {
                 // most state-changing operations will wake the selector up, however, asynchronous closings
-                // of the channels won't, so we have to timeout to allow checking those cases
+                // of the channels won't, so we have to time out to allow checking those cases
                 int c = selector.select(100); // block
                 selectionCount.increment();
                 // avoid unnecessary creation of iterator object

@@ -71,7 +71,7 @@ public class SniBlockingServer {
                     ByteBuffer res = ByteBuffer.allocate(10000);
                     while (tlsChannel.read(res) != -1) {
                         res.flip();
-                        System.out.print(utf8.decode(res).toString());
+                        System.out.print(utf8.decode(res));
                         res.compact();
                     }
                 }
