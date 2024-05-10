@@ -67,7 +67,7 @@ public class AsynchronousChannelServer {
                     public void completed(Integer result, Object attachment) {
                         if (result != -1) {
                             res.flip();
-                            System.out.print(utf8.decode(res).toString());
+                            System.out.print(utf8.decode(res));
                             res.compact();
                             // repeat
                             asyncTlsChannel.read(res, null, this);

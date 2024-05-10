@@ -39,8 +39,8 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
     }
 
     /**
-     * Set the {@link BufferAllocator} to use for unencrypted data. By default a {@link
-     * HeapBufferAllocator} is used, as this buffers are used to supplement user-supplied ones when
+     * Set the {@link BufferAllocator} to use for unencrypted data. By default, a {@link
+     * HeapBufferAllocator} is used, as these buffers are used to supplement user-supplied ones when
      * dealing with too big a TLS record, that is, they operate entirely inside the JVM.
      *
      * @param bufferAllocator the buffer allocator
@@ -52,7 +52,7 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
     }
 
     /**
-     * Set the {@link BufferAllocator} to use for encrypted data. By default a {@link
+     * Set the {@link BufferAllocator} to use for encrypted data. By default, a {@link
      * DirectBufferAllocator} is used, as this data is usually read from or written to native sockets.
      *
      * @param bufferAllocator the buffer allocator
@@ -80,7 +80,7 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
      * Whether to release unused buffers in the mid of connections. Equivalent to OpenSSL's
      * SSL_MODE_RELEASE_BUFFERS.
      *
-     * <p>Default is to release. Releasing unused buffers is specially effective in the case case of
+     * <p>Default is to release. Releasing unused buffers is specially effective in the case of
      * idle long-lived connections, when the memory footprint can be reduced significantly. A
      * potential reason for setting this value to <code>false</code> is performance, since more
      * releases means more allocations, which have a cost. This is effectively a memory-time
@@ -98,7 +98,7 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
      * Whether to wait for TLS close confirmation when executing a local {@link TlsChannel#close()} on
      * the channel. If the underlying channel is blocking, setting this to <code>true</code> will
      * block (potentially until it times out, or indefinitely) the close operation until the
-     * counterpart confirms the close on their side (sending a close_notify alert. If the underlying
+     * counterpart confirms the close on their side (sending a close_notify alert). If the underlying
      * channel is non-blocking, setting this parameter to true is ineffective.
      *
      * <p>Setting this value to <code>true</code> emulates the behavior of {@link SSLSocket} when used

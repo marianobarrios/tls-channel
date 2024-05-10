@@ -6,7 +6,7 @@ import java.nio.channels.SocketChannel;
 
 /**
  * This exception signals the caller that the operation cannot continue because bytesProduced need
- * to be write to the underlying {@link ByteChannel}, the channel is non-blocking and there are no
+ * to be written to the underlying {@link ByteChannel}, the channel is non-blocking and there are no
  * buffer space available. The caller should try the operation again, either with the channel in
  * blocking mode of after ensuring that buffer space exists.
  *

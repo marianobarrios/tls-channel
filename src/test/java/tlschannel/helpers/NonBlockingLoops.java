@@ -199,8 +199,8 @@ public class NonBlockingLoops {
                                     int c = writer.socketGroup.external.write(writer.buffer);
                                     assertTrue(c >= 0); // the necessity of blocking is communicated with exceptions
                                 } finally {
-                                    int bytesWriten = writer.buffer.position() - oldPosition;
-                                    writer.remaining -= bytesWriten;
+                                    int bytesWritten = writer.buffer.position() - oldPosition;
+                                    writer.remaining -= bytesWritten;
                                 }
 
                             } while (writer.remaining > 0);

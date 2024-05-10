@@ -32,7 +32,7 @@ Being an API layer, TLS Channel *delegates all cryptographic operations to SSLEn
 
 ## Rationale
 
-The world's most used encryption protocol is TLS. Created by Netscape in 1994 as SSL (Secure Socket Layer), it experimented widespread adoption, which eventually let to its standardization. TLS works on top of the Transport Control Protocol (TCP), maintaining its core abstractions: two independent byte streams, one in each direction, with ordered at-most-once delivery. It can be argued that part of the success of TLS was due to its convenient programming interface, similar to the highly successful and familiar Berkeley Sockets. Currenty, there exist a few widely-used implementations:
+The world's most used encryption protocol is TLS. Created by Netscape in 1994 as SSL (Secure Socket Layer), it experimented widespread adoption, which eventually let to its standardization. TLS works on top of the Transport Control Protocol (TCP), maintaining its core abstractions: two independent byte streams, one in each direction, with ordered at-most-once delivery. It can be argued that part of the success of TLS was due to its convenient programming interface, similar to the highly successful and familiar Berkeley Sockets. Currently, there exist a few widely-used implementations:
 
 - The most used TLS library is [OpenSSL](https://www.openssl.org/). Written in C and (along with some forks) the *de facto* standard for C and C++. Also widely used in Python, PHP, Ruby and Node.js.
 - The Go language has its own implementation, package [crypto/tls](https://golang.org/pkg/crypto/tls/).
@@ -59,8 +59,8 @@ But no TLS support, which was only available in old-style sockets.
 
 Version 1.5 saw the advent of [SSLEngine](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLEngine.html) as the official way of doing TLS over NIO sockets. This API has been the official option for more than a decade. However, it has severe shortcomings:
 
-- No streaming support. SSLEngine does not do any I/O, or keep any buffers. It does all cryptographic operations on user-managed buffers (but, confusingly, at the same time keeps internal state associated with the TLS connection). This no-data but stateful API is just not what users expect or are used to, and indeed not what the rest of the industry has standarized on.
-- Even considering the constrains, the API is unnecessarily convoluted, with too big a surface, and many incorrect interactions just not prevented at compile-time. It's just extremely hard to use correctly.
+- No streaming support. SSLEngine does not do any I/O, or keep any buffers. It does all cryptographic operations on user-managed buffers (but, confusingly, at the same time keeps internal state associated with the TLS connection). This no-data but stateful API is just not what users expect or are used to, and indeed not what the rest of the industry has standardized on.
+- Even considering the constraints, the API is unnecessarily convoluted, with too big a surface, and many incorrect interactions just not prevented at compile-time. It's just extremely hard to use correctly.
 - No support for server-side SNI handling.
 
 #### What to do
@@ -132,7 +132,7 @@ Standard ByteChannel instances communicate the fact that operations would blockâ
 
 Ideally, a more complex return type would sufficeâ€”not merely an `int` but some object including more information. For instance, OpenSSL uses special error codes for these conditions: `SSL_ERROR_WANT_READ` and `SSL_ERROR_WANT_WRITE`.
 
-In the case of TLS Channel, it is in practice necessary to maintain compatibility with the existing ByteChannel interface. That's why an somewhat unorthodox approach is used: when the operation would block, special exceptions are thrown: [NeedsReadException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/NeedsReadException.html) and [NeedsWriteException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/NeedsWriteException.html), meaning that the operation should be retried when the underlying channel is ready for reading or writing, respectively. 
+In the case of TLS Channel, it is in practice necessary to maintain compatibility with the existing ByteChannel interface. That's why a somewhat unorthodox approach is used: when the operation would block, special exceptions are thrown: [NeedsReadException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/NeedsReadException.html) and [NeedsWriteException](https://oss.sonatype.org/service/local/repositories/releases/archive/com/github/marianobarrios/tls-channel/0.1.0/tls-channel-0.1.0-javadoc.jar/!/index.html?tlschannel/NeedsWriteException.html), meaning that the operation should be retried when the underlying channel is ready for reading or writing, respectively. 
 
 Typical usage inside a selector loop looks like this:
 

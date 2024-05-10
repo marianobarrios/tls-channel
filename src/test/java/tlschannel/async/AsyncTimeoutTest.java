@@ -24,8 +24,8 @@ import tlschannel.helpers.SslContextFactory;
 @TestInstance(Lifecycle.PER_CLASS)
 public class AsyncTimeoutTest implements AsyncTestBase {
 
-    SslContextFactory sslContextFactory = new SslContextFactory();
-    SocketPairFactory factory = new SocketPairFactory(sslContextFactory.defaultContext());
+    final SslContextFactory sslContextFactory = new SslContextFactory();
+    final SocketPairFactory factory = new SocketPairFactory(sslContextFactory.defaultContext());
 
     private static final int bufferSize = 10;
 

@@ -18,7 +18,7 @@ import javax.net.ssl.SSLSession;
  * <p>In other words, an interface that allows the programmer to have TLS using the same standard
  * socket API used for plaintext, just like OpenSSL does for C, only for Java.
  *
- * <p>Note that this is an API adapter, not a cryptographic implementation: with the exception of a
+ * <p>Note that this is an API adapter, not a cryptographic implementation: except for a
  * few bytesProduced of parsing at the beginning of the connection, to look for the SNI, the whole
  * protocol implementation is done by the SSLEngine. Both the SSLContext and SSLEngine are supplied
  * by the client; these classes are the ones responsible for protocol configuration, including
@@ -114,9 +114,9 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
      * its limit will not have changed.
      *
      * <p>A read operation might not fill the buffer, and in fact it might not read any bytesProduced
-     * at all. Whether or not it does so depends upon the nature and state of the underlying channel.
+     * at all. Whether it does so depends upon the nature and state of the underlying channel.
      * It is guaranteed, however, that if a channel is in blocking mode and there is at least one byte
-     * remaining in the buffer then this method will block until at least one byte is read. On the
+     * remaining in the buffer, then this method will block until at least one byte is read. On the
      * other hand, if the underlying channel is in non-blocking mode then a {@link
      * WouldBlockException} may be thrown. Note that this also includes the possibility of a {@link
      * NeedsWriteException}, due to the fact that, during a TLS handshake, bytesProduced need to be
@@ -252,7 +252,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
      * <p>See {@link GatheringByteChannel#write(ByteBuffer[], int, int)} for more details of the
      * meaning of this signature.
      *
-     * <p>This method behaves slightly different than the interface specification, with respect to
+     * <p>This method behaves slightly different from the interface specification, with respect to
      * non-blocking responses, see {@link #write(ByteBuffer)} for more details.
      *
      * @param srcs The buffers from which bytesProduced are to be retrieved
@@ -287,7 +287,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
      *
      * </blockquote>
      *
-     * This method behaves slightly different than the interface specification, with respect to
+     * This method behaves slightly different from the interface specification, with respect to
      * non-blocking responses, see {@link #write(ByteBuffer)} for more details.
      *
      * @param srcs The buffers from which bytesProduced are to be retrieved
@@ -310,7 +310,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
      * <p>See {@link ScatteringByteChannel#read(ByteBuffer[], int, int)} for more details of the
      * meaning of this signature.
      *
-     * <p>This method behaves slightly different than the interface specification, with respect to
+     * <p>This method behaves slightly different from the interface specification, with respect to
      * non-blocking responses, see {@link #read(ByteBuffer)} for more details.
      *
      * @param dsts The buffers into which bytesProduced are to be transferred
@@ -346,7 +346,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
      *
      * </blockquote>
      *
-     * <p>This method behaves slightly different than the interface specification, with respect to
+     * <p>This method behaves slightly different from the interface specification, with respect to
      * non-blocking responses, see {@link #read(ByteBuffer)} for more details.
      *
      * @param dsts The buffers into which bytesProduced are to be transferred
@@ -369,7 +369,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
      * done. The exact behavior can be configured using the {@link
      * TlsChannelBuilder#withWaitForCloseConfirmation}.
      *
-     * <p>The default behavior mimics what happens in a normal (that is, non layered) {@link
+     * <p>The default behavior mimics what happens in a normal (that is, non-layered) {@link
      * javax.net.ssl.SSLSocket#close()}.
      *
      * <p>For finer control of the TLS close, use {@link #shutdown()}
@@ -390,7 +390,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
      * used for more communications, the complete shutdown procedure (bidirectional "close notify"
      * alerts) must be performed, so that the peers stay synchronized.
      *
-     * <p>This class supports both uni- and bidirectional shutdown by its 2 step behavior, using this
+     * <p>This class supports both uni- and bidirectional shutdown by its 2-step behavior, using this
      * method.
      *
      * <p>When this is the first party to send the "close notify" alert, this method will only send
@@ -400,7 +400,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
      * for the peer's "close notify" shutdown alert. On success, the second call will return <code>
      * true</code>.
      *
-     * <p>If the peer already sent the "close notify" alert and it was already processed implicitly
+     * <p>If the peer already sent the "close notify" alert, and it was already processed implicitly
      * inside a read operation, the {@link #shutdownReceived()} flag is already set. This method will
      * then send the "close notify" alert, set the {@link #shutdownSent()} flag and immediately return
      * <code>true</code>. It is therefore recommended to check the return value of this method and
