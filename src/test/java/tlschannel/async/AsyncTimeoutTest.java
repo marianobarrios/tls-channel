@@ -1,11 +1,13 @@
 package tlschannel.async;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static tlschannel.helpers.SocketPairFactory.NULL_CIPHER;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +41,7 @@ public class AsyncTimeoutTest implements AsyncTestBase {
         for (int i = 1; i <= repetitions; i++) {
             int socketPairCount = 50;
             List<SocketGroups.AsyncSocketPair> socketPairs =
-                    factory.asyncN(null, channelGroup, socketPairCount, true, false);
+                    factory.asyncN(Optional.of(NULL_CIPHER), channelGroup, socketPairCount, true, false);
             CountDownLatch latch = new CountDownLatch(socketPairCount * 2);
             for (SocketGroups.AsyncSocketPair pair : socketPairs) {
                 ByteBuffer writeBuffer = ByteBuffer.allocate(bufferSize);
@@ -120,7 +122,7 @@ public class AsyncTimeoutTest implements AsyncTestBase {
         for (int i = 1; i <= repetitions; i++) {
             int socketPairCount = 50;
             List<SocketGroups.AsyncSocketPair> socketPairs =
-                    factory.asyncN(null, channelGroup, socketPairCount, true, false);
+                    factory.asyncN(Optional.of(NULL_CIPHER), channelGroup, socketPairCount, true, false);
 
             for (SocketGroups.AsyncSocketPair pair : socketPairs) {
                 ByteBuffer writeBuffer = ByteBuffer.allocate(bufferSize);

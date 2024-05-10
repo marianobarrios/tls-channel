@@ -1,5 +1,7 @@
 package tlschannel;
 
+import static tlschannel.helpers.SocketPairFactory.NULL_CIPHER;
+
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
@@ -25,8 +27,8 @@ public class NullMultiNonBlockingTest {
 
     @Test
     public void testRunTasksInNonBlockingLoop() {
-        List<SocketPair> pairs =
-                factory.nioNioN(null, totalConnections, Optional.empty(), true, false, Optional.empty());
+        List<SocketPair> pairs = factory.nioNioN(
+                Optional.of(NULL_CIPHER), totalConnections, Optional.empty(), true, false, Optional.empty());
         NonBlockingLoops.Report report = NonBlockingLoops.loop(pairs, dataSize, false);
         Assertions.assertEquals(0, report.asyncTasksRun);
     }

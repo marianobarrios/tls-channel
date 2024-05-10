@@ -1,6 +1,7 @@
 package tlschannel.async;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static tlschannel.helpers.SocketPairFactory.NULL_CIPHER;
 
 import java.util.List;
 import java.util.Optional;
@@ -69,7 +70,8 @@ public class AsyncTest implements AsyncTestBase {
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         int dataSize = 12 * 1024 * 1024;
         System.out.printf("data size: %d\n", dataSize);
-        List<AsyncSocketPair> socketPairs = factory.asyncN(null, channelGroup, socketPairCount, true, false);
+        List<AsyncSocketPair> socketPairs =
+                factory.asyncN(Optional.of(NULL_CIPHER), channelGroup, socketPairCount, true, false);
         AsyncLoops.Report report = AsyncLoops.loop(socketPairs, dataSize);
 
         shutdownChannelGroup(channelGroup);

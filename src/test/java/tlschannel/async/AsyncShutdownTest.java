@@ -3,10 +3,12 @@ package tlschannel.async;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static tlschannel.helpers.SocketPairFactory.NULL_CIPHER;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -29,7 +31,7 @@ public class AsyncShutdownTest implements AsyncTestBase {
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         int socketPairCount = 50;
         List<SocketGroups.AsyncSocketPair> socketPairs =
-                factory.asyncN(null, channelGroup, socketPairCount, true, false);
+                factory.asyncN(Optional.of(NULL_CIPHER), channelGroup, socketPairCount, true, false);
         for (SocketGroups.AsyncSocketPair pair : socketPairs) {
             ByteBuffer writeBuffer = ByteBuffer.allocate(bufferSize);
             pair.client.external.write(writeBuffer);
@@ -56,7 +58,7 @@ public class AsyncShutdownTest implements AsyncTestBase {
         AsynchronousTlsChannelGroup channelGroup = new AsynchronousTlsChannelGroup();
         int socketPairCount = 50;
         List<SocketGroups.AsyncSocketPair> socketPairs =
-                factory.asyncN(null, channelGroup, socketPairCount, true, false);
+                factory.asyncN(Optional.of(NULL_CIPHER), channelGroup, socketPairCount, true, false);
         for (SocketGroups.AsyncSocketPair pair : socketPairs) {
             ByteBuffer writeBuffer = ByteBuffer.allocate(bufferSize);
             pair.client.external.write(writeBuffer);
