@@ -2,18 +2,15 @@ plugins {
     id 'java'
     id 'signing'
     id 'maven-publish'
-    id "com.diffplug.spotless" version "6.25.0"
+    id "com.diffplug.spotless" version "6.25.0" apply false
     id "com.github.spotbugs" version "6.0.14"
 }
 
-var javaToolchain = System.getenv('JAVA_TOOLCHAIN')
+var javaToolchainStr = System.getenv('JAVA_TOOLCHAIN')
+var javaToolchain = javaToolchainStr == null ? null : Integer.parseInt(javaToolchainStr)
 
-java {
-    if (javaToolchain != null) {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(javaToolchain)
-        }
-    }
+if (javaToolchain >= 21) {
+    apply plugin: 'com.diffplug.spotless'
 }
 
 compileJava {
@@ -49,10 +46,13 @@ dependencies {
 
 }
 
-spotless {
-    java {
-         // remove when spotless moved to this Palantir version
-         palantirJavaFormat("2.38.0")
+if (javaToolchain >= 21) {
+    spotless {
+        java {
+            // remove when spotless moved to this Palantir version
+            //palantirJavaFormat("2.38.0")
+            palantirJavaFormat()
+        }
     }
 }
 
