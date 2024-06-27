@@ -39,8 +39,8 @@ dependencies {
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.3.4'
 
     // pinned due to netty-tcnative-boringssl-static being pinned
-    testImplementation 'io.netty:netty-buffer:4.1.73.Final'
-    testImplementation 'io.netty:netty-handler:4.1.73.Final'
+    testImplementation 'io.netty:netty-buffer:4.1.111.Final'
+    testImplementation 'io.netty:netty-handler:4.1.111.Final'
     // pinned: https://github.com/netty/netty-tcnative/issues/716
     testRuntimeOnly 'io.netty:netty-tcnative-boringssl-static:2.0.47.Final'
 
