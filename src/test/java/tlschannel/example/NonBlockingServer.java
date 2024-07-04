@@ -88,22 +88,26 @@ public class NonBlockingServer {
 
                         // recover the TlsChannel from the attachment
                         TlsChannel tlsChannel = (TlsChannel) key.attachment();
+
                         try {
-                            // write received bytes in stdout
-                            int c = tlsChannel.read(buffer);
-                            if (c > 0) {
-                                buffer.flip();
-                                System.out.print(utf8.decode(buffer));
-                            }
-                            if (c < 0) {
-                                tlsChannel.close();
+                            // reading in a loop is necessary because not all bytes may be returned
+                            // the flow control exceptions, or -1, will stop it
+                            while (true) {
+                                // write received bytes in stdout
+                                int c = tlsChannel.read(buffer);
+                                if (c > 0) {
+                                    buffer.flip();
+                                    System.out.print(utf8.decode(buffer));
+                                }
+                                if (c < 0) {
+                                    tlsChannel.close();
+                                }
                             }
                         } catch (NeedsReadException e) {
                             key.interestOps(SelectionKey.OP_READ); // overwrites previous value
                         } catch (NeedsWriteException e) {
                             key.interestOps(SelectionKey.OP_WRITE); // overwrites previous value
                         }
-
                     } else {
                         throw new IllegalStateException();
                     }

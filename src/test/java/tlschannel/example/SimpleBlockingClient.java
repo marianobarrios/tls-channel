@@ -16,8 +16,9 @@ public class SimpleBlockingClient {
 
     private static final Charset utf8 = StandardCharsets.UTF_8;
 
-    public static final String domain = "www.howsmyssl.com";
-    public static final String httpLine = "GET https://www.howsmyssl.com/a/check HTTP/1.0\nHost: www.howsmyssl.com\n\n";
+    public static final String domain = "tcpbin.com";
+    public static final int port = 4243;
+    public static final String message = "the message\n";
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
 
@@ -26,7 +27,7 @@ public class SimpleBlockingClient {
 
         // connect raw socket channel normally
         try (SocketChannel rawChannel = SocketChannel.open()) {
-            rawChannel.connect(new InetSocketAddress(domain, 443));
+            rawChannel.connect(new InetSocketAddress(domain, port));
 
             // create TlsChannel builder, combining the raw channel and the SSLEngine, using minimal
             // options
@@ -36,7 +37,7 @@ public class SimpleBlockingClient {
             try (TlsChannel tlsChannel = builder.build()) {
 
                 // do HTTP interaction and print result
-                tlsChannel.write(ByteBuffer.wrap(httpLine.getBytes(StandardCharsets.US_ASCII)));
+                tlsChannel.write(ByteBuffer.wrap(message.getBytes(StandardCharsets.US_ASCII)));
                 ByteBuffer res = ByteBuffer.allocate(10000);
 
                 // being HTTP 1.0, the server will just close the connection at the end

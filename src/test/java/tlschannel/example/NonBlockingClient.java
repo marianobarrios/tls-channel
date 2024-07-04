@@ -23,7 +23,7 @@ public class NonBlockingClient {
 
     public static void main(String[] args) throws IOException, GeneralSecurityException {
 
-        ByteBuffer requestBuffer = ByteBuffer.wrap(SimpleBlockingClient.httpLine.getBytes(StandardCharsets.US_ASCII));
+        ByteBuffer requestBuffer = ByteBuffer.wrap(SimpleBlockingClient.message.getBytes(StandardCharsets.US_ASCII));
         ByteBuffer responseBuffer = ByteBuffer.allocate(1000); // use small buffer to cause selector loops
         boolean requestSent = false;
 
@@ -35,7 +35,7 @@ public class NonBlockingClient {
         // connect raw socket channel normally
         try (SocketChannel rawChannel = SocketChannel.open()) {
             rawChannel.configureBlocking(false);
-            rawChannel.connect(new InetSocketAddress(SimpleBlockingClient.domain, 443));
+            rawChannel.connect(new InetSocketAddress(SimpleBlockingClient.domain, SimpleBlockingClient.port));
 
             // Note that the raw channel (and not the wrapped one) is registered in the selector
             rawChannel.register(selector, SelectionKey.OP_CONNECT);
@@ -45,8 +45,7 @@ public class NonBlockingClient {
             ClientTlsChannel.Builder builder = ClientTlsChannel.newBuilder(rawChannel, sslContext);
 
             // instantiate TlsChannel
-            TlsChannel tlsChannel = builder.build();
-            try {
+            try (TlsChannel tlsChannel = builder.build()) {
                 mainLoop:
                 while (true) {
 
@@ -73,19 +72,24 @@ public class NonBlockingClient {
                                     // do HTTP request
                                     tlsChannel.write(requestBuffer);
                                     if (requestBuffer.remaining() == 0) {
+                                        tlsChannel.shutdown();
                                         requestSent = true;
                                     }
                                 } else {
-                                    // handle HTTP response
-                                    int c = tlsChannel.read(responseBuffer);
-                                    if (c > 0) {
-                                        responseBuffer.flip();
-                                        System.out.print(utf8.decode(responseBuffer));
-                                        responseBuffer.compact();
-                                    }
-                                    if (c < 0) {
-                                        tlsChannel.close();
-                                        break mainLoop;
+                                    // reading in a loop is necessary because not all bytes may be returned
+                                    // the flow control exceptions, or -1, will stop it
+                                    while (true) {
+                                        // handle HTTP response
+                                        int c = tlsChannel.read(responseBuffer);
+                                        if (c > 0) {
+                                            responseBuffer.flip();
+                                            System.out.print(utf8.decode(responseBuffer));
+                                            responseBuffer.compact();
+                                        }
+                                        if (c < 0) {
+                                            tlsChannel.close();
+                                            break mainLoop;
+                                        }
                                     }
                                 }
                             } catch (NeedsReadException e) {
@@ -99,8 +103,6 @@ public class NonBlockingClient {
                         }
                     }
                 }
-            } finally {
-                tlsChannel.close();
             }
         }
     }
