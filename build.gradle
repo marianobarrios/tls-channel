@@ -9,6 +9,7 @@ plugins {
 var javaToolchain = System.getenv('JAVA_TOOLCHAIN')
 
 java {
+    // If running from CI, the tool chain will be present
     if (javaToolchain != null) {
         toolchain {
             languageVersion = JavaLanguageVersion.of(javaToolchain)
@@ -16,15 +17,19 @@ java {
     }
 }
 
+println(javaToolchain)
+
 compileJava {
-    sourceCompatibility = '8'
-    targetCompatibility = '8'
+    if (javaToolchain != "8") {
+        options.release = 8
+    }
     options.compilerArgs.add('-Xlint')
 }
 
 compileTestJava {
-    sourceCompatibility = '8'
-    targetCompatibility = '8'
+    if (javaToolchain != "8") {
+        options.release = 8
+    }
     options.compilerArgs.add('-Xlint')
 }
 
