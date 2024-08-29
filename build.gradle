@@ -3,7 +3,7 @@ plugins {
     id 'signing'
     id 'maven-publish'
     id "com.diffplug.spotless" version "6.25.0"
-    id "com.github.spotbugs" version "6.0.20"
+    id "com.github.spotbugs" version "6.0.21"
 }
 
 var javaToolchain = System.getenv('JAVA_TOOLCHAIN')
