@@ -69,7 +69,7 @@ Of course, many programmers don't manipulate TCP or TLS streams directly, but us
 
 1. Use the old (implicitly deprecated) socket API. This implies being subject to its limitations, which means, among other things, only blocking behavior.
 2. Use SSLEngine directly. As said, this is a hard task, which is _very_ difficult to accomplish correctly, and in most cases completely out of proportion to the effort of writing the application code.
-3. Use some higher-level I/O library, like [Netty](https://netty.io/), [Project Grizzly](https://grizzly.java.net/), [Apache Mina](https://mina.apache.org/) or [JBoss XNIO](http://xnio.jboss.org/). They supply event architectures that intend to ease the task of writing programs that use non-blocking I/O. They are usually big framework-like libraries, sometimes themselves with dependencies. Using one of these is the path chosen by many, but it is not an option if the programmer cannot commit to a particular event architecture, couple the application code to an idiosyncratic library, or include a big dependency.
+3. Use some higher-level I/O library, like [Netty](https://netty.io/), [Project Grizzly](https://javaee.github.io/grizzly/), [Apache Mina](https://mina.apache.org/) or [JBoss XNIO](http://xnio.jboss.org/). They supply event architectures that intend to ease the task of writing programs that use non-blocking I/O. They are usually big framework-like libraries, sometimes themselves with dependencies. Using one of these is the path chosen by many, but it is not an option if the programmer cannot commit to a particular event architecture, couple the application code to an idiosyncratic library, or include a big dependency.
 
 All three alternatives have been taken by many Java libraries and applications, with no clear preference among leading open-source Java projects. Even though these options can work reasonable well, there was still no clear and standard solution.
 
@@ -88,7 +88,7 @@ The feat of using SSLEngine directly is indeed performed by several projects, bo
 
 Type | Project | Package/class
 --- | --- | ---
-I/O framework | [Grizzly](https://grizzly.java.net/) | [org.glassfish.grizzly.ssl](https://java.net/projects/grizzly/sources/git/show/modules/grizzly/src/main/java/org/glassfish/grizzly/ssl)
+I/O framework | [Grizzly](https://grizzly.java.net/) | [org.glassfish.grizzly.ssl](https://github.com/eclipse-ee4j/grizzly/tree/master/modules/grizzly/src/main/java/org/glassfish/grizzly/ssl)
 I/O framework | [Netty](https://netty.io/) | [io.netty.handler.ssl.SslHandler](https://github.com/netty/netty/blob/netty-4.1.8.Final/handler/src/main/java/io/netty/handler/ssl/SslHandler.java)
 I/O framework | [Apache Mina](https://mina.apache.org/) | [org.apache.mina.filter.ssl.SslHandler](https://git-wip-us.apache.org/repos/asf?p=mina.git;a=blob;f=mina-core/src/main/java/org/apache/mina/filter/ssl/SslHandler.java;h=8cd1c802090c3e5c05a4f010e6502aabf23db7de;hb=c1064a07693af79aa4c5069c0046cc462a8d0f68)
 I/O framework | [XNIO](http://xnio.jboss.org/) | [org.xnio.ssl.JsseStreamConduit](https://github.com/xnio/xnio/blob/3.x/api/src/main/java/org/xnio/ssl/JsseStreamConduit.java)
@@ -176,7 +176,7 @@ try {
     taskExecutor.execute(() -> {
         e.getTask().run();
         // when the task finished, add it to the ready-set
-        // taskReadyKeys should be a concurrent set that shoud be checked 
+        // taskReadyKeys should be a concurrent set that should be checked
         // and emptied as part of the selector loop
         taskReadyKeys.add(key);
         selector.wakeup(); // unblock the selector
