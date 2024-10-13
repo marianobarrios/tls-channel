@@ -6,7 +6,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import javax.net.ssl.SSLContext;
@@ -27,8 +26,6 @@ import tlschannel.async.AsynchronousTlsChannelGroup;
  */
 public class AsynchronousChannelServer {
 
-    private static final Charset utf8 = StandardCharsets.UTF_8;
-
     public static void main(String[] args) throws IOException, GeneralSecurityException {
 
         // initialize the SSLContext, a configuration holder, reusable object
@@ -48,15 +45,13 @@ public class AsynchronousChannelServer {
                 SocketChannel rawChannel = serverSocket.accept();
                 rawChannel.configureBlocking(false);
 
-                // create TlsChannel builder, combining the raw channel and the SSLEngine, using minimal
-                // options
+                // create TlsChannel builder, combining the raw channel and the SSLEngine, using minimal options
                 ServerTlsChannel.Builder builder = ServerTlsChannel.newBuilder(rawChannel, sslContext);
 
                 // instantiate TlsChannel
                 TlsChannel tlsChannel = builder.build();
 
-                // build asynchronous channel, based in the TLS channel and associated with the global
-                // group.
+                // build asynchronous channel, based in the TLS channel and associated with the global group.
                 AsynchronousTlsChannel asyncTlsChannel =
                         new AsynchronousTlsChannel(channelGroup, tlsChannel, rawChannel);
 
@@ -67,7 +62,7 @@ public class AsynchronousChannelServer {
                     public void completed(Integer result, Object attachment) {
                         if (result != -1) {
                             res.flip();
-                            System.out.print(utf8.decode(res));
+                            System.out.print(StandardCharsets.UTF_8.decode(res));
                             res.compact();
                             // repeat
                             asyncTlsChannel.read(res, null, this);

@@ -5,7 +5,6 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Optional;
@@ -24,8 +23,6 @@ import tlschannel.TlsChannel;
  * </code>
  */
 public class SniBlockingServer {
-
-    private static final Charset utf8 = StandardCharsets.UTF_8;
 
     public static void main(String[] args) throws IOException, GeneralSecurityException {
 
@@ -71,7 +68,7 @@ public class SniBlockingServer {
                     ByteBuffer res = ByteBuffer.allocate(10000);
                     while (tlsChannel.read(res) != -1) {
                         res.flip();
-                        System.out.print(utf8.decode(res));
+                        System.out.print(StandardCharsets.UTF_8.decode(res));
                         res.compact();
                     }
                 }

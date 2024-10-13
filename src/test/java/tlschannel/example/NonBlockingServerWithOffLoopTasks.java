@@ -7,7 +7,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Iterator;
@@ -37,8 +36,6 @@ import tlschannel.TlsChannel;
  */
 public class NonBlockingServerWithOffLoopTasks {
 
-    private static final Charset utf8 = StandardCharsets.UTF_8;
-
     private static final Executor taskExecutor =
             Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     private static final Set<SelectionKey> taskReadyKeys = ConcurrentHashMap.newKeySet();
@@ -54,7 +51,6 @@ public class NonBlockingServerWithOffLoopTasks {
             serverSocket.configureBlocking(false);
             Selector selector = Selector.open();
             serverSocket.register(selector, SelectionKey.OP_ACCEPT);
-
             while (true) {
 
                 // loop blocks here
@@ -119,7 +115,7 @@ public class NonBlockingServerWithOffLoopTasks {
             int c = tlsChannel.read(buffer);
             if (c > 0) {
                 buffer.flip();
-                System.out.print(utf8.decode(buffer));
+                System.out.print(StandardCharsets.UTF_8.decode(buffer));
             }
             if (c < 0) {
                 tlsChannel.close();

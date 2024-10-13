@@ -7,7 +7,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Iterator;
@@ -35,8 +34,6 @@ import tlschannel.TlsChannel;
  */
 public class NonBlockingServer {
 
-    private static final Charset utf8 = StandardCharsets.UTF_8;
-
     public static void main(String[] args) throws IOException, GeneralSecurityException {
 
         // initialize the SSLContext, a configuration holder, reusable object
@@ -48,7 +45,6 @@ public class NonBlockingServer {
             serverSocket.configureBlocking(false);
             Selector selector = Selector.open();
             serverSocket.register(selector, SelectionKey.OP_ACCEPT);
-
             while (true) {
 
                 // loop blocks here
@@ -56,12 +52,9 @@ public class NonBlockingServer {
 
                 Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
                 while (iterator.hasNext()) {
-
                     SelectionKey key = iterator.next();
                     iterator.remove();
-
                     if (key.isAcceptable()) {
-
                         // we have a new connection
 
                         ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
@@ -79,9 +72,7 @@ public class NonBlockingServer {
                         // reading, because TLS connections are initiated by clients.
                         SelectionKey newKey = rawChannel.register(selector, SelectionKey.OP_READ);
                         newKey.attach(tlsChannel);
-
                     } else if (key.isReadable() || key.isWritable()) {
-
                         // we have data (or buffer space) in existing connections
 
                         ByteBuffer buffer = ByteBuffer.allocate(10000);
@@ -93,7 +84,7 @@ public class NonBlockingServer {
                             int c = tlsChannel.read(buffer);
                             if (c > 0) {
                                 buffer.flip();
-                                System.out.print(utf8.decode(buffer));
+                                System.out.print(StandardCharsets.UTF_8.decode(buffer));
                             }
                             if (c < 0) {
                                 tlsChannel.close();
