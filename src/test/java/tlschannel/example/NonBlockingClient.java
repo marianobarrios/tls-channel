@@ -6,7 +6,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Iterator;
@@ -19,10 +18,7 @@ import tlschannel.TlsChannel;
 /** Client non-blocking example. Connects to a public TLS reporting service. */
 public class NonBlockingClient {
 
-    private static final Charset utf8 = StandardCharsets.UTF_8;
-
     public static void main(String[] args) throws IOException, GeneralSecurityException {
-
         ByteBuffer requestBuffer = ByteBuffer.wrap(SimpleBlockingClient.httpLine.getBytes(StandardCharsets.US_ASCII));
         ByteBuffer responseBuffer = ByteBuffer.allocate(1000); // use small buffer to cause selector loops
         boolean requestSent = false;
@@ -40,13 +36,11 @@ public class NonBlockingClient {
             // Note that the raw channel (and not the wrapped one) is registered in the selector
             rawChannel.register(selector, SelectionKey.OP_CONNECT);
 
-            // create TlsChannel builder, combining the raw channel and the SSLEngine, using minimal
-            // options
+            // create TlsChannel builder, combining the raw channel and the SSLEngine, using minimal options
             ClientTlsChannel.Builder builder = ClientTlsChannel.newBuilder(rawChannel, sslContext);
 
             // instantiate TlsChannel
-            TlsChannel tlsChannel = builder.build();
-            try {
+            try (TlsChannel tlsChannel = builder.build()) {
                 mainLoop:
                 while (true) {
 
@@ -55,18 +49,14 @@ public class NonBlockingClient {
 
                     Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
                     while (iterator.hasNext()) {
-
                         SelectionKey key = iterator.next();
                         iterator.remove();
-
                         if (key.isConnectable()) {
-
                             if (rawChannel.finishConnect()) {
                                 // the channel is registered for writing, because TLS connections are initiated by
                                 // clients.
                                 rawChannel.register(selector, SelectionKey.OP_WRITE);
                             }
-
                         } else if (key.isReadable() || key.isWritable()) {
                             try {
                                 if (!requestSent) {
@@ -80,7 +70,7 @@ public class NonBlockingClient {
                                     int c = tlsChannel.read(responseBuffer);
                                     if (c > 0) {
                                         responseBuffer.flip();
-                                        System.out.print(utf8.decode(responseBuffer));
+                                        System.out.print(StandardCharsets.UTF_8.decode(responseBuffer));
                                         responseBuffer.compact();
                                     }
                                     if (c < 0) {
@@ -93,14 +83,11 @@ public class NonBlockingClient {
                             } catch (NeedsWriteException e) {
                                 key.interestOps(SelectionKey.OP_WRITE); // overwrites previous value
                             }
-
                         } else {
                             throw new IllegalStateException();
                         }
                     }
                 }
-            } finally {
-                tlsChannel.close();
             }
         }
     }

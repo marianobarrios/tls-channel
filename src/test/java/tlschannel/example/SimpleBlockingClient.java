@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import javax.net.ssl.SSLContext;
@@ -13,8 +12,6 @@ import tlschannel.TlsChannel;
 
 /** Client example. Connects to a public TLS reporting service. */
 public class SimpleBlockingClient {
-
-    private static final Charset utf8 = StandardCharsets.UTF_8;
 
     public static final String domain = "www.howsmyssl.com";
     public static final String httpLine = "GET https://www.howsmyssl.com/a/check HTTP/1.0\nHost: www.howsmyssl.com\n\n";
@@ -28,8 +25,7 @@ public class SimpleBlockingClient {
         try (SocketChannel rawChannel = SocketChannel.open()) {
             rawChannel.connect(new InetSocketAddress(domain, 443));
 
-            // create TlsChannel builder, combining the raw channel and the SSLEngine, using minimal
-            // options
+            // create TlsChannel builder, combining the raw channel and the SSLEngine, using minimal options
             ClientTlsChannel.Builder builder = ClientTlsChannel.newBuilder(rawChannel, sslContext);
 
             // instantiate TlsChannel
@@ -44,7 +40,7 @@ public class SimpleBlockingClient {
                     // empty
                 }
                 res.flip();
-                System.out.println(utf8.decode(res));
+                System.out.println(StandardCharsets.UTF_8.decode(res));
             }
         }
     }
