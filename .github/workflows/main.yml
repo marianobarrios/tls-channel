@@ -11,7 +11,7 @@ jobs:
         java-version: [ 8, 11, 17, 21 ]
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           # The target JDK is used to build, the latest one to run Gradle itself
