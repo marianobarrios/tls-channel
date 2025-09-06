@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          # The target JDK is used to build, the latest one to run Gradle itself
+          # The target JDK is used to build, the latest one to run Gradle itself (we cannot use Java 8 for Gradle)
           java-version: |
             ${{ matrix.java-version }}
             21

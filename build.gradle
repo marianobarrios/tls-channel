@@ -46,13 +46,6 @@ dependencies {
 
 }
 
-spotless {
-    java {
-         // remove when spotless moved to this Palantir version
-         palantirJavaFormat("2.38.0")
-    }
-}
-
 spotbugs {
     ignoreFailures = false
     showProgress = true
