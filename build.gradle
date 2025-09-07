@@ -7,29 +7,16 @@ plugins {
     id "com.github.spotbugs" version "6.1.13"
 }
 
-var javaToolchain = System.getenv('JAVA_TOOLCHAIN')
-
-java {
-    // If running from CI, the tool chain will be present
-    if (javaToolchain != null) {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(javaToolchain)
-        }
-    }
-}
-
 compileJava {
-    if (javaToolchain != "8") {
-        options.release = 8
-    }
-    options.compilerArgs.add('-Xlint')
+    options.release = 8
+    // for some reason javac warns the previous option, disabling
+    options.compilerArgs.add('-Xlint:all,-options')
 }
 
 compileTestJava {
-    if (javaToolchain != "8") {
-        options.release = 8
-    }
-    options.compilerArgs.add('-Xlint')
+    options.release = 8
+    // for some reason javac warns the previous option, disabling
+    options.compilerArgs.add('-Xlint:all,-options')
 }
 
 repositories {
@@ -78,6 +65,11 @@ testing {
             targets {
                 all {
                     testTask.configure {
+                        javaLauncher.set(
+                                javaToolchains.launcherFor {
+                                    languageVersion.set(JavaLanguageVersion.of(System.getenv('TEST_JAVA_TOOLCHAIN')))
+                                }
+                        )
                         // override security properties enabling all options
                         systemProperty "java.security.properties", "java.security.override"
                         systemProperty "junit.jupiter.extensions.autodetection.enabled", "true"

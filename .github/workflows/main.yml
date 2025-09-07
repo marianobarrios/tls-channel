@@ -14,10 +14,11 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          # The target JDK is used to build, the latest one to run Gradle itself (we cannot use Java 8 for Gradle)
+          # Being in the last position, the latest JDK is used by default to build, the version from the matrix is made
+          # available to run the tests, to check compatibility.
           java-version: |
             ${{ matrix.java-version }}
             21
       - run: ./gradlew assemble check --info
         env:
-          JAVA_TOOLCHAIN: ${{ matrix.java-version }}
+          TEST_JAVA_TOOLCHAIN: ${{ matrix.java-version }}
