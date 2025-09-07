@@ -58,6 +58,8 @@ spotbugsTest {
     }
 }
 
+var testJavaToolchain = System.getenv('TEST_JAVA_TOOLCHAIN')
+
 testing {
     suites {
         test {
@@ -65,11 +67,13 @@ testing {
             targets {
                 all {
                     testTask.configure {
-                        javaLauncher.set(
-                                javaToolchains.launcherFor {
-                                    languageVersion.set(JavaLanguageVersion.of(System.getenv('TEST_JAVA_TOOLCHAIN')))
-                                }
-                        )
+                        if (testJavaToolchain != null) {
+                            javaLauncher.set(
+                                    javaToolchains.launcherFor {
+                                        languageVersion.set(JavaLanguageVersion.of(testJavaToolchain))
+                                    }
+                            )
+                        }
                         // override security properties enabling all options
                         systemProperty "java.security.properties", "java.security.override"
                         systemProperty "junit.jupiter.extensions.autodetection.enabled", "true"
