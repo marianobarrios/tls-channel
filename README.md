@@ -69,7 +69,7 @@ Of course, many programmers don't manipulate TCP or TLS streams directly but use
 
 1. Use the old (implicitly deprecated) socket API. This implies being subject to its limitations, which means, among other things, only blocking behavior.
 2. Use SSLEngine directly. As said, this is a difficult task, which is _very_ hard to accomplish correctly, and in most cases completely out of proportion to the effort of writing the application code.
-3. Use some higher-level I/O library, like [Netty](https://netty.io/), [Project Grizzly](https://javaee.github.io/grizzly/), [Apache Mina](https://mina.apache.org/), or [JBoss XNIO](http://xnio.jboss.org/). They supply event architectures that intend to ease the task of writing programs that use non-blocking I/O. They are usually big, framework-like libraries, sometimes with their own dependencies. Using one of these is the path chosen by many, but it is not an option if the programmer cannot commit to a particular event architecture, couple the application code to an idiosyncratic library, or include a big dependency.
+3. Use some higher-level I/O library, like [Netty](https://netty.io/), [Eclipse Grizzly](https://projects.eclipse.org/projects/ee4j.grizzly), [Apache Mina](https://mina.apache.org/), or [JBoss XNIO](https://xnio.jboss.org/). They supply event architectures that intend to ease the task of writing programs that use non-blocking I/O. They are usually big, framework-like libraries, sometimes with their own dependencies. Using one of these is the path chosen by many, but it is not an option if the programmer cannot commit to a particular event architecture, couple the application code to an idiosyncratic library, or include a big dependency.
 
 All three alternatives have been taken by many Java libraries and applications, with no clear preference among leading open-source Java projects. Even though these options can work reasonably well, there was still no clear and standard solution.
 
@@ -77,7 +77,7 @@ All three alternatives have been taken by many Java libraries and applications, 
 
 There is actually no strict need to use SSLEngine. The two most common alternatives are:
 
-- Using the [Java Native Interface](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/) (JNI) and calling OpenSSL (or another C library). The Tomcat project has a widely used "[native](http://tomcat.apache.org/native-doc/)" library that eases that task. While using native code can work, it has obvious shortcomings, especially regarding packaging, distribution, type compatibility, and runtime safety.
+- Using the [Java Native Interface](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/) (JNI) and calling OpenSSL (or another C library). The Tomcat project has a widely used "[native](https://tomcat.apache.org/native-doc/)" library that eases that task. While using native code can work, it has obvious shortcomings, especially regarding packaging, distribution, type compatibility, and runtime safety.
 - "[The Legion of the Bouncy Castle](https://www.bouncycastle.org/)" has a "lightweight" TLS API that supports streaming. This actually works, but only in blocking mode, effectively just like using the old SSLSocket API.
 
 Of course, these options imply using an alternative cryptographic implementation, which may not be desired.
