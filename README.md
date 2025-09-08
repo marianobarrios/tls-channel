@@ -84,19 +84,19 @@ Of course, these options imply using an alternative cryptographic implementation
 
 ### Existing open-source SSLEngine users
 
-The feat of using SSLEngine directly is indeed performed by several projects, both general-purpose I/O libraries and implementations of particular protocols. Below is an inevitably incomplete list of open-source examples. Every one in the list contains essentially the same general-purpose, SSLEngine-calling code, only embedded in custom types and semantics. That said, these examples, while not really suited for reuse, have been invaluable for both appreciating the difficulty of the task and also as a source of ideas.
+The feat of using SSLEngine directly is indeed performed by several projects, both general-purpose I/O libraries and implementations of particular protocols. Below is an inevitably incomplete list of open-source examples (some of them unmaintained). Every one in the list contains essentially the same general-purpose, SSLEngine-calling code, only embedded in custom types and semantics. That said, these examples, while not really suited for reuse, have been invaluable for both appreciating the difficulty of the task and also as a source of ideas.
 
 | Type | Project | Package/class |
 | --- | --- | --- |
-| I/O framework | [Grizzly](https://grizzly.java.net/) | [org.glassfish.grizzly.ssl](https://github.com/eclipse-ee4j/grizzly/tree/master/modules/grizzly/src/main/java/org/glassfish/grizzly/ssl) |
-| I/O framework | [Netty](https://netty.io/) | [io.netty.handler.ssl.SslHandler](https://github.com/netty/netty/blob/netty-4.1.8.Final/handler/src/main/java/io/netty/handler/ssl/SslHandler.java) |
-| I/O framework | [Apache Mina](https://mina.apache.org/) | [org.apache.mina.filter.ssl.SslHandler](https://git-wip-us.apache.org/repos/asf?p=mina.git;a=blob;f=mina-core/src/main/java/org/apache/mina/filter/ssl/SslHandler.java;h=8cd1c802090c3e5c05a4f010e6502aabf23db7de;hb=c1064a07693af79aa4c5069c0046cc462a8d0f68) |
-| I/O framework | [XNIO](http://xnio.jboss.org/) | [org.xnio.ssl.JsseStreamConduit](https://github.com/xnio/xnio/blob/3.x/api/src/main/java/org/xnio/ssl/JsseStreamConduit.java) |
-| HTTP server | [Tomcat](http://tomcat.apache.org/) | [org.apache.tomcat.util.net.SecureNio2Channel](http://svn.apache.org/viewvc/tomcat/trunk/java/org/apache/tomcat/util/net/SecureNio2Channel.java?view=markup) |
-| HTTP server | [OpenJDK](http://openjdk.java.net/) | [sun.net.httpserver.SSLStreams](http://cr.openjdk.java.net/~ohair/openjdk7/jdk7-build-copyright/webrev/jdk/src/share/classes/sun/net/httpserver/SSLStreams.java.html) |
-| HTTP client/server | [Apache HttpComponents](https://hc.apache.org/) | [org.apache.http.impl.nio.reactor.SSLIOSession](https://apache.googlesource.com/httpcore/+/trunk/httpcore5/src/main/java/org/apache/hc/core5/reactor/ssl/SSLIOSession.java) |
-| HTTP server | [Jetty](https://eclipse.dev/jetty/) | [org.eclipse.jetty.io.ssl.SslConnection](https://github.com/eclipse/jetty.project/blob/master/jetty-io/src/main/java/org/eclipse/jetty/io/ssl/SslConnection.java) |
-| Distributed file system | [XtreemFS](http://www.xtreemfs.org/) | [org.xtreemfs.foundation.pbrpc.channels.SSLChannelIO](https://github.com/xtreemfs/xtreemfs/blob/master/java/xtreemfs-foundation/src/main/java/org/xtreemfs/foundation/pbrpc/channels/SSLChannelIO.java) |
+| I/O framework | [Eclipse Grizzly](https://projects.eclipse.org/projects/ee4j.grizzly) | [org.glassfish.grizzly.ssl](https://github.com/eclipse-ee4j/glassfish-grizzly/tree/main/modules/grizzly/src/main/java/org/glassfish/grizzly/ssl) |
+| I/O framework | [Netty Project](https://netty.io/) | [io.netty.handler.ssl.SslHandler](https://github.com/netty/netty/blob/4.2/handler/src/main/java/io/netty/handler/ssl/SslHandler.java) |
+| I/O framework | [Apache Mina](https://mina.apache.org/) | [org.apache.mina.transport.nio](https://github.com/apache/mina/blob/trunk/core/src/main/java/org/apache/mina/transport/nio/SslHelper.java) |
+| I/O framework | [JBoss XNIO](https://xnio.jboss.org/) | [org.xnio.ssl.JsseStreamConduit](https://github.com/xnio/xnio/blob/3.x/api/src/main/java/org/xnio/ssl/JsseStreamConduit.java) |
+| HTTP server | [Apache Tomcat](https://tomcat.apache.org/) | [org.apache.tomcat.util.net.SecureNio2Channel](https://github.com/apache/tomcat/blob/main/java/org/apache/tomcat/util/net/SecureNioChannel.java) |
+| HTTP server | [OpenJDK](http://openjdk.java.net/) | [sun.net.httpserver.SSLStreams](https://github.com/openjdk/jdk/blob/master/src/jdk.httpserver/share/classes/sun/net/httpserver/SSLStreams.java) |
+| HTTP client/server | [Apache HttpComponents](https://hc.apache.org/) | [org.apache.hc.core5.reactor.ssl.SSLIOSession](https://github.com/apache/httpcomponents-core/blob/master/httpcore5/src/main/java/org/apache/hc/core5/reactor/ssl/SSLIOSession.java) |
+| HTTP server | [Eclipse Jetty](https://jetty.org/) | [org.eclipse.jetty.io.ssl.SslConnection](https://github.com/jetty/jetty.project/blob/jetty-12.1.x/jetty-core/jetty-io/src/main/java/org/eclipse/jetty/io/ssl/SslConnection.java) |
+| Distributed file system | [XtreemFS](https://www.xtreemfs.org/) | [org.xtreemfs.foundation.pbrpc.channels.SSLChannelIO](https://github.com/xtreemfs/xtreemfs/blob/master/java/xtreemfs-foundation/src/main/java/org/xtreemfs/foundation/pbrpc/channels/SSLChannelIO.java) |
 | Tor client | [Orchid](https://subgraph.com/orchid/index.en.html) | [com.subgraph.orchid.sockets.sslengine.SSLEngineManager](https://github.com/subgraph/Orchid/blob/master/src/com/subgraph/orchid/sockets/sslengine/SSLEngineManager.java) |
 
 ## Usage
