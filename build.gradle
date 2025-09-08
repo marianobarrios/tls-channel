@@ -16,7 +16,7 @@ compileJava {
 compileTestJava {
     options.release = 8
     // for some reason javac warns the previous option, disabling
-    options.compilerArgs.add('-Xlint:all,-options')
+    options.compilerArgs.add('-Xlint:all,-options,-try')
 }
 
 repositories {
