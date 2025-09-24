@@ -3,7 +3,7 @@ plugins {
     id 'jvm-test-suite'
     id 'signing'
     id 'maven-publish'
-    id "com.diffplug.spotless" version "7.2.1"
+    id "com.diffplug.spotless" version "8.0.0"
     id "com.github.spotbugs" version "6.4.2"
 }
 
