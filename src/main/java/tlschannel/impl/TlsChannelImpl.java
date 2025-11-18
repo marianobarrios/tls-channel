@@ -336,7 +336,7 @@ public class TlsChannelImpl implements ByteChannel {
         logger.log(Level.FINEST, "Reading from channel");
         int c = readChannel.read(buffer); // IO block
         if (logger.isLoggable(Level.FINEST)) {
-            logger.log(Level.FINEST, "Read from channel; response: {}, buffer: {}", new Object[] {c, buffer});
+            logger.log(Level.FINEST, "Read from channel; response: {0}, buffer: {1}", new Object[] {c, buffer});
         }
         if (c == -1) {
             throw new EofException();
