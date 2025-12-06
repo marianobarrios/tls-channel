@@ -15,10 +15,6 @@ import java.nio.channels.ByteChannel;
 public abstract class TlsChannelFlowControlException extends IOException {
     private static final long serialVersionUID = -2394919487958591959L;
 
-    public TlsChannelFlowControlException() {
-        super();
-    }
-
     /** For efficiency, override this method to do nothing. */
     @Override
     public Throwable fillInStackTrace() {
