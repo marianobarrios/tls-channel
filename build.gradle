@@ -79,7 +79,7 @@ testing {
         test {
             useJUnitJupiter()
             targets {
-                all {
+                configureEach {
                     testTask.configure {
                         if (testJavaToolchain != null) {
                             javaLauncher.set(
@@ -109,7 +109,7 @@ java {
 }
 
 // see tlschannel.AllocationTest for comment about this
-task allocationTest(type: JavaExec) {
+tasks.register('allocationTest', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
     mainClass = 'tlschannel.AllocationTest'
     jvmArgs = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseEpsilonGC']

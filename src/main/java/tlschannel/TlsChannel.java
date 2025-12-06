@@ -111,7 +111,7 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
      * its limit will not have changed.
      *
      * <p>A read operation might not fill the buffer, and in fact it might not read any bytesProduced
-     * at all. Whether it does so depends upon the nature and state of the underlying channel.
+     * at all. Whether it does so, depends upon the nature and state of the underlying channel.
      * It is guaranteed, however, that if a channel is in blocking mode and there is at least one byte
      * remaining in the buffer, then this method will block until at least one byte is read. On the
      * other hand, if the underlying channel is in non-blocking mode then a {@link
@@ -158,13 +158,13 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
      * changed.
      *
      * <p>If the underlying channel is in blocking mode, a write operation will return only after
-     * writing all of the <i>r</i> requested bytesProduced. On the other hand, if it is in
-     * non-blocking mode, this operation may write only some of the bytesProduced or possibly none at
-     * all, in this case a {@link WouldBlockException} will be thrown. Note that this also includes
-     * the possibility of a {@link NeedsReadException}, due to the fact that, during a TLS handshake,
-     * bytes need to be read from the underlying channel. In any case, after a {@link
-     * WouldBlockException}, the operation should be retried when the underlying channel is ready (for
-     * reading or writing, depending on the subclass).
+     * writing all the <i>r</i> requested bytesProduced. On the other hand, if it is in non-blocking
+     * mode, this operation may write only some of the bytesProduced or possibly none at all, in this
+     * case a {@link WouldBlockException} will be thrown. Note that this also includes the possibility
+     * of a {@link NeedsReadException}, due to the fact that, during a TLS handshake, bytes need to be
+     * read from the underlying channel. In any case, after a {@link WouldBlockException}, the
+     * operation should be retried when the underlying channel is ready (for reading or writing,
+     * depending on the subclass).
      *
      * <p>If the channel is configured to not run tasks and one is due to run, a {@link
      * NeedsTaskException} will be thrown. In this case the operation should be retried after the task

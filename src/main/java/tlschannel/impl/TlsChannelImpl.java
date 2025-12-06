@@ -445,7 +445,7 @@ public class TlsChannelImpl implements ByteChannel {
             if (c == 0) {
                 /*
                  * If no bytesProduced were written, it means that the socket is
-                 * non-blocking and needs more buffer space, so stop the loop
+                 * non-blocking and needs buffer space, so stop the loop
                  */
                 throw new NeedsWriteException();
             }
