@@ -6,7 +6,11 @@ import java.util.function.Consumer;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
-/** Base class for builders of {@link TlsChannel}. */
+/**
+ * Base class for builders of {@link TlsChannel}.
+ *
+ * @param <T> the subtype (client or server)
+ */
 public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 
     final ByteChannel underlying;

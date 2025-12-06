@@ -19,6 +19,11 @@ public class NeedsTaskException extends TlsChannelFlowControlException {
     private static final long serialVersionUID = -936451835836926915L;
     private final transient Runnable task;
 
+    /**
+     * Creates this class registering the supplied {@link Runnable} as the needed task.
+     *
+     * @param task the needed task
+     */
     public NeedsTaskException(Runnable task) {
         this.task = task;
     }
