@@ -8,7 +8,7 @@ plugins {
 }
 
 group = 'com.github.marianobarrios'
-version = "0.10.0-SNAPSHOT"
+version = System.getenv('VERSION')
 
 var javaToolchain = System.getenv('JAVA_TOOLCHAIN')
 
