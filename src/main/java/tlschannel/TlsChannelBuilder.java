@@ -13,14 +13,17 @@ import javax.net.ssl.SSLSocket;
  */
 public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
 
+    private static final BufferAllocator defaultPlainBufferAllocator = new HeapBufferAllocator();
+    private static final BufferAllocator defaultEncryptedBufferAllocator = new HeapBufferAllocator();
+
     final ByteChannel underlying;
 
     // @formatter:off
     Consumer<SSLSession> sessionInitCallback = session -> {};
     // @formatter:on
     boolean runTasks = true;
-    BufferAllocator plainBufferAllocator = TlsChannel.defaultPlainBufferAllocator;
-    BufferAllocator encryptedBufferAllocator = TlsChannel.defaultEncryptedBufferAllocator;
+    BufferAllocator plainBufferAllocator = defaultPlainBufferAllocator;
+    BufferAllocator encryptedBufferAllocator = defaultEncryptedBufferAllocator;
     boolean releaseBuffers = true;
     boolean waitForCloseConfirmation = false;
 

@@ -68,10 +68,8 @@ public class SocketPairFactory {
     private final SSLSocketFactory sslSocketFactory;
     private final SSLServerSocketFactory sslServerSocketFactory;
 
-    private final TrackingAllocator globalPlainTrackingAllocator =
-            new TrackingAllocator(TlsChannel.defaultPlainBufferAllocator);
-    private final TrackingAllocator globalEncryptedTrackingAllocator =
-            new TrackingAllocator(TlsChannel.defaultEncryptedBufferAllocator);
+    private final TrackingAllocator globalPlainTrackingAllocator = new TrackingAllocator(new HeapBufferAllocator());
+    private final TrackingAllocator globalEncryptedTrackingAllocator = new TrackingAllocator(new HeapBufferAllocator());
 
     public SocketPairFactory(SSLContext sslContext, String serverName) {
         this.sslContext = sslContext;
