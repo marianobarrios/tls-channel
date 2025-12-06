@@ -1,13 +1,22 @@
 plugins {
     id 'java'
     id 'scala'
-    id 'signing'
+    id 'org.jreleaser' version '1.21.0'
     id 'maven-publish'
     id "com.diffplug.spotless" version "6.25.0"
     id "com.github.spotbugs" version "6.0.10"
 }
 
 var javaToolchain = System.getenv('JAVA_TOOLCHAIN')
+
+group = 'com.github.marianobarrios'
+//java {
+//    group {
+//        id 'com.github.marianobarrios'
+//    }
+//}
+
+version = "0.9.2"
 
 java {
     // If running from CI, the tool chain will be present
@@ -129,9 +138,9 @@ check.dependsOn allocationTest
 publishing {
     publications {
         tlschannel(MavenPublication) {
-            groupId = 'com.github.marianobarrios'
+            //groupId = 'com.github.marianobarrios'
             artifactId = 'tls-channel'
-            version = '0.9.1'
+            //version = '0.9.2'
             from components.java
             pom {
                 name = 'TLS Channel'
@@ -160,15 +169,26 @@ publishing {
     }
     repositories {
         maven {
-            url = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
-            credentials {
-                username = project.findProperty('sonatypeUsername')
-                password = project.findProperty('sonatypePassword')
+            url = layout.buildDirectory.dir('staging-deploy')
+        }
+    }
+}
+
+jreleaser {
+    signing {
+        active = 'ALWAYS'
+        armored = true
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                sonatype {
+                    active = 'RELEASE'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('build/staging-deploy')
+                }
             }
         }
     }
 }
 
-signing {
-    sign publishing.publications.tlschannel
-}
