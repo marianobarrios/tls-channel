@@ -12,14 +12,14 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v5
         with:
-          java-version: '25'
+          java-version: '21' # jReleaser not yet compatible with 25
           distribution: 'temurin'
 
       - name: Extract version from tag
         run: echo "VERSION=${GITHUB_REF_NAME}" >>$GITHUB_ENV
 
       - name: Release
-        run: ./gradlew jreleaserDeploy
+        run: ./gradlew publish jreleaserRelease
         env:
           VERSION: ${{ env.VERSION }}
           JRELEASER_GITHUB_TOKEN: ${{ secrets.JRELEASER_GITHUB_TOKEN }}
