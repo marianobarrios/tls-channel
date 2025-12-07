@@ -141,8 +141,8 @@ publishing {
                 }
                 scm {
                     connection = 'scm:git@github.com:marianobarrios/tlschannel.git'
-                    developerConnection = 'scm:git:ssh://example.com/my-library.git'
-                    url = 'scm:git@github.com:marianobarrios/tlschannel.git'
+                    developerConnection = 'scm:git@github.com:marianobarrios/tlschannel.git'
+                    url = 'https://github.com/marianobarrios/tls-channel'
                 }
             }
         }
