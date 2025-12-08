@@ -6,7 +6,7 @@ In other words, it is a simple library that allows the programmer to implement T
 
 [![Build Status](https://github.com/marianobarrios/tls-channel/actions/workflows/main.yml/badge.svg)](https://github.com/marianobarrios/tls-channel/actions)
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/tls-channel/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/tls-channel)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.marianobarrios/tls-channel.svg?label=Maven%20Central)](https://central.sonatype.com/search?namespace=com.github.marianobarrios&name=tls-channel&sort=name)
 [![Javadoc](https://javadoc.io/badge2/com.github.marianobarrios/tls-channel/javadoc.svg)](https://javadoc.io/doc/com.github.marianobarrios/tls-channel)
 
 ### Main features
