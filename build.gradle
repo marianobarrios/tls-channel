@@ -4,7 +4,7 @@ plugins {
     id "com.diffplug.spotless" version "7.2.1" // 8.1.0 conflicts with jreleaser
     id "com.github.spotbugs" version "6.4.8"
     id 'maven-publish'
-    id 'org.jreleaser' version '1.21.0'
+    id 'org.jreleaser' version '1.22.0'
 }
 
 group = 'com.github.marianobarrios'
