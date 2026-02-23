@@ -78,8 +78,8 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
                 new ByteBufferSet(dst),
                 0,
                 TimeUnit.MILLISECONDS,
-                c -> group.executor.submit(() -> handler.completed((int) c, attach)),
-                e -> group.executor.submit(() -> handler.failed(e, attach)));
+                c -> group.executor.execute(() -> handler.completed((int) c, attach)),
+                e -> group.executor.execute(() -> handler.failed(e, attach)));
     }
 
     @Override
@@ -95,8 +95,8 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
                 new ByteBufferSet(dst),
                 timeout,
                 unit,
-                c -> group.executor.submit(() -> handler.completed((int) c, attach)),
-                e -> group.executor.submit(() -> handler.failed(e, attach)));
+                c -> group.executor.execute(() -> handler.completed((int) c, attach)),
+                e -> group.executor.execute(() -> handler.failed(e, attach)));
     }
 
     @Override
@@ -121,8 +121,8 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
                 bufferSet,
                 timeout,
                 unit,
-                c -> group.executor.submit(() -> handler.completed(c, attach)),
-                e -> group.executor.submit(() -> handler.failed(e, attach)));
+                c -> group.executor.execute(() -> handler.completed(c, attach)),
+                e -> group.executor.execute(() -> handler.failed(e, attach)));
     }
 
     @Override
@@ -159,8 +159,8 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
                 new ByteBufferSet(src),
                 0,
                 TimeUnit.MILLISECONDS,
-                c -> group.executor.submit(() -> handler.completed((int) c, attach)),
-                e -> group.executor.submit(() -> handler.failed(e, attach)));
+                c -> group.executor.execute(() -> handler.completed((int) c, attach)),
+                e -> group.executor.execute(() -> handler.failed(e, attach)));
     }
 
     @Override
@@ -175,8 +175,8 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
                 new ByteBufferSet(src),
                 timeout,
                 unit,
-                c -> group.executor.submit(() -> handler.completed((int) c, attach)),
-                e -> group.executor.submit(() -> handler.failed(e, attach)));
+                c -> group.executor.execute(() -> handler.completed((int) c, attach)),
+                e -> group.executor.execute(() -> handler.failed(e, attach)));
     }
 
     @Override
@@ -198,8 +198,8 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
                 bufferSet,
                 timeout,
                 unit,
-                c -> group.executor.submit(() -> handler.completed(c, attach)),
-                e -> group.executor.submit(() -> handler.failed(e, attach)));
+                c -> group.executor.execute(() -> handler.completed(c, attach)),
+                e -> group.executor.execute(() -> handler.failed(e, attach)));
     }
 
     @Override
@@ -219,11 +219,11 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
     }
 
     private <A> void completeWithZeroInt(A attach, CompletionHandler<Integer, ? super A> handler) {
-        group.executor.submit(() -> handler.completed(0, attach));
+        group.executor.execute(() -> handler.completed(0, attach));
     }
 
     private <A> void completeWithZeroLong(A attach, CompletionHandler<Long, ? super A> handler) {
-        group.executor.submit(() -> handler.completed(0L, attach));
+        group.executor.execute(() -> handler.completed(0L, attach));
     }
 
     /**
