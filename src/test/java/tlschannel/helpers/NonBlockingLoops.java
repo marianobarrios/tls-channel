@@ -232,7 +232,7 @@ public class NonBlockingLoops {
                             readyTaskSockets.add(endpoint);
                             totalTaskTimeNanos.add(elapsed.toNanos());
                         };
-                        executor.submit(r);
+                        executor.execute(r);
                         taskCount += 1;
                     }
                 }
