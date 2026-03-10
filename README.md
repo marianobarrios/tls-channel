@@ -2,7 +2,7 @@
 
 TLS Channel is a library that implements a [ByteChannel](https://docs.oracle.com/javase/8/docs/api/java/nio/channels/ByteChannel.html) interface over a [TLS](https://tools.ietf.org/html/rfc5246) (Transport Layer Security) connection. It delegates all cryptographic operations to the standard Java TLS implementation, [SSLEngine](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLEngine.html), effectively hiding it behind an easy-to-use streaming API that allows JVM applications to be secured with minimal added complexity.
 
-In other words, it is a simple library that allows the programmer to implement TLS using the same standard socket API used for plaintext, much like OpenSSL does for C, but for Java. It fills a particularly painful missing feature of the standard library.
+In other words, it is a simple library that allows the programmer to implement TLS using the same standard socket API used for plaintext, much like OpenSSL does for C, but for Java. It fills a particularly painful gap in the standard library.
 
 [![Build Status](https://github.com/marianobarrios/tls-channel/actions/workflows/main.yml/badge.svg)](https://github.com/marianobarrios/tls-channel/actions)
 
@@ -32,7 +32,7 @@ Being an API layer, TLS Channel *delegates all cryptographic operations to SSLEn
 
 ## Rationale
 
-TLS is the world's most used encryption protocol. Created by Netscape in 1994 as SSL (Secure Socket Layer), it saw widespread adoption, which eventually led to its standardization. TLS works on top of the Transport Control Protocol (TCP), maintaining its core abstractions: two independent byte streams, one in each direction, with ordered at-most-once delivery. It can be argued that part of the success of TLS was due to its convenient programming interface, which is similar to the highly successful and familiar Berkeley Sockets. Currently, there are a few widely used implementations:
+TLS is the world's most used encryption protocol. Created by Netscape in 1994 as SSL (Secure Socket Layer), it saw widespread adoption, which eventually led to its standardization. TLS works on top of the Transmission Control Protocol (TCP), maintaining its core abstractions: two independent byte streams, one in each direction, with ordered at-most-once delivery. It can be argued that part of the success of TLS was due to its convenient programming interface, which is similar to the highly successful and familiar Berkeley Sockets. Currently, there are a few widely used implementations:
 
 - The most used TLS library is [OpenSSL](https://www.openssl.org/). Written in C (and, along with some forks, is the *de facto* standard for C and C++), it is also widely used in Python, PHP, Ruby, and Node.js.
 - The Go language has its own implementation, package [crypto/tls](https://golang.org/pkg/crypto/tls/).
@@ -156,7 +156,7 @@ Complete examples:
 
 Selector loops work under the assumption that they don't (mostly) block. This is enough when it is possible to have as many loops as CPU cores. However, Java selectors don't work very well with multiple threads, requiring complicated synchronization; this leads to them being used almost universally from a single thread.
 
-A single I/O thread is generally enough for plaintext connections. But TLS can be CPU-intensive, in particular asymmetric cryptography when establishing sessions. Fortunately, SSLEngine encapsulates those, returning [Runnable](https://docs.oracle.com/javase/8/docs/api/java/lang/Runnable.html) objects that the client code can run in any thread. TLS Channel can be configured to either run those as part of I/O operations (that is, in-thread)—the default behavior—or not, letting the calling code handle them. The latter option should be enabled at construction time:
+A single I/O thread is generally enough for plaintext connections. But TLS can be CPU-intensive, in particular, asymmetric cryptography when establishing sessions. Fortunately, SSLEngine encapsulates those, returning [Runnable](https://docs.oracle.com/javase/8/docs/api/java/lang/Runnable.html) objects that the client code can run in any thread. TLS Channel can be configured to either run those as part of I/O operations (that is, in-thread)—the default behavior—or not, letting the calling code handle them. The latter option should be enabled at construction time:
 
 ```java
 TlsChannel tlsChannel = ServerTlsChannel
@@ -253,7 +253,7 @@ Due to the minuscule performance penalty and significant security benefits, zero
 
 TLS Channel supports opportunistic buffer release, a feature similar to OpenSSL's `SSL_MODE_RELEASE_BUFFERS` option. If, after any operation, a buffer does not contain any pending bytes, it is released back to the pool. This feature can dramatically reduce memory consumption in the case of long-lived idle connections, which tends to happen when implementing server-side HTTPS.
 
-This option is enabled by default and could be disabled if desired:
+This option is enabled by default and can be disabled if desired:
 
 ```java
 TlsChannel tlsChannel = ServerTlsChannel
