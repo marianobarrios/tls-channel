@@ -203,7 +203,7 @@ public class ServerTlsChannel implements TlsChannel {
         inEncrypted = new BufferHolder(
                 "inEncrypted",
                 Optional.empty(),
-                encryptedBufAllocator,
+                this.encryptedBufAllocator,
                 TlsChannelImpl.buffersInitialSize,
                 TlsChannelImpl.maxTlsPacketSize,
                 false /* plainData */,
