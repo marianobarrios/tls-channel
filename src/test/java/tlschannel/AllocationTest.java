@@ -9,8 +9,8 @@ import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SslContextFactory;
 
 /**
- * Test to be run with no-op (Epsilon) GC, in order to measure GC footprint. It's in the form of a separate main method
- * in order to be run using its own VM.
+ * Test to be run with no-op (Epsilon) GC, in order to measure GC footprint. It is in the form of a separate main
+ * method in order to be run using its own VM.
  */
 class AllocationTest {
 
@@ -18,7 +18,7 @@ class AllocationTest {
     private static final SocketPairFactory factory = new SocketPairFactory(sslContextFactory.defaultContext());
     private static final int dataSize = 1_000_000;
 
-    /** Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+    /** Tests a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP).
      */
     public static void main(String[] args) {
 

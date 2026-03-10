@@ -27,7 +27,7 @@ public class TlsChannelImpl implements ByteChannel {
 
     public static final int buffersInitialSize = 4096;
 
-    /** Official TLS max data size is 2^14 = 16k. Use 1024 more to account for the overhead */
+    /** Official TLS max data size is 2^14 = 16k. Use 1024 more to account for overhead. */
     public static final int maxTlsPacketSize = 17 * 1024;
 
     /** Used to signal EOF conditions from the underlying channel */
@@ -108,7 +108,7 @@ public class TlsChannelImpl implements ByteChannel {
     private volatile boolean handshakeCompleted = false;
 
     /**
-     * Whether a IOException was received from the underlying channel or from the {@link SSLEngine}.
+     * Whether an IOException was received from the underlying channel or from the {@link SSLEngine}.
      */
     private volatile boolean invalid = false;
 
@@ -125,7 +125,7 @@ public class TlsChannelImpl implements ByteChannel {
     private final BufferHolder outEncrypted;
 
     /**
-     * Reference to the current read buffer supplied by the client this field is only valid during a
+     * Reference to the current read buffer supplied by the client. This field is only valid during a
      * read operation. This field is used instead of {@link #inPlain} in order to avoid copying
      * returned bytes when possible.
      */
@@ -351,7 +351,7 @@ public class TlsChannelImpl implements ByteChannel {
     public long write(ByteBufferSet source) throws IOException {
         /*
          * Note that we should enter the write loop even in the case that the source buffer has no remaining bytes,
-         * as it could be the case, in non-blocking usage, that the user is forced to call write again after the
+         * as it could be the case in non-blocking usage that the user is forced to call write again after the
          * underlying channel is available for writing, just to write pending encrypted bytes.
          */
         handshake();
@@ -449,15 +449,15 @@ public class TlsChannelImpl implements ByteChannel {
                  */
                 throw new NeedsWriteException();
             }
-            // blocking SocketChannels can write less than all the bytesProduced
-            // just before an error, the loop forces the exception
+            // blocking SocketChannels can write less than all the bytes
+            // just before an error; the loop forces the exception
         }
     }
 
     // handshake and close
 
     /**
-     * Force a new negotiation.
+     * Forces a new negotiation.
      *
      * @throws IOException if the underlying channel throws an IOException
      */
@@ -468,7 +468,7 @@ public class TlsChannelImpl implements ByteChannel {
          */
         // relying on hopefully-robust lexicographic ordering of protocol names
         if (engine.getSession().getProtocol().compareTo("TLSv1.3") >= 0) {
-            throw new SSLException("renegotiation not supported in TLS 1.3 or latter");
+            throw new SSLException("renegotiation not supported in TLS 1.3 or later");
         }
         try {
             doHandshake(true /* force */);
@@ -478,7 +478,7 @@ public class TlsChannelImpl implements ByteChannel {
     }
 
     /**
-     * Do a negotiation if this connection is new and it hasn't been done already.
+     * Does a negotiation if this connection is new and it hasn't been done already.
      *
      * @throws IOException if the underlying channel throws an IOException
      */

@@ -22,8 +22,8 @@ import tlschannel.helpers.SslContextFactory;
 import tlschannel.util.StreamUtils;
 
 /**
- * Test using a null engine (pass-through). The purpose of the test is to remove the overhead of the real
- * {@link SSLEngine} to be able to test the overhead of the {@link TlsChannel}.
+ * Tests using a null engine (pass-through). The purpose of the test is to remove the overhead of the real
+ * {@link SSLEngine} in order to measure the overhead of the {@link TlsChannel}.
  */
 @TestInstance(Lifecycle.PER_CLASS)
 public class NullEngineTest {

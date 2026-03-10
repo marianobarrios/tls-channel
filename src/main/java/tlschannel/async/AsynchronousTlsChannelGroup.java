@@ -61,13 +61,13 @@ public class AsynchronousTlsChannelGroup {
         /** Protects {@link #writeOperation} reference and instance. */
         final Lock writeLock = new ReentrantLock();
 
-        /** Current read operation, in not null */
+        /** Current read operation, if not null */
         ReadOperation readOperation;
 
         /** Current write operation, if not null */
         WriteOperation writeOperation;
 
-        /** Bitwise union of pending operation to be registered in the selector */
+        /** Bitwise union of pending operations to be registered in the selector */
         final AtomicInteger pendingOps = new AtomicInteger();
 
         RegisteredSocket(TlsChannel tlsChannel, SocketChannel socketChannel) {
@@ -121,8 +121,8 @@ public class AsynchronousTlsChannelGroup {
     private final int id = globalGroupCount.getAndIncrement();
 
     /**
-     * With the intention of being spacer with warnings, use this flag to ensure that we only log the
-     * warning about needed task once.
+     * With the intention of being sparing with warnings, use this flag to ensure that we only log the
+     * warning about a needed task once.
      */
     private final AtomicBoolean loggedTaskWarning = new AtomicBoolean();
 
@@ -639,7 +639,7 @@ public class AsynchronousTlsChannelGroup {
     }
 
     /**
-     * Starts the shutdown process. New sockets cannot be registered, already registered one continue
+     * Starts the shutdown process. New sockets cannot be registered; already-registered ones continue
      * operating normally until they are closed.
      */
     public void shutdown() {
@@ -666,13 +666,13 @@ public class AsynchronousTlsChannelGroup {
     }
 
     /**
-     * Blocks until all registers sockets are closed and pending tasks finished execution after a
+     * Blocks until all registered sockets are closed and pending tasks have finished execution after a
      * shutdown request, or the timeout occurs, or the current thread is interrupted, whichever
      * happens first.
      *
      * @param timeout the maximum time to wait
      * @param unit the time unit of the timeout argument
-     * @return {@code true} if this group terminated and {@code false} if the group elapsed before
+     * @return {@code true} if this group terminated and {@code false} if the timeout elapsed before
      *     termination
      * @throws InterruptedException if interrupted while waiting
      */

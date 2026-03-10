@@ -220,8 +220,8 @@ public class ServerTlsChannel implements TlsChannel {
     /**
      * Return the used {@link SSLContext}.
      *
-     * @return context if present, or null if the TLS connection as not been initializer, or the
-     *     SNI not received yet.
+     * @return context if present, or null if the TLS connection has not been initialized, or the
+     *     SNI has not been received yet.
      */
     public SSLContext getSslContext() {
         return sslContext;

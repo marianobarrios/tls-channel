@@ -28,7 +28,7 @@ public class PseudoAsyncTest {
     private final SocketPairFactory factory = new SocketPairFactory(sslContextFactory.defaultContext());
     private final int dataSize = 60 * 1000;
 
-    // test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+    // Tests a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP).
     @TestFactory
     public Collection<DynamicTest> testHalfDuplex() {
         List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize * 2, x -> x * 2)
@@ -54,7 +54,7 @@ public class PseudoAsyncTest {
         return ret;
     }
 
-    // test a full-duplex interaction, without any renegotiation
+    // Tests a full-duplex interaction, without any renegotiation.
     @TestFactory
     public Collection<DynamicTest> testFullDuplex() {
         List<Integer> sizes = StreamUtils.iterate(1, x -> x < SslContextFactory.tlsMaxDataSize * 2, x -> x * 2)

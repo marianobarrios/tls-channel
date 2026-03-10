@@ -31,7 +31,7 @@ public class CipherTest {
         }
     }
 
-    // Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+    // Tests a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP).
     @TestFactory
     public Collection<DynamicTest> testHalfDuplexWithRenegotiation() {
         System.out.println("testHalfDuplexWithRenegotiation():");
@@ -60,7 +60,7 @@ public class CipherTest {
         return tests;
     }
 
-    // Test a full-duplex interaction, without any renegotiation
+    // Tests a full-duplex interaction, without any renegotiation.
     @TestFactory
     public Collection<DynamicTest> testFullDuplex() {
         List<DynamicTest> tests = new ArrayList<>();

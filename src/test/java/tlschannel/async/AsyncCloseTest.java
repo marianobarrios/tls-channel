@@ -34,7 +34,7 @@ public class AsyncCloseTest implements AsyncTestBase {
      */
     private static final int repetitions = 250;
 
-    // should throw an CancellationException (or ClosedChannelException) when closing the group while reading
+    // should throw a CancellationException (or ClosedChannelException) when closing the group while reading
     @Test
     public void testClosingWhileReading() throws IOException, InterruptedException {
         for (int i = 0; i < repetitions; i++) {
@@ -71,7 +71,7 @@ public class AsyncCloseTest implements AsyncTestBase {
         }
     }
 
-    // should throw an CancellationException (or ClosedChannelException) when closing the group while reading, even if
+    // should throw a CancellationException (or ClosedChannelException) when closing the group while reading, even if
     // we close the raw channel
     @Test
     public void testRawClosingWhileReading() throws IOException, InterruptedException {

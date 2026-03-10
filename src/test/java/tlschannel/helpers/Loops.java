@@ -21,8 +21,8 @@ public class Loops {
 
     /*
      * Note that it is necessary to use a multiple of 4 as buffer size for writing.
-     * This is because the bytesProduced to write are generated using Random.nextBytes, that
-     * always consumes full (4 byte) integers. A multiple of 4 then prevents "holes"
+     * This is because the bytes to write are generated using Random.nextBytes, which
+     * always consumes full (4-byte) integers. A multiple of 4 then prevents "holes"
      * in the random sequence.
      */
     public static final int bufferSize = 4 * 5000;
@@ -30,8 +30,8 @@ public class Loops {
     private static final int renegotiatePeriod = 10000;
     public static final String hashAlgorithm = "MD5"; // for speed
 
-    /** Test a half-duplex interaction, with (optional) renegotiation before reversing the direction of the flow (as in
-     * HTTP)
+    /** Tests a half-duplex interaction, with (optional) renegotiation before reversing the direction of the flow (as in
+     * HTTP).
      */
     public static void halfDuplex(SocketPair socketPair, int dataSize, boolean renegotiation, boolean scattering) {
         Thread clientWriterThread = new Thread(

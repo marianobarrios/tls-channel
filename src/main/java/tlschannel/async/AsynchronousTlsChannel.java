@@ -50,7 +50,7 @@ public class AsynchronousTlsChannel implements ExtendedAsynchronousByteChannel {
      * @param tlsChannel existing TLS channel to be used asynchronously
      * @param socketChannel underlying socket
      * @throws ClosedChannelException if any of the underlying channels are closed.
-     * @throws IllegalArgumentException is the socket is in blocking mode
+     * @throws IllegalArgumentException if the socket is in blocking mode
      */
     public AsynchronousTlsChannel(
             AsynchronousTlsChannelGroup channelGroup, TlsChannel tlsChannel, SocketChannel socketChannel)

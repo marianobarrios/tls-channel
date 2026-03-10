@@ -9,7 +9,7 @@ import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLProtocolException;
 import javax.net.ssl.StandardConstants;
 
-/** Implement basic TLS parsing, just to read the SNI. */
+/** Implements basic TLS parsing, just to read the SNI. */
 public final class TlsExplorer {
 
     private TlsExplorer() {}
@@ -35,7 +35,7 @@ public final class TlsExplorer {
      *   opaque fragment[TLSPlaintext.length];
      * } TLSPlaintext;
      */
-    /** Explores a TLS record in search to the SNI. This method does not consume buffer. */
+    /** Explores a TLS record in search of the SNI. This method does not consume the buffer. */
     public static Map<Integer, SNIServerName> exploreTlsRecord(ByteBuffer input) throws SSLProtocolException {
 
         input.mark();
@@ -97,7 +97,7 @@ public final class TlsExplorer {
         byte handshakeType = input.get();
         if (handshakeType != 0x01) {
             // 0x01: client_hello message
-            throw new SSLProtocolException("Not an initial handshaking");
+            throw new SSLProtocolException("Not an initial handshake");
         }
 
         // What is the handshake body length?
@@ -238,8 +238,8 @@ public final class TlsExplorer {
                 if (sniMap.put(serverName.getType(), serverName) != null) {
                     throw new SSLProtocolException("Duplicated server name of type " + serverName.getType());
                 }
-                remains -= encoded.length + 3; // NameType: 1 byte; HostName;
-                // length: 2 bytesProduced
+                remains -= encoded.length + 3; // NameType: 1 byte; HostName
+                // length: 2 bytes
             }
         } else if (extLen == 0) {
             // "server_name" extension in ServerHello

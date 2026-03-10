@@ -34,7 +34,7 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
     abstract T getThis();
 
     /**
-     * Whether CPU-intensive tasks are run or not. Default is to do run them. If setting this <code>
+     * Whether CPU-intensive tasks are run or not. Default is to run them. If setting this to <code>
      * false</code>, the calling code should be prepared to handle {@link NeedsTaskException}
      *
      * @param runTasks whether to run tasks
@@ -84,10 +84,10 @@ public abstract class TlsChannelBuilder<T extends TlsChannelBuilder<T>> {
     }
 
     /**
-     * Whether to release unused buffers in the mid of connections. Equivalent to OpenSSL's
+     * Whether to release unused buffers in the middle of connections. Equivalent to OpenSSL's
      * SSL_MODE_RELEASE_BUFFERS.
      *
-     * <p>Default is to release. Releasing unused buffers is specially effective in the case of
+     * <p>Default is to release. Releasing unused buffers is especially effective in the case of
      * idle long-lived connections, when the memory footprint can be reduced significantly. A
      * potential reason for setting this value to <code>false</code> is performance, since more
      * releases means more allocations, which have a cost. This is effectively a memory-time

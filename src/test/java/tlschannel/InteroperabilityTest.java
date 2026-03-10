@@ -53,7 +53,7 @@ public class InteroperabilityTest {
             while (remaining > 0) {
                 int chunkSize = random.nextInt(remaining + margin) + 1; // 1 <= chunkSize <= remaining + margin
                 int c = reader.read(receivedData, dataSize - remaining, chunkSize);
-                assertNotEquals(-1, c, "read must not return -1 when there were bytesProduced remaining");
+                assertNotEquals(-1, c, "read must not return -1 when there were bytes remaining");
                 assertTrue(c <= remaining);
                 assertTrue(c > 0, "blocking read must return a positive number");
                 remaining -= c;
@@ -63,7 +63,7 @@ public class InteroperabilityTest {
         });
     }
 
-    /** Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+    /** Tests a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP).
      */
     private void halfDuplexStream(Writer serverWriter, Reader clientReader, Writer clientWriter, Reader serverReader)
             throws IOException, InterruptedException {
@@ -87,7 +87,7 @@ public class InteroperabilityTest {
         clientWriter.close();
     }
 
-    /** Test a full-duplex interaction, without any renegotiation
+    /** Tests a full-duplex interaction, without any renegotiation.
      */
     private void fullDuplexStream(Writer serverWriter, Reader clientReader, Writer clientWriter, Reader serverReader)
             throws IOException, InterruptedException {
@@ -109,7 +109,7 @@ public class InteroperabilityTest {
 
     // OLD IO -> OLD IO
 
-    // "old-io -> old-io (half duplex)
+    // old-io -> old-io (half duplex)
     @Test
     public void testOldToOldHalfDuplex() throws IOException, InterruptedException {
         SocketGroups.OldOldSocketPair socketPair = factory.oldOld(Optional.empty());

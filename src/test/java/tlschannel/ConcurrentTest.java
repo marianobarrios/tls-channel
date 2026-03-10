@@ -26,7 +26,7 @@ public class ConcurrentTest {
     private final int dataSize = 250_000_000;
     private final int bufferSize = 2000;
 
-    /** Test several parties writing concurrently
+    /** Tests several parties writing concurrently.
      */
     // write-side thread safety
     @Test
@@ -51,7 +51,7 @@ public class ConcurrentTest {
         SocketPairFactory.checkDeallocation(socketPair);
     }
 
-    // read-size thread-safety
+    // read-side thread safety
     @Test
     public void testReadSide() throws IOException {
         SocketPair socketPair = factory.nioNio(Optional.empty(), Optional.empty(), true, false, Optional.empty());

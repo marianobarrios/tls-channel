@@ -14,8 +14,8 @@ import tlschannel.helpers.SocketGroups.SocketPair;
 import tlschannel.helpers.SocketPairFactory;
 import tlschannel.helpers.SslContextFactory;
 
-/** Test using concurrent, non-blocking connections, and a "null" [[javax.net.ssl.SSLEngine]] that just passes all byte
- * as they are.
+/** Tests using concurrent, non-blocking connections, and a "null" {@link javax.net.ssl.SSLEngine} that just passes all
+ * bytes as they are.
  */
 @TestInstance(Lifecycle.PER_CLASS)
 public class NullMultiNonBlockingTest {

@@ -88,10 +88,10 @@ public class BufferHolder {
     }
 
     /**
-     * Fill with zeros the remaining of the supplied buffer. This method does not change the buffer
+     * Fill with zeros the remainder of the supplied buffer. This method does not change the buffer
      * position.
      *
-     * <p>Typically used for security reasons, with buffers that contains now-unused plaintext.
+     * <p>Typically used for security reasons, with buffers that contain now-unused plaintext.
      */
     public void zeroRemaining() {
         zero(buffer.position());
@@ -100,7 +100,7 @@ public class BufferHolder {
     /**
      * Fill the buffer with zeros. This method does not change the buffer position.
      *
-     * <p>Typically used for security reasons, with buffers that contains now-unused plaintext.
+     * <p>Typically used for security reasons, with buffers that contain now-unused plaintext.
      */
     public void zero() {
         zero(0);

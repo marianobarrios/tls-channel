@@ -22,7 +22,7 @@ public class BlockingTest {
     private final SslContextFactory sslContextFactory = new SslContextFactory();
     private final SocketPairFactory factory = new SocketPairFactory(sslContextFactory.defaultContext());
 
-    // Test a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP)
+    // Tests a half-duplex interaction, with renegotiation before reversing the direction of the flow (as in HTTP).
     @TestFactory
     public Collection<DynamicTest> testHalfDuplexWireRenegotiations() {
         System.out.println("testHalfDuplexWireRenegotiations():");
@@ -50,7 +50,7 @@ public class BlockingTest {
         return ret;
     }
 
-    // Test a full-duplex interaction, without any renegotiation
+    // Tests a full-duplex interaction, without any renegotiation.
     @TestFactory
     public Collection<DynamicTest> testFullDuplex() {
         System.out.println("testFullDuplex():");

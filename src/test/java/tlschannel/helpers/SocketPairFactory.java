@@ -19,8 +19,8 @@ import tlschannel.async.AsynchronousTlsChannel;
 import tlschannel.async.AsynchronousTlsChannelGroup;
 import tlschannel.helpers.SocketGroups.*;
 
-/** Create pairs of connected sockets (using the loopback interface). Additionally, all the raw (non-encrypted) socket
- * channel are wrapped with a chunking decorator that partitions the bytesProduced of any read or write operation.
+/** Creates pairs of connected sockets (using the loopback interface). Additionally, all the raw (non-encrypted) socket
+ * channels are wrapped with a chunking decorator that partitions the bytes of any read or write operation.
  */
 public class SocketPairFactory {
 
@@ -279,7 +279,7 @@ public class SocketPairFactory {
                         .build();
 
                 /*
-                 * Handler executor can be null because BlockerByteChannel will only use Futures, never callbacks.
+                 * Handler executor can be null because BlockerByteChannel will only use Futures, not callbacks.
                  */
 
                 ByteChannel clientAsyncChannel;

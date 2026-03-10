@@ -27,7 +27,7 @@ public class CloseTest {
     private final byte[] data = new byte[] {15};
 
     /**
-     * Less than a TLS message, to force read/write loops
+     * Less than a TLS message, to force read/write loops.
      */
     private final Optional<Integer> internalBufferSize = Optional.of(10);
 

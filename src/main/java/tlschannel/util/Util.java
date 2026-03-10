@@ -12,7 +12,7 @@ public class Util {
     }
 
     /**
-     * Convert a {@link SSLEngineResult} into a {@link String}, this is needed because the supplied
+     * Convert a {@link SSLEngineResult} into a {@link String}; this is needed because the supplied
      * method includes a log-breaking newline.
      *
      * @param result the SSLEngineResult

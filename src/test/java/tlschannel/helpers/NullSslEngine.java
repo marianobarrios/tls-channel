@@ -10,11 +10,11 @@ import tlschannel.impl.ByteBufferSet;
 import tlschannel.impl.ByteBufferUtil;
 
 /**
- * "Null" {@link SSLEngine} that does nothing to the bytesProduced.
+ * "Null" {@link SSLEngine} that does nothing to the bytes.
  */
 class NullSslEngine extends SSLEngine {
 
-    /** Internal buffers are still used to prevent any underlying optimization of the wrap/unwrap.
+    /** Internal buffers are still used to prevent any underlying optimization of wrap/unwrap.
      */
     private final int bufferSize = 16000;
 

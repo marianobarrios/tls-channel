@@ -31,7 +31,7 @@ public class SniBlockingServer {
 
         /*
          * Set the SSLContext factory with a lambda expression. In this case we reject the connection in all cases
-         * except when the supplied domain matches exacting, in which case we just return our default context. A real
+         * except when the supplied domain matches exactly, in which case we just return our default context. A real
          * implementation would have more than one context to return according to the supplied name.
          */
         SniSslContextFactory exampleSslContextFactory = (Optional<SNIServerName> sniServerName) -> {

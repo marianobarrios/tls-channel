@@ -6,6 +6,6 @@
  *
  * <p>In other words, a simple library that allows the programmer to have TLS using the same
  * standard socket API used for plaintext, just like OpenSSL does for C, only for Java, filling a
- * specially painful missing feature of the standard Java library.
+ * particularly painful gap in the standard Java library.
  */
 package tlschannel;

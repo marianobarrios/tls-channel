@@ -2,8 +2,8 @@ package tlschannel;
 
 /**
  * This exception signals the caller that the operation could not continue because a CPU-intensive
- * operation (typically a TLS handshaking) needs to be executed and the {@link TlsChannel} is
- * configured to not run tasks. This allows the application to run these tasks in some other
+ * operation (typically a TLS handshake) needs to be executed and the {@link TlsChannel} is
+ * configured to not run tasks. This allows the application to run these tasks in other
  * threads, in order to not slow the selection loop. The method that threw the exception should be
  * retried once the task supplied by {@link #getTask()} is executed and finished.
  *

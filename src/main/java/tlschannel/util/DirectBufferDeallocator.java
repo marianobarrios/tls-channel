@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Access to NIO sun.misc.Cleaner, allowing caller to deterministically deallocate a given
+ * Access to NIO sun.misc.Cleaner, allowing the caller to deterministically deallocate a given
  * sun.nio.ch.DirectBuffer.
  */
 public class DirectBufferDeallocator {

@@ -51,7 +51,7 @@ public class AsynchronousChannelServer {
                 // instantiate TlsChannel
                 TlsChannel tlsChannel = builder.build();
 
-                // build asynchronous channel, based in the TLS channel and associated with the global group.
+                // build asynchronous channel, based on the TLS channel and associated with the global group.
                 AsynchronousTlsChannel asyncTlsChannel =
                         new AsynchronousTlsChannel(channelGroup, tlsChannel, rawChannel);
 

@@ -96,7 +96,7 @@ public class NonBlockingServerWithOffLoopTasks {
 
         /*
          * Wrap raw channel with a TlsChannel. Note that the raw channel is registered in the selector
-         * and the TlsChannel put as an attachment register the channel for reading, because TLS
+         * and the TlsChannel is put as an attachment. Register the channel for reading, because TLS
          * connections are initiated by clients.
          */
         SelectionKey newKey = rawChannel.register(selector, SelectionKey.OP_READ);
