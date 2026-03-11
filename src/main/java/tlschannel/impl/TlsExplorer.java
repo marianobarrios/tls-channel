@@ -49,7 +49,7 @@ public final class TlsExplorer {
             ignore(input, 2); // ignore version
 
             // Is there enough data for a full record?
-            int recordLength = getInt16(input);
+            int recordLength = getUnsignedInt16(input);
             if (recordLength > input.remaining()) {
                 throw new BufferUnderflowException();
             }
@@ -101,7 +101,7 @@ public final class TlsExplorer {
         }
 
         // What is the handshake body length?
-        int handshakeLength = getInt24(input);
+        int handshakeLength = getUnsignedInt24(input);
 
         // Theoretically, a single handshake message might span multiple
         // records, but in practice this does not occur.
@@ -172,10 +172,10 @@ public final class TlsExplorer {
      * ExtensionType;
      */
     private static Map<Integer, SNIServerName> exploreExtensions(ByteBuffer input) throws SSLProtocolException {
-        int length = getInt16(input); // length of extensions
+        int length = getUnsignedInt16(input); // length of extensions
         while (length > 0) {
-            int extType = getInt16(input); // extension type
-            int extLen = getInt16(input); // length of extension data
+            int extType = getUnsignedInt16(input); // extension type
+            int extLen = getUnsignedInt16(input); // length of extension data
             if (extType == 0x00) {
                 // 0x00: type of server name indication
                 return exploreSNIExt(input, extLen);
@@ -212,14 +212,14 @@ public final class TlsExplorer {
         int remains = extLen;
         if (extLen >= 2) {
             // "server_name" extension in ClientHello
-            int listLen = getInt16(input); // length of server_name_list
+            int listLen = getUnsignedInt16(input); // length of server_name_list
             if (listLen == 0 || listLen + 2 != extLen) {
                 throw new SSLProtocolException("Invalid server name indication extension");
             }
             remains -= 2; // 2: the length field of server_name_list
             while (remains > 0) {
-                int code = getInt8(input); // name_type
-                int snLen = getInt16(input); // length field of server name
+                int code = getUnsignedInt8(input); // name_type
+                int snLen = getUnsignedInt16(input); // length field of server name
                 if (snLen > remains) {
                     throw new SSLProtocolException("Not enough data to fill declared vector size");
                 }
@@ -251,24 +251,31 @@ public final class TlsExplorer {
         return sniMap;
     }
 
-    private static int getInt8(ByteBuffer input) {
-        return input.get();
+    /*
+     * Java's byte type is signed, so ByteBuffer.get() returns a value in [-128, 127]. When it is
+     * widened to int for arithmetic or return, the sign is respected. In bits, the byte 0x80
+     * becomes the int 0xFFFFFF80, not 0x00000080. Masking with 0xFF clears those upper bits, giving
+     * the correct unsigned value (0..255).
+     */
+
+    private static int getUnsignedInt8(ByteBuffer input) {
+        return input.get() & 0xFF;
     }
 
-    private static int getInt16(ByteBuffer input) {
+    private static int getUnsignedInt16(ByteBuffer input) {
         return ((input.get() & 0xFF) << 8) | (input.get() & 0xFF);
     }
 
-    private static int getInt24(ByteBuffer input) {
+    private static int getUnsignedInt24(ByteBuffer input) {
         return ((input.get() & 0xFF) << 16) | ((input.get() & 0xFF) << 8) | (input.get() & 0xFF);
     }
 
     private static void ignoreByteVector8(ByteBuffer input) {
-        ignore(input, getInt8(input));
+        ignore(input, getUnsignedInt8(input));
     }
 
     private static void ignoreByteVector16(ByteBuffer input) {
-        ignore(input, getInt16(input));
+        ignore(input, getUnsignedInt16(input));
     }
 
     private static void ignore(ByteBuffer input, int length) {
