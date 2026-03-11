@@ -239,7 +239,7 @@ public class ServerTlsChannel implements TlsChannel {
 
     @Override
     public boolean getRunTasks() {
-        return impl.getRunTasks();
+        return runTasks;
     }
 
     @Override
