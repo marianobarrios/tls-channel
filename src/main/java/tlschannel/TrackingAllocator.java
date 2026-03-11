@@ -24,7 +24,7 @@ public class TrackingAllocator implements BufferAllocator {
 
     public ByteBuffer allocate(int size) {
         bytesAllocatedAdder.add(size);
-        currentAllocationSize.addAndGet(size);
+        maxAllocationSizeAcc.accumulate(currentAllocationSize.addAndGet(size));
         buffersAllocatedAdder.increment();
         return impl.allocate(size);
     }
@@ -32,7 +32,6 @@ public class TrackingAllocator implements BufferAllocator {
     public void free(ByteBuffer buffer) {
         int size = buffer.capacity();
         bytesDeallocatedAdder.add(size);
-        maxAllocationSizeAcc.accumulate(currentAllocationSize.longValue());
         currentAllocationSize.addAndGet(-size);
         buffersDeallocatedAdder.increment();
         impl.free(buffer);
