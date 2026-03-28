@@ -10,8 +10,12 @@ jobs:
       matrix:
         java-version: [ 8, 11, 17, 21, 25 ]
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           # Being in the last position, the latest JDK is used by default to build, the version from the matrix is made
@@ -19,6 +23,14 @@ jobs:
           java-version: |
             ${{ matrix.java-version }}
             25
-      - run: ./gradlew assemble check --info
+
+      - name: Check
+        run: ./gradlew assemble check --info
         env:
           TEST_JAVA_TOOLCHAIN: ${{ matrix.java-version }}
+
+      - name: Upload debug artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-${{ strategy.job-index }}
+          path: build/reports
