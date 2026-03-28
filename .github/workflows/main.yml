@@ -30,7 +30,7 @@ jobs:
           TEST_JAVA_TOOLCHAIN: ${{ matrix.java-version }}
 
       - name: Upload debug artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: reports-${{ strategy.job-index }}
           path: build/reports
