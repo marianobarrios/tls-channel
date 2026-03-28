@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'jvm-test-suite'
-    id "com.diffplug.spotless" version "8.4.0"
+    id "com.diffplug.spotless" version "7.2.1" // jrelease fails with 8.0.x
     id "com.github.spotbugs" version "6.4.8"
     id 'maven-publish'
     id 'org.jreleaser' version '1.23.0'

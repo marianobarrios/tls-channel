@@ -14,7 +14,8 @@
       "matchUpdateTypes": ["major"],
       "enabled": false,
       "matchPackageNames": [
-        "/^ch.qos.logback/"
+        "/^ch.qos.logback/",
+        "/^com.diffplug.spotless/"
       ]
     }
   ]
