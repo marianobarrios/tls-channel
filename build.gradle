@@ -21,13 +21,13 @@ java {
     }
 }
 
-compileJava {
+tasks.named('compileJava') {
     options.release = 8
     // for some reason javac warns the previous option, disabling
     options.compilerArgs.add('-Xlint:all,-options')
 }
 
-compileTestJava {
+tasks.named('compileTestJava') {
     options.release = 8
     // for some reason javac warns the previous option, disabling
     options.compilerArgs.add('-Xlint:all,-options,-try')
@@ -49,25 +49,25 @@ dependencies {
 spotbugs {
     ignoreFailures = false
     showProgress = true
-    reportsDir = file("$buildDir/spotbugs")
+    reportsDir = layout.buildDirectory.dir("spotbugs")
 }
 
-spotbugsMain {
+tasks.named('spotbugsMain') {
     excludeFilter = file('spotbugs-exclude.xml')
     reports {
         html {
             required = true
-            outputLocation = file("$buildDir/reports/spotbugs/spotbugs.html")
+            outputLocation = layout.buildDirectory.file("reports/spotbugs/spotbugs.html")
         }
     }
 }
 
-spotbugsTest {
+tasks.named('spotbugsTest') {
     excludeFilter = file('spotbugs-exclude-tests.xml')
     reports {
         html {
             required = true
-            outputLocation = file("$buildDir/reports/spotbugs/spotbugsTest.html")
+            outputLocation = layout.buildDirectory.file("reports/spotbugs/spotbugsTest.html")
         }
     }
 }
@@ -115,7 +115,7 @@ tasks.register('allocationTest', JavaExec) {
     jvmArgs = ['-XX:+UnlockExperimentalVMOptions', '-XX:+UseEpsilonGC']
 }
 
-check.dependsOn allocationTest
+tasks.named('check').configure { dependsOn tasks.named('allocationTest') }
 
 publishing {
     publications {
