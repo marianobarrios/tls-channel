@@ -1,11 +1,11 @@
 {
   "extends": [
-"config:recommended"
+    "config:recommended"
   ],
   "internalChecksFilter": "strict",
   "packageRules": [
     {
-      "minimumReleaseAge": "7",
+      "minimumReleaseAge": "7 days",
       "matchPackageNames": [
         "/.*/"
       ]
@@ -14,8 +14,15 @@
       "matchUpdateTypes": ["major"],
       "enabled": false,
       "matchPackageNames": [
-        "/^ch.qos.logback/",
-        "/^com.diffplug.spotless/"
+        "/^com\\.diffplug\\.spotless/",
+        "/^org\\.junit\\.jupiter/"
+      ]
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "enabled": false,
+      "matchPackageNames": [
+        "/^ch\\.qos\\.logback/"
       ]
     }
   ]
