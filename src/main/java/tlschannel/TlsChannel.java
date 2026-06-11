@@ -125,6 +125,11 @@ public interface TlsChannel extends ByteChannel, GatheringByteChannel, Scatterin
      * NeedsTaskException} will be thrown. In this case the operation should be retried after the task
      * is run.
      *
+     * <p>The end of stream may be detected by the same invocation that returns data, when the peer's
+     * close_notify is already available together with it: in that case the data is returned, the
+     * shutdown is observable immediately via {@link #shutdownReceived()}, and the next invocation
+     * returns <code>-1</code> without any further I/O.
+     *
      * <p>This method may be invoked at any time. If another thread has already initiated a read or
      * handshaking operation upon this channel, however, then an invocation of this method will block
      * until the first operation is complete.

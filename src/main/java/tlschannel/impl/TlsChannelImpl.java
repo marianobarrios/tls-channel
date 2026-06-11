@@ -200,9 +200,9 @@ public class TlsChannelImpl implements ByteChannel {
                     case NOT_HANDSHAKING:
                     case FINISHED:
                         readAndUnwrap();
-                        if (shutdownReceived) {
-                            return -1;
-                        }
+                        // bytesToReturn and shutdownReceived are handled at the top of the loop, in
+                        // that order: a read that produced data and also detected the peer's close
+                        // returns the data, and the next read returns -1
                         break;
                     case NEED_TASK:
                         handleTask();
@@ -593,6 +593,9 @@ public class TlsChannelImpl implements ByteChannel {
                 HandshakeStatus status = engine.getHandshakeStatus();
                 if (result.bytesProduced() > 0) {
                     bytesToReturn = result.bytesProduced();
+                    if (suppliedInPlain != null && inPlain.nullOrEmpty()) {
+                        unwrapBufferedFollowUpRecords();
+                    }
                     return;
                 }
                 if (result.getStatus() == Status.CLOSED) {
@@ -611,6 +614,54 @@ public class TlsChannelImpl implements ByteChannel {
             }
         } finally {
             inEncrypted.release();
+        }
+    }
+
+    /**
+     * Eagerly unwraps records already buffered in inEncrypted (same network segment, separate TLS
+     * records) so a close_notify following the data is reported together with it in a single
+     * read() call. This lets callers that need the end of stream to delimit a response (e.g. HTTP
+     * responses without Content-Length) see the data and the close together. Uses single engine
+     * unwraps rather than unwrapLoop: OVERFLOW and UNDERFLOW consume nothing, so this can never
+     * spill into inPlain.
+     */
+    private void unwrapBufferedFollowUpRecords() {
+        try {
+            // inEncrypted.buffer is in write-mode: position() == bytes of buffered ciphertext
+            while (inEncrypted.buffer.position() > 0 && suppliedInPlain.hasRemaining()) {
+                SSLEngineResult followUp = callEngineUnwrap(suppliedInPlain);
+                // just as in unwrapLoop, data can be produced even in case of overflow
+                bytesToReturn += followUp.bytesProduced();
+                if (followUp.getStatus() == Status.CLOSED) {
+                    shutdownReceived = true;
+                    return;
+                }
+                if (followUp.getStatus() != Status.OK) {
+                    // BUFFER_UNDERFLOW: partial record buffered; BUFFER_OVERFLOW: destination full.
+                    // Neither consumes source bytes from inEncrypted (any produced bytes are already
+                    // counted above) - leave the remaining records for the next read.
+                    return;
+                }
+                if (followUp.bytesConsumed() == 0) {
+                    // defensive guard against a non-conforming engine reporting OK without
+                    // consuming the record, which would otherwise loop forever
+                    return;
+                }
+                HandshakeStatus status = engine.getHandshakeStatus();
+                if (status != HandshakeStatus.NOT_HANDSHAKING) {
+                    // renegotiation, key update, or any other handshake transition: let the main
+                    // loops drive it
+                    return;
+                }
+            }
+        } catch (SSLException e) {
+            /*
+             * The channel was already marked invalid by callEngineUnwrap, so subsequent reads will
+             * fail. Return the data decrypted so far instead of discarding it, mirroring the
+             * behavior without the eager unwrapping, where the failing record would only have been
+             * hit by the next read.
+             */
+            logger.log(Level.FINEST, "swallowing exception unwrapping follow-up records, returning data: {0}", e);
         }
     }
 
